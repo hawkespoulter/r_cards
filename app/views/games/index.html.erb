@@ -1,0 +1,17 @@
+<div class="flex flex-col">
+  <h1 class="text-3xl font-bold underline">Games</h1>
+
+  <div class="p-4 flex flex-row flex-wrap" id="game-updates">
+    <% @games.each do |game| %>
+      <div class="flex flex-col p-4 m-4 bg-emerald-700 rounded-xl text-white min-w-72 min-h-72 justify-between">
+        <div>Name of game:<%= game.name %></div>
+        <div>players: Sam, Hawkes, Sicily, Normandy</div>
+        <div class="p-4 bg-emerald-800 flex justify-center rounded">Join</div>
+      </div>
+    <% end %>
+  </div>
+
+  <%= link_to 'New Game', new_game_path, class: 'btn btn-primary' %>
+
+  <div id="game-updates"></div>
+</div>
