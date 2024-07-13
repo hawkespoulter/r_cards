@@ -10,6 +10,8 @@ consumer.subscriptions.create("GameChannel", {
   },
 
   received(data) {
-    document.getElementById('game-updates').innerHTML += `<p>${data.message}</p>`;
+    console.log(data);
+    console.log('received');
+    document.getElementById('game-updates').innerHTML += `<p>some butthole just did a thing</p>`;
   }
 });

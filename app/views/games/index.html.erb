@@ -1,5 +1,6 @@
 <div class="flex flex-col">
   <h1 class="text-3xl font-bold underline">Games</h1>
+  <%= link_to 'New Game', new_game_path, class: 'btn btn-primary' %>
 
   <div class="p-4 flex flex-row flex-wrap" id="game-updates">
     <% @games.each do |game| %>
@@ -7,11 +8,10 @@
         <div>Name of game:<%= game.name %></div>
         <div>players: Sam, Hawkes, Sicily, Normandy</div>
         <div class="p-4 bg-emerald-800 flex justify-center rounded">Join</div>
+        <%= button_to 'Delete', game_path(game), method: :delete, data: { confirm: 'Are you sure?' }, class: 'mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700' %>
       </div>
     <% end %>
   </div>
-
-  <%= link_to 'New Game', new_game_path, class: 'btn btn-primary' %>
 
   <div id="game-updates"></div>
 </div>

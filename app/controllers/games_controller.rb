@@ -14,7 +14,7 @@ class GamesController < ApplicationController
     @game = Game.new(game_params)
     if @game.save
       ActionCable.server.broadcast('game_channel', @game)
-      redirect_to games_path, notice: 'Game was successfully created.'
+      redirect_to games_path
     else
       render :new
     end
@@ -27,6 +27,9 @@ class GamesController < ApplicationController
   end
 
   def destroy
+    @game = Game.find(params[:id])
+    @game.destroy
+    redirect_to games_path
   end
 
   private
