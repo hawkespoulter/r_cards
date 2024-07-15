@@ -1,4 +1,6 @@
-- Create game goes to game page
-- Join game db
-- join game view
-- navigate away from game page gives you are in game warning and if they leave remove from lobby
+- add turn order to db
+- add current turn 
+- add is turn for player
+- ui show players and current turn
+- frontend to move through turns
+- ui, play pile (next button for now that moves turn to next player, can only be pressed if is ur turn)

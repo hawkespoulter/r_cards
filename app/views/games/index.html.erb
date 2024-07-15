@@ -1,8 +1,9 @@
 <%= link_to 'New Game', new_game_path, class: 'btn btn-primary' %>
 
 <div class="grid-container" id="game-updates">
+  <%= @player_names %>
   <% @games.each do |game| %>
-    <%= render partial: 'game_lobby_card', locals: {game: game} %>
+    <%= render partial: 'game_lobby_card', locals: {game: game, players: game.players} %>
   <% end %>
 </div>
 

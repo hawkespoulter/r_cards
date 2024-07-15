@@ -1,6 +1,10 @@
 <div class="card flex-container">
   <div>Name of game:<%= game.name %></div>
-  <div>Players: <%= game.player_names.join(', ') %></div>
+  <ul>
+    <% players.each do |player| %>
+      <li><%= player.user.name %></li>
+    <% end %>
+  </ul>
   <%= form_with(url: join_game_path(game), method: :post, local: true) do |form| %>
     <%= form.submit 'Join' %>
   <% end %>

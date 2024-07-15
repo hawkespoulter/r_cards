@@ -5,6 +5,7 @@ class GamesController < ApplicationController
 
   def show
     @game = Game.find(params[:id])
+    @players = @game.players
   end
 
   def new
@@ -13,8 +14,8 @@ class GamesController < ApplicationController
 
   def create
     @game = Game.new(game_params)
-    @game.players << current_user.id
     if @game.save
+      @game.players.create(user: current_user)
       redirect_to @game
     else
       render :new
@@ -23,8 +24,14 @@ class GamesController < ApplicationController
 
   def join
     @game = Game.find(params[:id])
-    @game.players << current_user.id
-    @game.save
+    
+    if @game.players.where(user_id: current_user.id).exists?
+      flash[:notice] = "You are already part of this game."
+    else
+      @player = @game.players.create(user: current_user)
+      flash[:notice] = "You have joined the game successfully." if @player.persisted?
+    end
+  
     redirect_to @game
   end
 
