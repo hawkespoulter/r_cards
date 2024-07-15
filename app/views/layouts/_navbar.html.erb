@@ -1,9 +1,9 @@
-<nav class="bg-emerald-800 text-white p-4">
-  <ul class="flex flex-row justify-between">
-    <li class="nav-item active">
+<nav>
+  <ul>
+    <li>
       <%= link_to 'Games', games_path %>
     </li>
-    <li class="nav-item">
+    <li>
       <% if user_signed_in? %>
         <%= link_to 'Logout', destroy_user_session_path, data: { "turbo-method": :delete } %>
       <% else %>
