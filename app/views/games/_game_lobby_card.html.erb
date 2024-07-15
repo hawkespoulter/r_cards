@@ -1,6 +1,6 @@
-<div class="flex flex-col p-4 m-4 bg-emerald-700 rounded-xl text-white min-w-72 min-h-72 justify-between">
+<div class="card flex-container">
   <div>Name of game:<%= game.name %></div>
   <div>players: Sam, Hawkes, Sicily, Normandy</div>
-  <div class="p-4 bg-emerald-800 flex justify-center rounded">Join</div>
-  <%= button_to 'Delete', game_path(game), method: :delete, data: { confirm: 'Are you sure?' }, class: 'mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700' %>
+  <button>Join</button>
+  <%= button_to 'Delete', game_path(game), method: :delete, data: { confirm: 'Are you sure?' }, class: 'danger' %>
 </div>

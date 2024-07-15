@@ -14,24 +14,27 @@
  *= require_self
  */
 
+:root {
+  --light:  rgb(5 150 105);
+  --medium: rgb(4 120 87);
+  --dark: rgb(6 95 70);
+  --danger: rgb(153 27 27);
+}
+
 a {
 color: white;
 text-decoration: none;
 }
 
-a:hover {
-  color: rgb(227, 255, 247);
-}
-
 body {
-  background-color: rgb(5 150 105);
+  background-color: var(--light);
   margin: 0;
   font-family: 'Inter', sans-serif;
+  color: white;
 }
 
 nav {
-  background-color: rgb(6 95 70);
-  color: white;
+  background-color: var(--dark);
 }
 
 ul {
@@ -40,4 +43,79 @@ ul {
   list-style-type: none;
   margin: 0;
   padding: 20px;
+}
+
+input[type="submit"]{
+  background-color: var(--light);
+  border: 0; 
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  outline: none;
+}
+
+button {
+  background-color: var(--light);
+  border: 0; 
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  outline: none;
+}
+
+.btn {
+  background-color: var(--medium);
+  border: 0; 
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  outline: none;
+  margin: 10px;
+}
+
+.card {
+  background-color: var(--medium);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  margin: 20px;
+  padding: 20px;
+}
+
+.danger {
+  background-color: var(--danger);
+}
+
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.new_user {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
 }

@@ -1,2 +1,13 @@
-<h1>Games#show</h1>
-<p>Find me in app/views/games/show.html.erb</p>
+<div class="flex-container">
+  <div class="card">
+    <h1><%= @game.name %></h1>
+    <h2>Players:</h2>
+    <ul>
+      <%# <% @game.players.each do |player| %> %>
+        <%# <li><%= player.name %></li> %>
+      <%# <% end %> %>
+    </ul>
+    <button>Join</button>
+    <%= button_to 'Delete', game_path(@game), method: :delete, data: { confirm: 'Are you sure?' }, class: 'danger' %>
+  </div>
+</div>

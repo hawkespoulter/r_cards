@@ -1,4 +1,3 @@
-- Style
 - Create game goes to game page
 - Join game db
 - join game view
