@@ -13,11 +13,19 @@ class GamesController < ApplicationController
 
   def create
     @game = Game.new(game_params)
+    @game.players << current_user.id
     if @game.save
       redirect_to @game
     else
       render :new
     end
+  end
+
+  def join
+    @game = Game.find(params[:id])
+    @game.players << current_user.id
+    @game.save
+    redirect_to @game
   end
 
   def edit

@@ -1,6 +1,8 @@
 <div class="card flex-container">
   <div>Name of game:<%= game.name %></div>
-  <div>players: Sam, Hawkes, Sicily, Normandy</div>
-  <button>Join</button>
-  <%= button_to 'Delete', game_path(game), method: :delete, data: { confirm: 'Are you sure?' }, class: 'danger' %>
+  <div>Players: <%= game.player_names.join(', ') %></div>
+  <%= form_with(url: join_game_path(game), method: :post, local: true) do |form| %>
+    <%= form.submit 'Join' %>
+  <% end %>
+  <%= button_to 'Delete', game_path(game), method: :delete, class: 'danger' %>
 </div>
