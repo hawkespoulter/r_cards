@@ -10,8 +10,7 @@ consumer.subscriptions.create("GameChannel", {
   },
 
   received(data) {
-    console.log(data);
-    console.log('received');
-    document.getElementById('game-updates').innerHTML += data.game;
+    console.log('Turn was taken should reload');
+    location.reload();
   }
 });

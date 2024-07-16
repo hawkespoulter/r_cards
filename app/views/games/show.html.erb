@@ -1,7 +1,7 @@
 <div class="game-container">
   <div class="game-header">
     <h1><%= @game.name %></h1>
-    <div>Current Turn: <%= @game.current_turn %></div>
+    <div>Current Turn: <%= @current_turn_name %></div>
     <% unless @game_started %>
       <%= button_to 'Start Game', start_game_path(@game), method: :post, class: 'btn' %>
     <% end %>

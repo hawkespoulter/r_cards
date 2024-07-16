@@ -10,6 +10,7 @@ class GamesController < ApplicationController
     @players = @game.players.where.not(user_id: current_user.id)
     @current_player = @game.players.where(user_id: current_user.id).first
     @game_started = @game.turn_order.present?
+    @current_turn_name = @game.players.find(@game.current_turn).user.name if @game_started
   end
 
   def new
@@ -50,13 +51,13 @@ class GamesController < ApplicationController
   def start
     @game = Game.find(params[:id])
     @game.start_game
+    ActionCable.server.broadcast 'game_channel', { message: 'Game started!' }
   end
 
   def take_turn
     @game = Game.find(params[:id])
     @game.take_turn
-
-    redirect_to @game
+    ActionCable.server.broadcast 'game_channel', { message: 'Next turn!' }
   end
 
   private
