@@ -1,11 +1,15 @@
 class GamesController < ApplicationController
+
+  # Rest endpoints
   def index
     @games = Game.all
   end
 
   def show
     @game = Game.find(params[:id])
-    @players = @game.players
+    @players = @game.players.where.not(user_id: current_user.id)
+    @current_player = @game.players.where(user_id: current_user.id).first
+    @game_started = @game.turn_order.present?
   end
 
   def new
@@ -22,6 +26,14 @@ class GamesController < ApplicationController
     end
   end
 
+  def destroy
+    @game = Game.find(params[:id])
+    @game.destroy
+    redirect_to games_path
+  end
+
+  # Game logic endpoints
+
   def join
     @game = Game.find(params[:id])
     
@@ -35,16 +47,16 @@ class GamesController < ApplicationController
     redirect_to @game
   end
 
-  def edit
-  end
-
-  def update
-  end
-
-  def destroy
+  def start
     @game = Game.find(params[:id])
-    @game.destroy
-    redirect_to games_path
+    @game.start_game
+  end
+
+  def take_turn
+    @game = Game.find(params[:id])
+    @game.take_turn
+
+    redirect_to @game
   end
 
   private

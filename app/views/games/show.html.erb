@@ -1,7 +1,25 @@
-<div class="flex-container">
-  <div class="card">
+<div class="game-container">
+  <div class="game-header">
     <h1><%= @game.name %></h1>
-    <div>Players: <%= @players.inspect %></div>
-    <%= button_to 'Delete', game_path(@game), method: :delete, data: { confirm: 'Are you sure?' }, class: 'danger' %>
+    <div>Current Turn: <%= @game.current_turn %></div>
+    <% unless @game_started %>
+      <%= button_to 'Start Game', start_game_path(@game), method: :post, class: 'btn' %>
+    <% end %>
+    <%= button_to 'Quit Game', game_path(@game), method: :delete, class: 'danger' %>
+  </div>
+  <div class="game-body">
+    <div class="players">
+      <% @players.each do |player| %>
+        <%= player.user.name %>
+      <% end %>
+    </div>
+    <div class="current-player">Current Player: <%= @current_player.user.name %></div>
+    <div><%= @game.current_turn %></div>
+    <div><%= @game.turn_order %></div>
+  </div>
+  <div class="game-footer">
+    <% if @game.current_turn == @current_player.id %>
+      <%= button_to 'End Turn', take_turn_game_path(@game), method: :post, class: 'btn' %>
+    <% end %>
   </div>
 </div>

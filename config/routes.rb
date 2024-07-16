@@ -3,7 +3,11 @@ Rails.application.routes.draw do
   resources :games
 
   resources :games do
-    post 'join', on: :member
+    member do
+      post 'join'
+      post 'start'
+      post 'take_turn'
+    end
   end  
 
   get "up" => "rails/health#show", as: :rails_health_check

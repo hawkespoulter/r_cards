@@ -1,0 +1,19 @@
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.game-body {
+  height: calc(50vh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.game-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}

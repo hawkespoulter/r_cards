@@ -1,6 +1,5 @@
-- add turn order to db
-- add current turn 
-- add is turn for player
+- add start button that initializes turn order
+- add name to create user
 - ui show players and current turn
 - frontend to move through turns
 - ui, play pile (next button for now that moves turn to next player, can only be pressed if is ur turn)

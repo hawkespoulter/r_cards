@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_15_215438) do
+ActiveRecord::Schema[7.1].define(version: 2024_07_16_171012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -18,6 +18,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_15_215438) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "turn_order", default: [], array: true
+    t.integer "current_turn"
   end
 
   create_table "players", force: :cascade do |t|
@@ -26,6 +28,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_15_215438) do
     t.string "hand"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "is_turn"
     t.index ["game_id"], name: "index_players_on_game_id"
     t.index ["user_id"], name: "index_players_on_user_id"
   end
