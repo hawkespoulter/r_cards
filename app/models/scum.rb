@@ -1,15 +1,12 @@
 class Scum < ApplicationRecord
   belongs_to :game
-  store_accessor :game_state, :turn_order, :current_turn, :deck, :hands,
-                             :last_played_by, :last_played_cards
+  store_accessor :game_state, :deck, :hands, :last_played_by, :last_played_cards
 
   after_initialize :initialize_state
 
   def initialize_state
     self.game_state = {
-      turn_order: [],
-      current_turn: nil,
-      deck: nil,
+      deck: deck,
       hands: initialize_hands(),
       last_played_by: nil,
       last_played_cards: nil,
@@ -19,12 +16,12 @@ class Scum < ApplicationRecord
   def initialize_hands
     hands = {}
     game.players.each do |player|
-      hands[player.id] = initial_hand_for_player(player)
+      hands[player.id] = deal(player)
     end
     hands
   end
 
-  def initial_hand_for_player(player)
+  def deal(player)
     # Define your logic here to initialize the initial hand for each player
     # For example, you might generate a random hand or initialize with specific cards
     # Here's a basic example:
