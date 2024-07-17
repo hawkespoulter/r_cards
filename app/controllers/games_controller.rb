@@ -11,6 +11,7 @@ class GamesController < ApplicationController
     @current_player = @game.players.where(user_id: current_user.id).first
     @game_started = @game.turn_order.present?
     @current_turn_name = @game.players.find(@game.current_turn).user.name if @game_started
+    @scum = Scum.where(:game_id => @game.id).first if @game.scum?
   end
 
   def new

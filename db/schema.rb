@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_17_161947) do
+ActiveRecord::Schema[7.1].define(version: 2024_07_17_183701) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -43,7 +43,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_17_161947) do
 
   create_table "scums", force: :cascade do |t|
     t.bigint "game_id"
-    t.jsonb "state", default: {}
+    t.jsonb "game_state", default: {}
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["game_id"], name: "index_scums_on_game_id"
