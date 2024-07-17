@@ -11,8 +11,8 @@
   <% end %>
 
   <div class="field">
-    <%= form.label :name %>
-    <%= form.text_field :name %>
+    <%= form.label :game_type %>
+    <%= form.select :game_type, Game.game_types.keys.map { |type| [type.humanize, type] } %>
   </div>
 
   <%= form.hidden_field :user_id, value: current_user.id %>

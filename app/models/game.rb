@@ -1,6 +1,9 @@
 class Game < ApplicationRecord
   has_many :players, dependent: :destroy
+  has_many :decks, dependent: :destroy
   has_many :users, through: :players
+
+  enum game_type: { scum: 0, canasta: 1, lucky_seven: 2 }
 
   def start_game
     player_ids = players.pluck(:id)

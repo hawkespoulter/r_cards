@@ -10,16 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_07_16_171012) do
+ActiveRecord::Schema[7.1].define(version: 2024_07_17_161947) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
+  create_table "decks", force: :cascade do |t|
+    t.bigint "game_id"
+    t.jsonb "cards", default: []
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id"], name: "index_decks_on_game_id"
+  end
+
   create_table "games", force: :cascade do |t|
-    t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "turn_order", default: [], array: true
     t.integer "current_turn"
+    t.integer "game_type", default: 0
   end
 
   create_table "players", force: :cascade do |t|
@@ -31,6 +39,14 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_16_171012) do
     t.boolean "is_turn"
     t.index ["game_id"], name: "index_players_on_game_id"
     t.index ["user_id"], name: "index_players_on_user_id"
+  end
+
+  create_table "scums", force: :cascade do |t|
+    t.bigint "game_id"
+    t.jsonb "state", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id"], name: "index_scums_on_game_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -46,6 +62,8 @@ ActiveRecord::Schema[7.1].define(version: 2024_07_16_171012) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "decks", "games"
   add_foreign_key "players", "games"
   add_foreign_key "players", "users"
+  add_foreign_key "scums", "games"
 end
