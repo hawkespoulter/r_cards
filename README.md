@@ -1,2 +1,4 @@
+- Show user hand on screen with cards
+- scum game state
 - adjust sign up form to include username
 - ui, play pile

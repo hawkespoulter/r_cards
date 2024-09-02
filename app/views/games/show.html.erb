@@ -13,8 +13,8 @@
         <%= player.user.name %>
       <% end %>
     </div>
-    <div class="current-player">Current Player: <%= @current_player.user.name %></div>
-    <div class="current-player">Hand: <%= @scum.inspect if @game_started %></div>
+    <div class="current-player">Current Player: <%= @current_player.id %></div>
+    <%= render partial: 'hand', locals: {hand: @current_player.hand} if @game_started %>
   </div>
   <div class="game-footer">
     <% if @game.current_turn == @current_player.id %>

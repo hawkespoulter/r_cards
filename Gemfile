@@ -70,3 +70,4 @@ gem 'devise'
 gem 'sassc-rails'
 
 gem 'pg'
+gem 'pry-byebug'
