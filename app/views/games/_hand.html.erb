@@ -1,2 +1,11 @@
 <div class="current-player">Butt: <%= @current_player.hand %></div>
-<%= image_tag "cards/#{'clubs_2'}.svg" %>
+
+<div class="hand">
+  <% @current_player.hand.each do |rank| %>
+    <div class="rank">
+      <% rank.each do |card| %>
+        <%= image_tag "cards/#{card}.svg" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -49,6 +49,8 @@ class Deck < ApplicationRecord
   end
   
   def sort_cards(cards)
-    cards.sort_by { |card| card_rank(card) }
+  sorted_cards = cards.sort_by { |card| card_rank(card) }
+  grouped_cards = sorted_cards.group_by { |card| card[1] }
+  grouped_cards.values
   end
 end
