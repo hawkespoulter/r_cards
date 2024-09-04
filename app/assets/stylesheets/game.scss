@@ -26,6 +26,12 @@
 
 .rank {
   display: flex;
+  // flex-direction: column;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-around;
+}
+
+.gamecard {
+  max-width: 75%;
 }
