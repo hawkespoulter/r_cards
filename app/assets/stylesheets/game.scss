@@ -4,34 +4,95 @@
   justify-content: space-around;
 }
 
-.game-body {
-  height: calc(50vh);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-
 .game-footer {
   display: flex;
   align-items: center;
   justify-content: space-around;
 }
 
-.hand {
+.game-body {
   display: flex;
   align-items: center;
-  justify-content: space-around;
+  justify-content: center;
+  flex-direction: column;
+  // height: calc(50vh);
+  height: max-content;
+}
+
+.hand {
+  display: flex; 
+  flex-wrap: wrap;
+  gap: 7px;
 }
 
 .rank {
-  display: flex;
-  // flex-direction: column;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-around;
+  position: relative;
+  width: 70px; //needs to be the same width as .game-card width
+  height: 250px; //this determines the height of the game-body
+  @for $i from 1 through 12 { //at most 12 cards in a rank
+    :nth-child(#{$i}) {
+      top: 20px * $i;
+    }
+  }
+  &:hover {
+    // @for $i from 1 through 12 { //at most 12 cards in a rank
+    //   :nth-child(#{$i}) {
+      //     top: 25px * $i;
+      //   }
+      // }
+    transform: translate(0, -8px);
+    transition: transform 0.3s ease; 
+    cursor: pointer;
+  }
 }
 
-.gamecard {
-  max-width: 75%;
+.game-card {
+  position: absolute;
+  max-width: 70px;
+  min-width: 70px;
 }
+
+// .rank {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   @for $i from 1 through 75 {
+//     :nth-child(#{$i}) {
+//       transform: translate(0, -80% * $i);
+//     }
+//   }
+//   transform: translate(0, 40%);
+// }
+
+// .gamecard {
+//   max-width: 90%;
+//   min-width: 60px;
+// }
+
+
+
+// .hand {
+//   position: absolute;
+//   height: 100%;
+//   width: 100%;
+  
+//   $angle: 50deg;
+
+//   @for $i from 1 through 75 {
+//     div:nth-child(#{$i}) {
+//       transform: translate(-50%, -50%) rotate(-$angle / 2 + $angle / 6 * $i);
+//     }
+//   }
+// }
+
+// .rank {
+//   background: white;
+//   height: 200px;
+//   width: 150px;
+//   border-radius: 5px;
+//   position: absolute;
+//   box-shadow: 0 0 30px transparentize(black, 0.8);
+//   left: 50%;
+//   top: 50%;
+//   transform-origin: center 120%;
+// }
