@@ -1,3 +1,8 @@
+.current-player {
+  background-color: var(--medium);
+  border-radius: 5px;
+}
+
 .game-header {
   display: flex;
   align-items: center;
@@ -10,12 +15,11 @@
   justify-content: space-around;
 }
 
-.game-body {
+.hand-container {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  // height: calc(50vh);
   height: max-content;
 }
 
@@ -23,6 +27,8 @@
   display: flex; 
   flex-wrap: wrap;
   gap: 7px;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 
 .rank {
@@ -35,11 +41,6 @@
     }
   }
   &:hover {
-    // @for $i from 1 through 12 { //at most 12 cards in a rank
-    //   :nth-child(#{$i}) {
-      //     top: 25px * $i;
-      //   }
-      // }
     transform: translate(0, -8px);
     transition: transform 0.3s ease; 
     cursor: pointer;
@@ -52,47 +53,18 @@
   min-width: 70px;
 }
 
-// .rank {
-//   display: flex;
-//   flex-direction: column;
-//   align-items: center;
-//   @for $i from 1 through 75 {
-//     :nth-child(#{$i}) {
-//       transform: translate(0, -80% * $i);
-//     }
-//   }
-//   transform: translate(0, 40%);
-// }
+.players {
+  display: flex;
+  gap: 100px;
+}
 
-// .gamecard {
-//   max-width: 90%;
-//   min-width: 60px;
-// }
+.player {
+  padding: 5px;
+}
 
-
-
-// .hand {
-//   position: absolute;
-//   height: 100%;
-//   width: 100%;
-  
-//   $angle: 50deg;
-
-//   @for $i from 1 through 75 {
-//     div:nth-child(#{$i}) {
-//       transform: translate(-50%, -50%) rotate(-$angle / 2 + $angle / 6 * $i);
-//     }
-//   }
-// }
-
-// .rank {
-//   background: white;
-//   height: 200px;
-//   width: 150px;
-//   border-radius: 5px;
-//   position: absolute;
-//   box-shadow: 0 0 30px transparentize(black, 0.8);
-//   left: 50%;
-//   top: 50%;
-//   transform-origin: center 120%;
-// }
+.play-pile {
+  display: flex;
+  height: 50vh;
+  justify-content: center;
+  align-items: center;
+}

@@ -1,20 +1,25 @@
 <div class="game-container">
   <div class="game-header">
     <h1><%= @game.game_type %></h1>
-    <div>Current Turn: <%= @current_turn_name %></div>
+    <div class="players">
+      <% @players.each do |player| %>
+        <div class="player <%= 'current-player' if @current_turn_name == player.user.name %>">
+          <%= player.user.name %>
+        </div>
+      <% end %>
+    </div>
     <% unless @game_started %>
       <%= button_to 'Start Game', start_game_path(@game), method: :post, class: 'btn' %>
     <% end %>
     <%= button_to 'Quit Game', game_path(@game), method: :delete, class: 'danger' %>
   </div>
-  <div class="game-body">
-    <div class="players">
-      <% @players.each do |player| %>
-        <%= player.user.name %>
-      <% end %>
+  <div class="play-pile">
+    <%= image_tag "cards/blank_card.svg", class: "game-card" %>
+  </div>
+  <div class="hand-container">
+    <div class =<%= 'current-player' if @current_turn_name == @current_player.user.name %>>
+      <%= render partial: 'hand', locals: {hand: @current_player.hand} if @game_started %>
     </div>
-    <div class="current-player">Current Player: <%= @current_player.id %></div>
-    <%= render partial: 'hand', locals: {hand: @current_player.hand} if @game_started %>
   </div>
   <div class="game-footer">
     <% if @game.current_turn == @current_player.id %>
