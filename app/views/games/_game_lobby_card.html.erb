@@ -12,9 +12,18 @@
   </ul>
 
   <div class="lobby-actions">
-    <%= form_with url: join_game_path(game), method: :post do |form| %>
-      <%= form.submit 'Join', class: 'btn-join' %>
+    <% already_in_game = Player.exists?(user_id: current_user.id) %>
+    <% in_this_game    = game.players.any? { |p| p.user_id == current_user.id } %>
+    <% if in_this_game %>
+      <%= link_to 'Enter', game_path(game), class: 'btn-join' %>
+    <% elsif !already_in_game %>
+      <%= form_with url: join_game_path(game), method: :post do |form| %>
+        <%= form.submit 'Join', class: 'btn-join' %>
+      <% end %>
     <% end %>
-    <%= button_to 'Delete', game_path(game), method: :delete, class: 'btn-quit' %>
+    <% if game.players.order(:created_at).first&.user_id == current_user.id %>
+      <%= button_to 'Delete', game_path(game), method: :delete, class: 'btn-quit',
+            form: { data: { turbo_confirm: 'Delete this game?' } } %>
+    <% end %>
   </div>
 </div>

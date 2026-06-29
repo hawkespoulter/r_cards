@@ -224,9 +224,13 @@
       <% if all_players.length < 2 %>
         <p>You need at least 2 players to start.</p>
       <% end %>
-      <%= button_to 'Start Game', start_game_path(@game), method: :post,
-            class: 'btn-start',
-            disabled: all_players.length < 2 %>
+      <% if @is_host %>
+        <%= button_to 'Start Game', start_game_path(@game), method: :post,
+              class: 'btn-start',
+              disabled: all_players.length < 2 %>
+      <% else %>
+        <p style="opacity:0.5;font-size:0.9rem;">Waiting for the host to start the game…</p>
+      <% end %>
     </div>
 
   <% end %>

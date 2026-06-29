@@ -1,3 +1,4 @@
+<div data-lobby="true">
 <div class="lobby-header">
   <h1>♠ Game Lobby</h1>
   <%= link_to 'New Game', new_game_path, class: 'btn' %>
@@ -10,4 +11,5 @@
   <% if @games.empty? %>
     <p style="padding: 0 24px; opacity: 0.6;">No games yet — create one!</p>
   <% end %>
+</div>
 </div>

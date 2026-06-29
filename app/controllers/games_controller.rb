@@ -25,6 +25,7 @@ class GamesController < ApplicationController
     @game = Game.new(game_params)
     if @game.save
       @game.players.create(user: current_user)
+      ActionCable.server.broadcast "lobby", { message: "update" }
       redirect_to @game
     else
       render :new
@@ -38,6 +39,7 @@ class GamesController < ApplicationController
 
     ActionCable.server.broadcast "game_#{@game.id}", { type: "game_ended" }
     @game.destroy
+    ActionCable.server.broadcast "lobby", { message: "update" }
     redirect_to games_path
   end
 
@@ -82,20 +84,23 @@ class GamesController < ApplicationController
   def join
     @game = Game.find(params[:id])
 
-    if @game.players.where(user_id: current_user.id).exists?
-      flash[:notice] = "You are already part of this game."
-    else
-      @player = @game.players.create(user: current_user)
-      flash[:notice] = "You have joined the game successfully." if @player.persisted?
+    if Player.where(user_id: current_user.id).exists?
+      return redirect_to games_path, alert: "You're already in a game — leave it before joining another."
     end
 
+    @game.players.create(user: current_user)
+    ActionCable.server.broadcast "lobby", { message: "update" }
     redirect_to @game
   end
 
   def start
     @game = Game.find(params[:id])
+    is_host = @game.players.order(:created_at).first&.user_id == current_user.id
+    return redirect_to @game, alert: "Only the host can start the game." unless is_host
+
     @game.start_game
     ActionCable.server.broadcast "game_#{@game.id}", { message: 'Game started!' }
+    ActionCable.server.broadcast "lobby", { message: "update" }
     redirect_to @game
   end
 
