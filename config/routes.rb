@@ -18,6 +18,8 @@ Rails.application.routes.draw do
     end
   end  
 
+  resources :bugs, only: [:index, :create, :update]
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "games#index"

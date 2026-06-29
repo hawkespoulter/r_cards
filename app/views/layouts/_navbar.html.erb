@@ -5,6 +5,8 @@
     </li>
     <li class="nav-right">
       <% if user_signed_in? %>
+        <button class="bug-report-trigger" id="bug-report-trigger" title="Report a bug">🐛</button>
+
         <div class="profile-menu">
           <button class="profile-trigger" id="profile-trigger" aria-expanded="false">
             <span class="profile-avatar"><%= current_user.name&.first&.upcase || "?" %></span>
@@ -18,33 +20,75 @@
             </div>
             <div class="dropdown-divider"></div>
             <%= link_to 'Edit Profile', edit_user_registration_path, class: 'dropdown-item' %>
+            <%= link_to 'Bug Tracker', bugs_path, class: 'dropdown-item' %>
             <%= link_to 'Sign Out', destroy_user_session_path,
                   data: { "turbo-method": :delete },
                   class: 'dropdown-item dropdown-item-danger' %>
           </div>
         </div>
-      <% else %>
-        <%= link_to 'Login', new_user_session_path, class: 'nav-link' %>
       <% end %>
     </li>
   </ul>
 </nav>
 
+<!-- Bug report modal -->
+<% if user_signed_in? %>
+  <div class="bug-modal-overlay" id="bug-modal-overlay">
+    <div class="bug-modal" id="bug-modal">
+      <div class="bug-modal-header">
+        <span>🐛 Report a Bug</span>
+        <button class="bug-modal-close" id="bug-modal-close">✕</button>
+      </div>
+      <%= form_with url: bugs_path, method: :post, data: { turbo: false }, html: { class: "bug-modal-form" } do |f| %>
+        <%= f.text_area :description, name: "bug[description]",
+              placeholder: "Describe what happened…",
+              class: "bug-textarea",
+              rows: 4 %>
+        <div class="bug-modal-actions">
+          <%= f.submit "Submit", class: "btn-create" %>
+          <%= link_to bugs_path, class: "btn-view-bugs" do %>View all bugs<% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    // Profile dropdown
     const trigger  = document.getElementById("profile-trigger");
     const dropdown = document.getElementById("profile-dropdown");
-    if (!trigger) return;
+    if (trigger) {
+      trigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const open = dropdown.classList.toggle("open");
+        trigger.setAttribute("aria-expanded", open);
+      });
+      document.addEventListener("click", function () {
+        dropdown.classList.remove("open");
+        trigger.setAttribute("aria-expanded", false);
+      });
+    }
 
-    trigger.addEventListener("click", function (e) {
-      e.stopPropagation();
-      const open = dropdown.classList.toggle("open");
-      trigger.setAttribute("aria-expanded", open);
-    });
+    // Bug modal
+    const bugTrigger = document.getElementById("bug-report-trigger");
+    const bugOverlay = document.getElementById("bug-modal-overlay");
+    const bugClose   = document.getElementById("bug-modal-close");
 
-    document.addEventListener("click", function () {
-      dropdown.classList.remove("open");
-      trigger.setAttribute("aria-expanded", false);
-    });
+    if (bugTrigger && bugOverlay) {
+      bugTrigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        bugOverlay.classList.add("open");
+      });
+      bugClose.addEventListener("click", function () {
+        bugOverlay.classList.remove("open");
+      });
+      bugOverlay.addEventListener("click", function (e) {
+        if (e.target === bugOverlay) bugOverlay.classList.remove("open");
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") bugOverlay.classList.remove("open");
+      });
+    }
   });
 </script>

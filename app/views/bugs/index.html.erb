@@ -1,0 +1,71 @@
+<div class="bugs-page">
+
+  <div class="bugs-header">
+    <h1>🐛 Bug Tracker</h1>
+    <span class="bugs-count"><%= @bugs.count %> <%= params[:status] || "total" %></span>
+  </div>
+
+  <div class="bugs-toolbar">
+    <%= form_with url: bugs_path, method: :get, data: { turbo: false }, html: { class: "bugs-search-form" } do |f| %>
+      <%= f.hidden_field :status, value: params[:status] %>
+      <div class="bugs-search-wrap">
+        <span class="search-icon">🔍</span>
+        <%= f.text_field :q, value: params[:q], placeholder: "Search bugs…", class: "bugs-search-input" %>
+        <% if params[:q].present? %>
+          <%= link_to "✕", bugs_path(status: params[:status]), class: "search-clear" %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="bugs-filters">
+      <%= link_to "All",      bugs_path(q: params[:q]),
+            class: "filter-btn #{"active" unless params[:status].present?}" %>
+      <%= link_to "Open",     bugs_path(q: params[:q], status: "open"),
+            class: "filter-btn #{"active" if params[:status] == "open"}" %>
+      <%= link_to "Resolved", bugs_path(q: params[:q], status: "resolved"),
+            class: "filter-btn #{"active" if params[:status] == "resolved"}" %>
+    </div>
+  </div>
+
+  <% if @bugs.any? %>
+    <div class="bugs-table-wrap">
+      <table class="bugs-table">
+        <thead>
+          <tr>
+            <th class="col-id">#</th>
+            <th class="col-desc">Description</th>
+            <th class="col-date">Reported</th>
+            <th class="col-status">Status</th>
+            <th class="col-action"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @bugs.each do |bug| %>
+            <tr class="bug-row <%= bug.resolved? ? "bug-resolved" : "" %>">
+              <td class="col-id"><%= bug.id %></td>
+              <td class="col-desc"><%= bug.description %></td>
+              <td class="col-date"><%= bug.created_at.strftime("%b %-d, %Y") %></td>
+              <td class="col-status">
+                <span class="status-badge status-<%= bug.status %>"><%= bug.status.capitalize %></span>
+              </td>
+              <td class="col-action">
+                <% if bug.open? %>
+                  <%= button_to "Resolve", bug_path(bug, status: "resolved", q: params[:q], filter_status: params[:status]),
+                        method: :patch, class: "btn-resolve", data: { turbo: false } %>
+                <% else %>
+                  <%= button_to "Reopen", bug_path(bug, status: "open", q: params[:q], filter_status: params[:status]),
+                        method: :patch, class: "btn-reopen", data: { turbo: false } %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="bugs-empty">
+      <p>No bugs found<% if params[:q].present? %> matching "<%= params[:q] %>"<% end %>.</p>
+    </div>
+  <% end %>
+
+</div>
