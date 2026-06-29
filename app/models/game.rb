@@ -6,6 +6,16 @@ class Game < ApplicationRecord
 
   enum game_type: { scum: 0, canasta: 1, lucky_seven: 2 }
 
+  store_accessor :settings, :pass_locks_out, :leader_can_continue
+
+  def pass_locks_out?
+    pass_locks_out == true || pass_locks_out == "true" || pass_locks_out == "1"
+  end
+
+  def leader_can_continue?
+    leader_can_continue == true || leader_can_continue == "true" || leader_can_continue == "1"
+  end
+
   def start_game
     if scum?
       initialize_scum_game_state

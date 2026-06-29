@@ -1,14 +1,50 @@
 <nav>
   <ul>
     <li>
-      <%= link_to 'Games', games_path %>
+      <%= link_to '♠ RCards', games_path %>
     </li>
-    <li>
+    <li class="nav-right">
       <% if user_signed_in? %>
-        <%= link_to 'Logout', destroy_user_session_path, data: { "turbo-method": :delete } %>
+        <div class="profile-menu">
+          <button class="profile-trigger" id="profile-trigger" aria-expanded="false">
+            <span class="profile-avatar"><%= current_user.name&.first&.upcase || "?" %></span>
+            <span class="profile-name"><%= current_user.name || current_user.email %></span>
+            <span class="profile-caret">▾</span>
+          </button>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <div class="dropdown-header">
+              <span class="dropdown-name"><%= current_user.name %></span>
+              <span class="dropdown-email"><%= current_user.email %></span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <%= link_to 'Edit Profile', edit_user_registration_path, class: 'dropdown-item' %>
+            <%= link_to 'Sign Out', destroy_user_session_path,
+                  data: { "turbo-method": :delete },
+                  class: 'dropdown-item dropdown-item-danger' %>
+          </div>
+        </div>
       <% else %>
-        <%= link_to 'Login', new_user_session_path %>
+        <%= link_to 'Login', new_user_session_path, class: 'nav-link' %>
       <% end %>
     </li>
   </ul>
 </nav>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const trigger  = document.getElementById("profile-trigger");
+    const dropdown = document.getElementById("profile-dropdown");
+    if (!trigger) return;
+
+    trigger.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const open = dropdown.classList.toggle("open");
+      trigger.setAttribute("aria-expanded", open);
+    });
+
+    document.addEventListener("click", function () {
+      dropdown.classList.remove("open");
+      trigger.setAttribute("aria-expanded", false);
+    });
+  });
+</script>

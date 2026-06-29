@@ -1,12 +1,20 @@
-<div class="card flex-container">
-  <div>Name of game:<%= game.game_type %></div>
-  <ul>
-    <% players.each do |player| %>
-      <li><%= player.user.name %></li>
+<div class="lobby-card">
+  <p class="lobby-card-title">♠ <%= game.game_type.capitalize %></p>
+
+  <ul class="lobby-players">
+    <% if players.any? %>
+      <% players.each do |player| %>
+        <li><%= player.user.name %></li>
+      <% end %>
+    <% else %>
+      <li style="opacity:0.5">No players yet</li>
     <% end %>
   </ul>
-  <%= form_with(url: join_game_path(game), method: :post, local: true) do |form| %>
-    <%= form.submit 'Join' %>
-  <% end %>
-  <%= button_to 'Delete', game_path(game), method: :delete, class: 'danger' %>
+
+  <div class="lobby-actions">
+    <%= form_with url: join_game_path(game), method: :post do |form| %>
+      <%= form.submit 'Join', class: 'btn-join' %>
+    <% end %>
+    <%= button_to 'Delete', game_path(game), method: :delete, class: 'btn-quit' %>
+  </div>
 </div>

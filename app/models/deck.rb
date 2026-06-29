@@ -38,7 +38,7 @@ class Deck < ApplicationRecord
     Player.transaction do
       hands.each do |player_id, hand_cards|
         hand_jsonb = sort_cards(hand_cards).to_json
-        Player.where(id: player_id).update_all("hand = '#{hand_jsonb}'::jsonb")
+        Player.where(id: player_id).update_all(["hand = ?::jsonb", hand_jsonb])
       end
     end
   end

@@ -9,6 +9,12 @@ Rails.application.routes.draw do
       post 'join'
       post 'start'
       post 'take_turn'
+      post 'play_cards'
+      post 'pass'
+      patch 'update_settings'
+      post 'leave'
+      post 'start_round'
+      post 'give_cards'
     end
   end  
 

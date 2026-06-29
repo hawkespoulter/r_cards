@@ -1,16 +1,37 @@
 import consumer from "channels/consumer"
 
-consumer.subscriptions.create("GameChannel", {
-  connected() {
-    // Called when the subscription is ready for use on the server
-  },
+let currentSubscription = null;
+let currentGameId = null;
 
-  disconnected() {
-    // Called when the subscription has been terminated by the server
-  },
+document.addEventListener("turbo:load", function () {
+  const container = document.querySelector("[data-game-id]");
+  const gameId    = container?.dataset.gameId;
 
-  received(data) {
-    console.log('Turn was taken should reload');
-    location.reload();
+  // Already subscribed to this game — nothing to do
+  if (gameId && gameId === currentGameId && currentSubscription) return;
+
+  // Clean up previous subscription if switching games or leaving the page
+  if (currentSubscription) {
+    currentSubscription.unsubscribe();
+    currentSubscription = null;
+    currentGameId = null;
   }
+
+  if (!gameId) return;
+
+  currentGameId = gameId;
+  currentSubscription = consumer.subscriptions.create(
+    { channel: "GameChannel", game_id: gameId },
+    {
+      connected() {},
+      disconnected() {},
+      received(data) {
+        if (data.type === "game_ended") {
+          window.location.href = "/games";
+        } else {
+          location.reload();
+        }
+      }
+    }
+  );
 });

@@ -1,7 +1,7 @@
 <div class="hand">
-  <% @current_player.hand.each do |rank| %>
-    <div class="rank">
-      <% rank.each do |card| %>
+  <% hand.each do |rank_group| %>
+    <div class="rank" draggable="true" data-cards="<%= rank_group.to_json %>">
+      <% rank_group.each do |card| %>
         <%= image_tag "cards/#{card}.svg", class: "game-card", data: { card: card } %>
       <% end %>
     </div>

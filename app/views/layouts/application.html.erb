@@ -10,24 +10,13 @@
   </head>
 
   <body>
-    <main>
-      <% if notice %>
-      <p class="alert alert-success"><%= notice %></p>
-      <% end %>
-      <% if alert %>
-        <p class="alert alert-danger"><%= alert %></p>
-      <% end %>
-
-      <style type="text/css">
-        .alert-success{
-          color: green;
-        }
-        .alert-danger{
-          color: red;
-        }
-      </style>
-      <%= render 'layouts/navbar' %>
-      <%= yield %>
-    </main>
+    <%= render 'layouts/navbar' %>
+    <% if notice %>
+      <div class="flash flash-notice"><%= notice %></div>
+    <% end %>
+    <% if alert %>
+      <div class="flash flash-alert"><%= alert %></div>
+    <% end %>
+    <%= yield %>
   </body>
 </html>

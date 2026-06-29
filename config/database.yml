@@ -16,6 +16,4 @@ test:
 
 production:
   <<: *default
-  database: r_cards_production
-  username: r_cards
-  password: <%= ENV["BACKEND_DATABASE_PASSWORD"] %>
+  url: <%= ENV["DATABASE_URL"] %>
