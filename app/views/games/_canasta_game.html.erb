@@ -250,20 +250,6 @@
       </p>
     </div>
 
-    <% if my_peak %>
-      <div class="hand-container peak-hand-own">
-        <p class="hand-label">
-          Your peak hand
-          <span class="player-title-badge" style="margin-left:6px;">Face-down to opponents — picked up after your team's first canasta</span>
-        </p>
-        <div class="canasta-hand-row">
-          <% canasta_sort(my_peak).each do |card| %>
-            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card" %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-
     <% if my_turn %>
       <div class="game-footer" id="canasta-actions" data-turn-phase="<%= turn_phase %>">
         <% if turn_phase == "draw" %>
