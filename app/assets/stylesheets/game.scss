@@ -463,10 +463,11 @@
 .center-table-grid {
   display: grid;
   grid-template-areas:
-    ".    top   ."
-    "left piles right";
+    ".    top    ."
+    "left piles  right"
+    ".    mine   .";
   grid-template-columns: 110px 1fr 110px;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   gap: 10px;
   align-items: center;
   justify-items: center;
@@ -477,6 +478,7 @@
 .peak-top    { grid-area: top; }
 .peak-left   { grid-area: left; }
 .peak-right  { grid-area: right; }
+.peak-mine   { grid-area: mine; }
 
 .peak-hand-box {
   text-align: center;
