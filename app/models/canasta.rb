@@ -14,7 +14,8 @@ class Canasta < ApplicationRecord
     :round_number,
     :team_scores,      # { "0" => Integer, "1" => Integer } cumulative across rounds
     :round_scores,     # { "0" => Integer, "1" => Integer } this round's running tally (display only until scored)
-    :red_threes        # { "0" => [cards...], "1" => [cards...] } collected red 3s per team
+    :red_threes,       # { "0" => [cards...], "1" => [cards...] } collected red 3s per team
+    :last_draw         # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last draw, for the "you got these cards" popup
 
   MELD_THRESHOLDS = [
     [3000, 50],
@@ -114,7 +115,12 @@ class Canasta < ApplicationRecord
 
     hand.concat(drawn_cards)
     player.update!(hand: hand)
-    write_game_state!("draw_pile" => pile, "turn_phase" => "discard")
+    next_seq = (last_draw || {})["seq"].to_i + 1
+    write_game_state!(
+      "draw_pile" => pile,
+      "turn_phase" => "discard",
+      "last_draw" => { "player_id" => player.id, "cards" => drawn_cards, "seq" => next_seq }
+    )
     { success: true, drawn_cards: drawn_cards }
   end
 

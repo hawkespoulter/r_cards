@@ -4,7 +4,12 @@
 <% my_turn       = @game_started && @canasta && !@canasta.game_over? && @game.current_turn == @current_player&.id %>
 <% turn_phase    = @canasta&.turn_phase %>
 
-<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>">
+<% other_players = @game.players.where.not(id: @current_player&.id).order(:id).to_a %>
+<% peak_left  = other_players[0] %>
+<% peak_top   = other_players[1] %>
+<% peak_right = other_players[2] %>
+
+<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>">
 
   <header class="game-header">
     <div class="game-title">♣ Canasta<%= " (Florida Rules)" if @game.florida_rules? %></div>
@@ -104,8 +109,53 @@
       <% end %>
     </div>
 
-    <div class="canasta-table">
-      <div class="canasta-piles">
+    <% if (@canasta.last_draw || {})["cards"].present? %>
+      <div data-last-draw="true"
+           data-draw-player="<%= @canasta.last_draw["player_id"] %>"
+           data-draw-seq="<%= @canasta.last_draw["seq"] %>"
+           data-draw-cards="<%= @canasta.last_draw["cards"].to_json %>"
+           style="display:none;"></div>
+    <% end %>
+
+    <% [opponent_team = 1 - my_team.to_i].each do %>
+      <div class="team-melds opponent-melds">
+        <p class="hand-label">Opposing team's melds (Team <%= opponent_team + 1 %>)</p>
+        <% opp_melds = (@canasta.melds || {})[opponent_team.to_s] || {} %>
+        <% if opp_melds.empty? %>
+          <p class="pile-info">No melds yet</p>
+        <% else %>
+          <% opp_melds.each do |rank, cards| %>
+            <div class="meld-group <%= 'canasta-complete' if cards.length >= 7 %>">
+              <% cards.each do |card| %>
+                <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
+              <% end %>
+              <% if cards.length >= 7 %>
+                <span class="player-title-badge"><%= cards.none? { |c| c == "jo" || c[1..-1].downcase == "2" } ? "Clean Canasta" : "Dirty Canasta" %></span>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="center-table-grid">
+      <% if peak_top %>
+        <div class="peak-hand-box peak-top">
+          <p class="peak-hand-label"><%= peak_top.user.name %> <span class="player-title-badge">Team <%= peak_top.team.to_i + 1 %></span></p>
+          <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+          <p class="peak-hand-count"><%= (peak_top.hand || []).length %> cards</p>
+        </div>
+      <% end %>
+
+      <% if peak_left %>
+        <div class="peak-hand-box peak-left">
+          <p class="peak-hand-label"><%= peak_left.user.name %> <span class="player-title-badge">Team <%= peak_left.team.to_i + 1 %></span></p>
+          <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+          <p class="peak-hand-count"><%= (peak_left.hand || []).length %> cards</p>
+        </div>
+      <% end %>
+
+      <div class="piles-center">
         <div class="draw-pile-block">
           <p class="pile-info">Stock: <%= (@canasta.draw_pile || []).length %> cards</p>
           <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
@@ -120,25 +170,31 @@
         </div>
       </div>
 
-      <% [0, 1].each do |team| %>
-        <div class="team-melds <%= 'my-team' if team == my_team %>">
-          <p class="hand-label">Team <%= team + 1 %> melds<%= " (yours)" if team == my_team %></p>
-          <% team_melds = (@canasta.melds || {})[team.to_s] || {} %>
-          <% if team_melds.empty? %>
-            <p class="pile-info">No melds yet</p>
-          <% else %>
-            <% team_melds.each do |rank, cards| %>
-              <div class="canasta-hand-row meld-group <%= 'canasta-complete' if cards.length >= 7 %>">
-                <% cards.each do |card| %>
-                  <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
-                <% end %>
-                <% if cards.length >= 7 %>
-                  <span class="player-title-badge"><%= cards.none? { |c| c == "jo" || c[1..-1].downcase == "2" } ? "Clean Canasta" : "Dirty Canasta" %></span>
-                <% end %>
-              </div>
-            <% end %>
-          <% end %>
+      <% if peak_right %>
+        <div class="peak-hand-box peak-right">
+          <p class="peak-hand-label"><%= peak_right.user.name %> <span class="player-title-badge">Team <%= peak_right.team.to_i + 1 %></span></p>
+          <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+          <p class="peak-hand-count"><%= (peak_right.hand || []).length %> cards</p>
         </div>
+      <% end %>
+    </div>
+
+    <div class="team-melds my-team-melds">
+      <p class="hand-label">Your team's melds (Team <%= my_team.to_i + 1 %>)</p>
+      <% my_melds = (@canasta.melds || {})[my_team.to_s] || {} %>
+      <% if my_melds.empty? %>
+        <p class="pile-info">No melds yet</p>
+      <% else %>
+        <% my_melds.each do |rank, cards| %>
+          <div class="meld-group <%= 'canasta-complete' if cards.length >= 7 %>">
+            <% cards.each do |card| %>
+              <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
+            <% end %>
+            <% if cards.length >= 7 %>
+              <span class="player-title-badge"><%= cards.none? { |c| c == "jo" || c[1..-1].downcase == "2" } ? "Clean Canasta" : "Dirty Canasta" %></span>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
     </div>
 

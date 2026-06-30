@@ -1,4 +1,25 @@
+import { showCardModal } from "card_modal"
+
 document.addEventListener("turbo:load", function () {
+  // ── "You drew these cards" popup (once per draw) ───────────────────────────
+  const drawInfo = document.querySelector("[data-last-draw]");
+  if (drawInfo) {
+    const container = document.querySelector("[data-game-id]");
+    const gameId     = container?.dataset.gameId;
+    const myPlayerId = container?.dataset.playerId;
+    const drawPlayer = drawInfo.dataset.drawPlayer;
+    const seq        = drawInfo.dataset.drawSeq;
+    const cards      = JSON.parse(drawInfo.dataset.drawCards || "[]");
+
+    if (gameId && myPlayerId && drawPlayer === myPlayerId && cards.length) {
+      const key = `r_cards_canasta_draw_${gameId}_${seq}`;
+      if (sessionStorage.getItem(key) !== "1") {
+        sessionStorage.setItem(key, "1");
+        showCardModal({ title: "You drew these cards", cards });
+      }
+    }
+  }
+
   const hand = document.getElementById("canasta-hand");
   if (!hand) return;
 

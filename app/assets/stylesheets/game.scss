@@ -413,23 +413,104 @@
     }
   }
 
-  &.meld-group {
-    background: rgba(255,255,255,0.04);
-    border-radius: 8px;
-    padding: 8px;
-    margin-bottom: 8px;
-    align-items: center;
+}
 
-    .game-card {
-      width: 50px;
-      min-width: 50px;
-      max-width: 50px;
+// Team melds: cards overlap so only the rank/suit corner of each card peeks
+// out, like a real fanned-out canasta, instead of taking up a full card width.
+.meld-group {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  padding: 8px 16px 8px 8px;
+  margin: 0 8px 8px 0;
+
+  .game-card.meld-card {
+    position: relative;
+    width: 50px;
+    min-width: 50px;
+    max-width: 50px;
+    margin-left: -36px;
+    box-shadow: 1px 0 4px rgba(0,0,0,0.4);
+
+    &:first-child {
+      margin-left: 0;
     }
   }
 
   &.canasta-complete {
     box-shadow: 0 0 0 2px #10b981 inset;
   }
+}
+
+.team-melds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding: 8px 24px;
+}
+
+.team-melds .hand-label {
+  width: 100%;
+}
+
+.opponent-melds {
+  order: -1;
+}
+
+// ── Canasta center table: draw/discard piles flanked by opponents' peek hands ──
+
+.center-table-grid {
+  display: grid;
+  grid-template-areas:
+    ".    top   ."
+    "left piles right";
+  grid-template-columns: 110px 1fr 110px;
+  grid-template-rows: auto auto;
+  gap: 10px;
+  align-items: center;
+  justify-items: center;
+  margin: 10px auto;
+  max-width: 720px;
+}
+
+.peak-top    { grid-area: top; }
+.peak-left   { grid-area: left; }
+.peak-right  { grid-area: right; }
+
+.peak-hand-box {
+  text-align: center;
+}
+
+.peak-hand-label {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin: 0 0 4px;
+}
+
+.peak-hand-stack {
+  width: 60px;
+  height: 80px;
+  margin: 0 auto;
+
+  img {
+    width: 60px;
+    border-radius: 5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+}
+
+.peak-hand-count {
+  font-size: 0.7rem;
+  opacity: 0.55;
+  margin: 4px 0 0;
+}
+
+.piles-center {
+  grid-area: piles;
+  display: flex;
+  justify-content: center;
+  gap: 28px;
 }
 
 .game-card {
