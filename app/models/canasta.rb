@@ -187,7 +187,8 @@ class Canasta < ApplicationRecord
     total_natural = existing.count { |c| !wild?(c) } + naturals.length
     return { error: "A meld cannot contain more wild cards than natural cards" } if total_wild > total_natural
 
-    if existing.empty?
+    team_has_melded = team_melds.values.any?(&:present?)
+    unless team_has_melded
       total_points = cards.sum { |c| card_points(c) }
       threshold    = meld_threshold(player.team)
       return { error: "Initial meld must total at least #{threshold} points (selected: #{total_points})" } \
