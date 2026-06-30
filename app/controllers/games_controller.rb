@@ -70,7 +70,11 @@ class GamesController < ApplicationController
     @scum           = @game.scum
     @current_player = @game.players.find_by(user_id: current_user.id)
 
-    cards = params[:cards].present? ? JSON.parse(params[:cards]) : []
+    cards = begin
+      params[:cards].present? ? JSON.parse(params[:cards]) : []
+    rescue JSON::ParserError
+      []
+    end
     result = @scum.give_cards(@current_player, cards)
 
     if result[:error]
@@ -116,7 +120,11 @@ class GamesController < ApplicationController
     @scum           = @game.scum
     @current_player = @game.players.find_by(user_id: current_user.id)
 
-    cards = params[:cards].present? ? JSON.parse(params[:cards]) : []
+    cards = begin
+      params[:cards].present? ? JSON.parse(params[:cards]) : []
+    rescue JSON::ParserError
+      []
+    end
     result = @scum.play_cards(@current_player, cards)
 
     if result[:error]
