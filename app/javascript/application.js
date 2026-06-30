@@ -2,4 +2,4 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 import "channels"
-import "./click_cards"; // Import your custom JS file
+import "click_cards"
