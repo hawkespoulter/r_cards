@@ -40,7 +40,9 @@ document.addEventListener("turbo:load", function () {
   if (!hand) return;
 
   const totalEl = document.getElementById("meld-running-total");
-  const selected = new Set();
+  // Map<cardIndex, cardCode> — index is unique per DOM position so duplicate
+  // ranks (e.g. two "dt" from different decks) are tracked independently.
+  const selected = new Map();
 
   function cardPoints(card) {
     if (card === "jo") return 50;
@@ -58,14 +60,18 @@ document.addEventListener("turbo:load", function () {
     totalEl.textContent = total;
   }
 
-  hand.querySelectorAll(".game-card").forEach((cardEl) => {
+  function selectedCards() {
+    return Array.from(selected.values());
+  }
+
+  hand.querySelectorAll(".game-card").forEach((cardEl, idx) => {
     cardEl.addEventListener("click", function () {
       const card = this.dataset.card;
-      if (selected.has(card)) {
-        selected.delete(card);
+      if (selected.has(idx)) {
+        selected.delete(idx);
         this.classList.remove("selected");
       } else {
-        selected.add(card);
+        selected.set(idx, card);
         this.classList.add("selected");
       }
       refreshTotal();
@@ -76,7 +82,7 @@ document.addEventListener("turbo:load", function () {
   const pickupInput = document.getElementById("pickup-cards-input");
   if (pickupForm && pickupInput) {
     pickupForm.addEventListener("submit", function () {
-      pickupInput.value = JSON.stringify(Array.from(selected));
+      pickupInput.value = JSON.stringify(selectedCards());
     });
   }
 
@@ -88,7 +94,7 @@ document.addEventListener("turbo:load", function () {
         e.preventDefault();
         return;
       }
-      meldInput.value = JSON.stringify(Array.from(selected));
+      meldInput.value = JSON.stringify(selectedCards());
     });
   }
 
@@ -101,7 +107,7 @@ document.addEventListener("turbo:load", function () {
         alert("Select exactly one card to discard.");
         return;
       }
-      discardInput.value = Array.from(selected)[0];
+      discardInput.value = selectedCards()[0];
     });
   }
 });
