@@ -17,7 +17,8 @@
     :trading_phase,      # true during between-round card exchange
     :pending_givers,     # Player IDs who still need to give cards
     :previous_rankings,  # Rankings from the completed round (string keys)
-    :round_number        # Integer, starts at 1
+    :round_number,       # Integer, starts at 1
+    :trade_log           # Hash of player_id (string) => { "gave" => [...], "received" => [...] }
 
   after_create :initialize_state
 
@@ -60,16 +61,16 @@
     remaining_active = active_player_ids
     if remaining_active.length <= 1
       write_game_state!("finished_players" => finished_player_ids + remaining_active)
-      return { game_over: true, rankings: rankings }
+      return { game_over: true, rankings: rankings, finished_player_name: player_finished ? player.user.name : nil }
     end
 
     if aces_played
       player_finished ? advance_turn(from_player_id: player.id) : set_turn(player.id)
-      return { success: true }
+      return { success: true, finished_player_name: player_finished ? player.user.name : nil }
     end
 
     advance_turn(from_player_id: player.id)
-    { success: true }
+    { success: true, finished_player_name: player_finished ? player.user.name : nil }
   end
 
   def pass_turn(player)
@@ -131,6 +132,10 @@
     add_cards_to_hand(pres_player, best_from_scum)
 
     pending = [pres_id]
+    log = {
+      scum_id.to_s => { "gave" => best_from_scum, "received" => [] },
+      pres_id.to_s => { "gave" => [], "received" => best_from_scum }
+    }
 
     # Force Vice Scum to give their best card to VP (4+ players, distinct roles)
     if vp_id && vs_id && vp_id != vs_id
@@ -140,6 +145,8 @@
       vs_player.update!(hand: remove_cards_from_hand(vs_player.hand, best_from_vs))
       add_cards_to_hand(vp_player, best_from_vs)
       pending << vp_id
+      log[vs_id.to_s] = { "gave" => best_from_vs, "received" => [] }
+      log[vp_id.to_s] = { "gave" => [], "received" => best_from_vs }
     end
 
     write_game_state!(
@@ -152,7 +159,8 @@
       "trading_phase"     => true,
       "pending_givers"    => pending,
       "previous_rankings" => old_rankings.map { |r| r.transform_keys(&:to_s) },
-      "round_number"      => old_round + 1
+      "round_number"      => old_round + 1,
+      "trade_log"         => log
     )
 
     set_turn(pres_id)
@@ -191,7 +199,11 @@
     add_cards_to_hand(target_player, cards)
 
     new_pending = (pending_givers || []).map(&:to_i).reject { |id| id == player.id }
-    write_game_state!("pending_givers" => new_pending)
+
+    log = (trade_log || {}).dup
+    log[player.id.to_s] = (log[player.id.to_s] || {}).merge("gave" => cards)
+    log[target_id.to_s] = (log[target_id.to_s] || {}).merge("received" => cards)
+    write_game_state!("pending_givers" => new_pending, "trade_log" => log)
 
     if new_pending.empty?
       pres_id = prev_ranks[0]["player_id"].to_i

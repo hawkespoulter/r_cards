@@ -18,7 +18,7 @@ class GamesController < ApplicationController
   end
 
   def new
-    @game = Game.new
+    @game = Game.new(pass_locks_out: true, leader_can_continue: true)
   end
 
   def create
@@ -46,6 +46,7 @@ class GamesController < ApplicationController
   def leave
     @game = Game.find(params[:id])
     @game.players.find_by(user_id: current_user.id)&.destroy
+    ActionCable.server.broadcast "lobby", { message: "update" }
     redirect_to games_path
   end
 
@@ -80,7 +81,7 @@ class GamesController < ApplicationController
     if result[:error]
       redirect_to @game, alert: result[:error]
     else
-      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update', finished_player_name: result[:finished_player_name] }
       redirect_to @game
     end
   end

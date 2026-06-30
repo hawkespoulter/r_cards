@@ -56,27 +56,45 @@ document.addEventListener("turbo:load", function () {
     if (playBtn) playBtn.disabled = true;
 
   } else {
-    // Play phase: single rank-group select
-    let selectedRank = null;
+    // Play phase: select individual cards of a single rank (allows playing
+    // fewer cards than the full stack to match what the pile requires).
+    const selectedCards = new Set();
+    let selectedRankEl  = null;
+
+    function refreshSelection() {
+      input.value = JSON.stringify(Array.from(selectedCards));
+      if (playBtn) playBtn.disabled = selectedCards.size === 0;
+    }
 
     rankGroups.forEach((rankEl) => {
-      rankEl.addEventListener("click", function () {
-        if (selectedRank === this) {
-          this.classList.remove("selected");
-          selectedRank = null;
-          input.value  = "[]";
-          if (playBtn) playBtn.disabled = true;
-          return;
-        }
-        if (selectedRank) selectedRank.classList.remove("selected");
-        this.classList.add("selected");
-        selectedRank = this;
-        input.value  = this.dataset.cards || "[]";
-        if (playBtn) playBtn.disabled = false;
+      const cardEls = rankEl.querySelectorAll(".game-card");
+
+      cardEls.forEach((cardEl) => {
+        cardEl.addEventListener("click", function (e) {
+          e.stopPropagation();
+          const card = this.dataset.card;
+
+          if (selectedRankEl && selectedRankEl !== rankEl) {
+            selectedRankEl.querySelectorAll(".game-card.selected").forEach(el => el.classList.remove("selected"));
+            selectedCards.clear();
+          }
+          selectedRankEl = rankEl;
+
+          if (selectedCards.has(card)) {
+            selectedCards.delete(card);
+            this.classList.remove("selected");
+          } else {
+            selectedCards.add(card);
+            this.classList.add("selected");
+          }
+
+          if (selectedCards.size === 0) selectedRankEl = null;
+          refreshSelection();
+        });
       });
     });
 
-    if (playBtn) playBtn.disabled = true;
+    refreshSelection();
   }
 
   // ── Drag and drop (play phase only) ───────────────────────────────────────

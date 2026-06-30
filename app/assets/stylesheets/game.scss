@@ -1,3 +1,37 @@
+// ── Finish toast ─────────────────────────────────────────────────────────────
+
+.finish-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  background: #1f2937;
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  z-index: 1000;
+  pointer-events: none;
+
+  &.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.trade-exchange-info {
+  text-align: center;
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  opacity: 0.85;
+
+  p { margin: 2px 0; }
+}
+
 // ── Game layout ──────────────────────────────────────────────────────────────
 
 .game-container {
@@ -58,6 +92,10 @@
   &.player-finished {
     opacity: 0.5;
   }
+
+  &.player-passed {
+    background: rgba(220, 38, 38, 0.25);
+  }
 }
 
 .card-count {
@@ -69,6 +107,13 @@
   font-size: 0.7rem;
   font-style: italic;
   opacity: 0.9;
+}
+
+.player-passed-badge {
+  font-size: 0.7rem;
+  font-style: italic;
+  opacity: 0.85;
+  color: #fca5a5;
 }
 
 .btn-settings {
@@ -292,7 +337,13 @@
   min-width: 80px;
   max-width: 80px;
   border-radius: 5px;
-  transition: box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+
+  &.selected {
+    transform: translateY(-12px);
+    box-shadow: 0 0 0 3px #fbbf24, 0 8px 20px rgba(0,0,0,0.45);
+  }
 }
 
 // ── Footer / actions ──────────────────────────────────────────────────────────

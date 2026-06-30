@@ -9,16 +9,21 @@
     <div class="game-title">♠ <%= @game.game_type.capitalize %></div>
 
     <div class="players-list">
+      <% passed_ids = (@scum&.passed_this_round || []).map(&:to_i) %>
       <% all_players.each do |player| %>
         <% is_active  = @game.current_turn && player.id == @game.current_turn %>
         <% p_finished = finished_ids.include?(player.id) %>
+        <% p_passed   = passed_ids.include?(player.id) %>
         <% ranking    = @scum&.rankings&.find { |r| r[:player_id] == player.id } %>
-        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'player-finished' if p_finished %>">
+        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'player-finished' if p_finished %> <%= 'player-passed' if p_passed %>">
           <span class="player-name">
             <%= player.user_id == current_user.id ? "You" : player.user.name %>
           </span>
           <% if @game_started %>
             <span class="card-count">· <%= (player.hand || []).flatten.length %> cards</span>
+          <% end %>
+          <% if p_passed && !p_finished %>
+            <span class="player-passed-badge">· Passed</span>
           <% end %>
           <% if ranking %>
             <span class="player-title-badge">· <%= ranking[:title] %></span>
@@ -100,6 +105,22 @@
         </div>
       </div>
 
+      <%
+        my_log      = (@scum.trade_log || {})[@current_player&.id.to_s] || {}
+        my_gave     = my_log["gave"] || []
+        my_received = my_log["received"] || []
+      %>
+      <% if my_gave.any? || my_received.any? %>
+        <div class="trade-exchange-info">
+          <% if my_gave.any? %>
+            <p>You gave: <%= my_gave.join(", ") %></p>
+          <% end %>
+          <% if my_received.any? %>
+            <p>You received: <%= my_received.join(", ") %></p>
+          <% end %>
+        </div>
+      <% end %>
+
       <% if is_my_give && required_give %>
         <div class="status-bar">
           <span class="your-turn-text">Choose <%= required_give %> card(s) to give to <%= target_name %></span>
@@ -122,8 +143,9 @@
         <div class="status-bar">
           Waiting for <strong><%= giving_name %></strong> to give their cards…
         </div>
-        <div class="hand-container" style="align-items:center;justify-content:center;flex:1;">
-          <p style="opacity:0.5;padding:40px 0;">Your hand is being prepared for the new round.</p>
+        <div class="hand-container">
+          <p class="hand-label">Your hand</p>
+          <%= render partial: 'hand', locals: { hand: @current_player.hand } %>
         </div>
         <div class="game-footer"></div>
       <% end %>
