@@ -10,6 +10,7 @@ class GamesController < ApplicationController
     @current_player = @game.players.find_by(user_id: current_user.id)
     @game_started   = @game.turn_order.present?
     @scum           = @game.scum if @game.scum?
+    @canasta        = @game.canasta if @game.canasta?
 
     if @game_started
       @current_turn_name = @game.players.find(@game.current_turn).user.name
@@ -105,6 +106,10 @@ class GamesController < ApplicationController
     is_host = @game.players.order(:created_at).first&.user_id == current_user.id
     return redirect_to @game, alert: "Only the host can start the game." unless is_host
 
+    if @game.canasta? && @game.players.count != 4
+      return redirect_to @game, alert: "Canasta needs exactly 4 players to start."
+    end
+
     @game.start_game
     ActionCable.server.broadcast "game_#{@game.id}", { message: 'Game started!' }
     ActionCable.server.broadcast "lobby", { message: "update" }
@@ -165,10 +170,88 @@ class GamesController < ApplicationController
     end
   end
 
+  def draw
+    @game           = Game.find(params[:id])
+    @canasta        = @game.canasta
+    @current_player = @game.players.find_by(user_id: current_user.id)
+
+    result = @canasta.draw(@current_player)
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
+      redirect_to @game
+    end
+  end
+
+  def pickup_discard
+    @game           = Game.find(params[:id])
+    @canasta        = @game.canasta
+    @current_player = @game.players.find_by(user_id: current_user.id)
+
+    meld_cards = begin
+      params[:meld_cards].present? ? JSON.parse(params[:meld_cards]) : []
+    rescue JSON::ParserError
+      []
+    end
+    result = @canasta.pickup_discard(@current_player, meld_cards)
+
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
+      ActionCable.server.broadcast "game_#{@game.id}", {
+        message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank]
+      }
+      redirect_to @game
+    end
+  end
+
+  def meld
+    @game           = Game.find(params[:id])
+    @canasta        = @game.canasta
+    @current_player = @game.players.find_by(user_id: current_user.id)
+
+    cards = begin
+      params[:cards].present? ? JSON.parse(params[:cards]) : []
+    rescue JSON::ParserError
+      []
+    end
+    result = @canasta.meld(@current_player, cards)
+
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
+      ActionCable.server.broadcast "game_#{@game.id}", {
+        message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank]
+      }
+      redirect_to @game
+    end
+  end
+
+  def discard
+    @game           = Game.find(params[:id])
+    @canasta        = @game.canasta
+    @current_player = @game.players.find_by(user_id: current_user.id)
+
+    result = @canasta.discard(@current_player, params[:card])
+
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
+      ActionCable.server.broadcast "game_#{@game.id}", {
+        message: 'update',
+        round_ended: result[:round_ended],
+        game_over: result[:game_over],
+        winning_team: result[:game_over] && @canasta.reload.winning_team
+      }
+      redirect_to @game
+    end
+  end
+
   private
 
   def game_params
-    params.require(:game).permit(:game_type, :pass_locks_out)
+    params.require(:game).permit(:game_type, :pass_locks_out, :florida_rules)
   end
 
   def settings_params

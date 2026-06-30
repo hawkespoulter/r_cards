@@ -1,0 +1,184 @@
+<% my_team       = @current_player&.team %>
+<% teammate      = my_team && @game.players.where(team: my_team).where.not(id: @current_player&.id).first %>
+<% opponents     = my_team ? @game.players.where.not(team: my_team) : [] %>
+<% my_turn       = @game_started && @canasta && !@canasta.game_over? && @game.current_turn == @current_player&.id %>
+<% turn_phase    = @canasta&.turn_phase %>
+
+<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>">
+
+  <header class="game-header">
+    <div class="game-title">♣ Canasta<%= " (Florida Rules)" if @game.florida_rules? %></div>
+
+    <div class="players-list">
+      <% [0, 1].each do |team| %>
+        <div class="team-score-chip <%= 'my-team' if team == my_team %>">
+          Team <%= team + 1 %><%= " (you)" if team == my_team %> —
+          <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
+        </div>
+      <% end %>
+      <% @game.players.order(:created_at).each do |player| %>
+        <% is_active = @game.current_turn && player.id == @game.current_turn %>
+        <div class="player-chip <%= 'active-turn' if is_active %>">
+          <span class="player-name">
+            <%= player.user_id == current_user.id ? "You" : player.user.name %>
+            <span class="player-title-badge">· Team <%= player.team.to_i + 1 %></span>
+          </span>
+          <% if @game_started %>
+            <span class="card-count">· <%= (player.hand || []).length %> cards</span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @is_host %>
+      <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
+    <% end %>
+    <% if @is_host %>
+      <%= button_to 'End Game', game_path(@game), method: :delete, class: 'btn-quit',
+            form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
+    <% else %>
+      <%= button_to 'Leave', leave_game_path(@game), method: :post, class: 'btn-quit' %>
+    <% end %>
+  </header>
+
+  <% if @is_host && !@game_started %>
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-panel-inner">
+      <p class="settings-heading">Game Settings</p>
+      <%= form_with url: update_settings_game_path(@game), method: :patch, data: { turbo: false } do |f| %>
+        <label class="toggle-label">
+          <%= f.check_box :florida_rules, checked: @game.florida_rules?, class: "toggle-input" %>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">
+            Florida Rules
+            <span class="toggle-hint">15-card hands and an extra joker per deck.</span>
+          </span>
+        </label>
+        <%= f.submit "Save", class: "btn-settings-save" %>
+      <% end %>
+    </div>
+  </div>
+  <% end %>
+
+  <% if !@game_started %>
+
+    <div class="pregame">
+      <p>Waiting for players to join… (<%= @game.players.count %>/4)</p>
+      <p>Canasta needs exactly 4 players, seated into 2 fixed teams (alternating join order).</p>
+      <% if @is_host %>
+        <%= button_to 'Start Game', start_game_path(@game), method: :post,
+              class: 'btn-start',
+              disabled: @game.players.count != 4 %>
+      <% else %>
+        <p style="opacity:0.5;font-size:0.9rem;">Waiting for the host to start the game…</p>
+      <% end %>
+    </div>
+
+  <% elsif @canasta&.game_over? %>
+
+    <div class="game-over">
+      <h2>Game Over!</h2>
+      <ol class="rankings-list">
+        <% [0, 1].each do |team| %>
+          <li>
+            <span class="ranking-title">Team <%= team + 1 %><%= " (you)" if team == my_team %></span>
+            <span><%= (@canasta.team_scores || {})[team.to_s] || 0 %> pts</span>
+          </li>
+        <% end %>
+      </ol>
+      <p><strong>Team <%= @canasta.winning_team.to_i + 1 %> wins!</strong></p>
+      <div class="game-over-actions">
+        <%= link_to 'Back to Lobby', games_path, class: 'btn-quit', style: 'display:inline-block;padding:10px 24px;border-radius:6px;text-decoration:none;' %>
+      </div>
+    </div>
+
+  <% else %>
+
+    <div class="status-bar">
+      <% if my_turn %>
+        <span class="your-turn-text">⚡ Your turn! —
+          <%= turn_phase == "draw" ? "Draw from the stock, or pick up the discard pile." : "Meld if you can, then discard to end your turn." %>
+        </span>
+      <% else %>
+        Waiting for <strong><%= @current_turn_name %></strong>…
+      <% end %>
+    </div>
+
+    <div class="canasta-table">
+      <div class="canasta-piles">
+        <div class="draw-pile-block">
+          <p class="pile-info">Stock: <%= (@canasta.draw_pile || []).length %> cards</p>
+          <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+        </div>
+        <div class="discard-pile-block">
+          <p class="pile-info">Discard <%= @canasta.frozen ? "(frozen ❄)" : "" %></p>
+          <% if (@canasta.discard_pile || []).any? %>
+            <%= image_tag "cards/#{@canasta.discard_pile.last}.svg", class: "pile-card" %>
+          <% else %>
+            <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+          <% end %>
+        </div>
+      </div>
+
+      <% [0, 1].each do |team| %>
+        <div class="team-melds <%= 'my-team' if team == my_team %>">
+          <p class="hand-label">Team <%= team + 1 %> melds<%= " (yours)" if team == my_team %></p>
+          <% team_melds = (@canasta.melds || {})[team.to_s] || {} %>
+          <% if team_melds.empty? %>
+            <p class="pile-info">No melds yet</p>
+          <% else %>
+            <% team_melds.each do |rank, cards| %>
+              <div class="rank meld-group <%= 'canasta-complete' if cards.length >= 7 %>">
+                <% cards.each do |card| %>
+                  <%= image_tag "cards/#{card}.svg", class: "game-card meld-card" %>
+                <% end %>
+                <% if cards.length >= 7 %>
+                  <span class="player-title-badge"><%= cards.none? { |c| c == "jo" || c[1..-1].downcase == "2" } ? "Clean Canasta" : "Dirty Canasta" %></span>
+                <% end %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="hand-container">
+      <p class="hand-label">Your hand</p>
+      <div class="rank" id="canasta-hand">
+        <% (@current_player.hand || []).each do |card| %>
+          <%= image_tag "cards/#{card}.svg", class: "game-card", data: { card: card } %>
+        <% end %>
+      </div>
+      <p class="pile-info" id="meld-selection-info" data-threshold="<%= my_turn && turn_phase == 'discard' ? 0 : 0 %>">
+        Selected total: <span id="meld-running-total">0</span> pts
+        <% if my_turn %>
+          — initial meld for your team needs at least <strong><%= meld_threshold = ((@canasta.team_scores || {})[my_team.to_s].to_i) %></strong> pts
+          (threshold scales with score; see status bar)
+        <% end %>
+      </p>
+    </div>
+
+    <% if my_turn %>
+      <div class="game-footer" id="canasta-actions" data-turn-phase="<%= turn_phase %>">
+        <% if turn_phase == "draw" %>
+          <%= button_to "Draw Card", draw_game_path(@game), method: :post, class: "btn-play" %>
+          <%= form_with url: pickup_discard_game_path(@game), method: :post, html: { id: "pickup-form" } do |f| %>
+            <%= f.hidden_field :meld_cards, id: "pickup-cards-input", value: "" %>
+            <%= f.submit "Pick Up Pile (with selected cards)", class: "btn-play", id: "pickup-btn" %>
+          <% end %>
+        <% else %>
+          <%= form_with url: meld_game_path(@game), method: :post, html: { id: "meld-form" } do |f| %>
+            <%= f.hidden_field :cards, id: "meld-cards-input", value: "" %>
+            <%= f.submit "Meld Selected", class: "btn-play", id: "meld-btn" %>
+          <% end %>
+          <%= form_with url: discard_game_path(@game), method: :post, html: { id: "discard-form" } do |f| %>
+            <%= f.hidden_field :card, id: "discard-card-input", value: "" %>
+            <%= f.submit "Discard Selected", class: "btn-pass", id: "discard-btn" %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+
+  <% end %>
+
+</div>

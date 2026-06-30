@@ -40,6 +40,20 @@
         </label>
       </div>
 
+      <div class="settings-section" id="canasta-settings" style="display:none;">
+        <p class="settings-heading">Canasta Settings</p>
+        <p class="toggle-hint">Canasta needs exactly 4 players, seated into 2 fixed teams.</p>
+
+        <label class="toggle-label">
+          <%= form.check_box :florida_rules, class: "toggle-input" %>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">
+            Florida Rules
+            <span class="toggle-hint">15-card hands instead of 13, plus an extra joker per deck.</span>
+          </span>
+        </label>
+      </div>
+
       <%= form.submit "Create Game", class: "btn-create" %>
     <% end %>
   </div>
@@ -47,12 +61,14 @@
 
 <script>
   document.addEventListener("turbo:load", function () {
-    const select   = document.getElementById("game-type-select");
-    const scumOpts = document.getElementById("scum-settings");
-    if (!select || !scumOpts) return;
+    const select      = document.getElementById("game-type-select");
+    const scumOpts    = document.getElementById("scum-settings");
+    const canastaOpts = document.getElementById("canasta-settings");
+    if (!select) return;
 
     function updateSettings() {
-      scumOpts.style.display = select.value === "scum" ? "block" : "none";
+      if (scumOpts)    scumOpts.style.display    = select.value === "scum"    ? "block" : "none";
+      if (canastaOpts) canastaOpts.style.display = select.value === "canasta" ? "block" : "none";
     }
 
     select.addEventListener("change", updateSettings);

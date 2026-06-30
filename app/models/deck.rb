@@ -13,10 +13,11 @@ class Deck < ApplicationRecord
 
   before_create :initialize_deck
 
-  def initialize_deck(deck_count: 1)
+  def initialize_deck(deck_count: 1, joker_count: 0)
     self.cards = []
     deck_count.times do
       self.cards.concat(DECK)
+      joker_count.times { self.cards << "jo" }
     end
     shuffle
   end

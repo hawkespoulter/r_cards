@@ -45,7 +45,25 @@ document.addEventListener("turbo:load", function () {
 
         playCardSound();
 
-        if (data.aces_played_by) {
+        if (data.canasta_completed) {
+          showCardModal({
+            title: `🃏 Canasta completed! (${data.canasta_rank})`,
+            confetti: true
+          });
+          setTimeout(() => location.reload(), 1600);
+        } else if (data.game_over) {
+          showCardModal({
+            title: `🏆 Team ${parseInt(data.winning_team, 10) + 1} wins the game!`,
+            confetti: true
+          });
+          setTimeout(() => location.reload(), 1600);
+        } else if (data.round_ended) {
+          showCardModal({
+            title: `Round over — new hands dealt!`,
+            confetti: true
+          });
+          setTimeout(() => location.reload(), 1600);
+        } else if (data.aces_played_by) {
           showCardModal({
             title: `🔥 ${data.aces_played_by} threw down Aces!`,
             subtitle: "Pile cleared",

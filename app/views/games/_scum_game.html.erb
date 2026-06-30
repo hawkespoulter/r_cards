@@ -1,0 +1,273 @@
+<% finished_ids    = (@scum&.finished_players || []).map(&:to_i) %>
+<% is_me_finished = finished_ids.include?(@current_player&.id) %>
+<% all_players    = (@players + [@current_player]).compact.sort_by(&:id) %>
+
+<% my_turn = @game_started && !@scum&.game_over? && @game.current_turn == @current_player&.id && !is_me_finished %>
+<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>">
+
+  <header class="game-header">
+    <div class="game-title">♠ <%= @game.game_type.capitalize %></div>
+
+    <div class="players-list">
+      <% passed_ids = (@scum&.passed_this_round || []).map(&:to_i) %>
+      <% all_players.each do |player| %>
+        <% is_active  = @game.current_turn && player.id == @game.current_turn %>
+        <% p_finished = finished_ids.include?(player.id) %>
+        <% p_passed   = passed_ids.include?(player.id) %>
+        <% ranking    = @scum&.rankings&.find { |r| r[:player_id] == player.id } %>
+        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'player-finished' if p_finished %> <%= 'player-passed' if p_passed %>">
+          <span class="player-name">
+            <%= player.user_id == current_user.id ? "You" : player.user.name %>
+          </span>
+          <% if @game_started %>
+            <span class="card-count">· <%= (player.hand || []).flatten.length %> cards</span>
+          <% end %>
+          <% if p_passed && !p_finished %>
+            <span class="player-passed-badge">· Passed</span>
+          <% end %>
+          <% if ranking %>
+            <span class="player-title-badge">· <%= ranking[:title] %></span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @is_host %>
+      <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
+    <% end %>
+    <% if @is_host %>
+      <%= button_to 'End Game', game_path(@game), method: :delete, class: 'btn-quit',
+            form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
+    <% else %>
+      <%= button_to 'Leave', leave_game_path(@game), method: :post, class: 'btn-quit' %>
+    <% end %>
+  </header>
+
+  <% if @is_host %>
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-panel-inner">
+      <p class="settings-heading">Game Settings</p>
+      <%= form_with url: update_settings_game_path(@game), method: :patch, data: { turbo: false } do |f| %>
+        <label class="toggle-label">
+          <%= f.check_box :pass_locks_out, checked: @game.pass_locks_out?, class: "toggle-input" %>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">
+            Pass locks you out until end of round
+            <span class="toggle-hint">Passing skips you for the rest of the round until the pile clears.</span>
+          </span>
+        </label>
+        <label class="toggle-label">
+          <%= f.check_box :leader_can_continue, checked: @game.leader_can_continue?, class: "toggle-input" %>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-text">
+            Leader can continue after everyone passes
+            <span class="toggle-hint">When everyone passes, the leader may play higher on their own pile or pass to clear it.</span>
+          </span>
+        </label>
+        <%= f.submit "Save", class: "btn-settings-save" %>
+      <% end %>
+    </div>
+  </div>
+  <% end %>
+
+  <% if @scum&.trading_phase %>
+
+    <%
+      prev_ranks    = (@scum.previous_rankings || [])
+      total_p       = prev_ranks.length
+      give_n        = total_p >= 4 ? 2 : 1
+      my_prev_idx   = prev_ranks.index { |r| r["player_id"].to_i == @current_player&.id }
+      is_my_give    = @game.current_turn == @current_player&.id
+
+      if my_prev_idx == 0
+        required_give = give_n
+        target_name   = prev_ranks.dig(-1, "name")
+      elsif my_prev_idx == 1 && total_p >= 4
+        required_give = 1
+        target_name   = prev_ranks.dig(-2, "name")
+      end
+    %>
+
+    <div class="trading-phase">
+      <div class="trading-header">
+        <h2>Round <%= @scum.round_number %> — Card Exchange</h2>
+        <p class="trading-subtitle">
+          Last round's Scum must give their best card(s) up; President and VP choose what to give back.
+        </p>
+
+        <div class="trading-summary">
+          <% prev_ranks.each do |r| %>
+            <div class="trade-row">
+              <span class="trade-name"><%= r["name"] %></span>
+              <span class="trade-title-badge"><%= r["title"] %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%
+        my_log      = (@scum.trade_log || {})[@current_player&.id.to_s] || {}
+        my_gave     = my_log["gave"] || []
+        my_received = my_log["received"] || []
+      %>
+      <% if my_gave.any? || my_received.any? %>
+        <div class="trade-exchange-info"
+             data-trade-info="true"
+             data-round="<%= @scum.round_number %>"
+             data-received-cards="<%= my_received.to_json %>">
+          <% if my_gave.any? %>
+            <div class="trade-card-row">
+              <span>You gave:</span>
+              <% my_gave.each do |card| %>
+                <%= image_tag "cards/#{card}.svg", class: "trade-card-img" %>
+              <% end %>
+            </div>
+          <% end %>
+          <% if my_received.any? %>
+            <div class="trade-card-row">
+              <span>You received:</span>
+              <% my_received.each do |card| %>
+                <%= image_tag "cards/#{card}.svg", class: "trade-card-img" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if is_my_give && required_give %>
+        <div class="status-bar">
+          <span class="your-turn-text">Choose <%= required_give %> card(s) to give to <%= target_name %></span>
+        </div>
+
+        <div class="hand-container">
+          <p class="hand-label">Select <%= required_give %> card(s) to give to <%= target_name %></p>
+          <%= render partial: 'hand', locals: { hand: @current_player.hand } %>
+        </div>
+
+        <div class="game-footer">
+          <%= form_with url: give_cards_game_path(@game), method: :post,
+                html: { id: "play-form" }, data: { give_count: required_give } do |f| %>
+            <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
+            <%= f.submit "Give Cards", class: "btn-play", id: "play-cards-btn" %>
+          <% end %>
+        </div>
+      <% else %>
+        <% giving_name = @game.current_turn ? @game.players.find(@game.current_turn).user.name : "Someone" %>
+        <div class="status-bar">
+          Waiting for <strong><%= giving_name %></strong> to give their cards…
+        </div>
+        <div class="hand-container">
+          <p class="hand-label">Your hand</p>
+          <%= render partial: 'hand', locals: { hand: @current_player.hand } %>
+        </div>
+        <div class="game-footer"></div>
+      <% end %>
+    </div>
+
+  <% elsif @scum&.game_over? %>
+
+    <div class="game-over">
+      <h2>Round <%= @scum.round_number %> Complete!</h2>
+      <ol class="rankings-list">
+        <% @scum.rankings.each do |r| %>
+          <li>
+            <span class="ranking-title"><%= r[:title] %></span>
+            <span>
+              <%= r[:name] %>
+              <% if r[:player_id] == @current_player&.id %>
+                <span class="ranking-you">(you)</span>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ol>
+      <div class="game-over-actions">
+        <% if @is_host %>
+          <%= button_to 'Play Another Round', start_round_game_path(@game), method: :post, class: 'btn-start' %>
+        <% else %>
+          <p class="waiting-hint">Waiting for the host to start the next round…</p>
+        <% end %>
+        <%= link_to 'Back to Lobby', games_path, class: 'btn-quit', style: 'display:inline-block;padding:10px 24px;border-radius:6px;text-decoration:none;' %>
+      </div>
+    </div>
+
+  <% elsif @game_started %>
+
+    <div class="status-bar">
+      <% if @game.current_turn == @current_player&.id && !is_me_finished %>
+        <span class="your-turn-text">⚡ Your turn!</span>
+        <% if @scum&.play_pile&.any? %>
+          <% everyone_passed = @game.leader_can_continue? && @current_player&.id == @scum.last_played_by&.to_i %>
+          <% if everyone_passed %>
+            — everyone passed. Play higher to continue, or pass to clear the pile and lead fresh
+          <% else %>
+            — drag <%= @scum.play_pile_count %> card(s) of higher rank onto the pile, or pass
+          <% end %>
+        <% else %>
+          — drag any rank group onto the pile to lead
+        <% end %>
+      <% elsif is_me_finished %>
+        You've finished — waiting for the rest to play out
+      <% else %>
+        Waiting for <strong><%= @current_turn_name %></strong>…
+      <% end %>
+    </div>
+
+    <div class="play-pile" id="play-pile">
+      <% if @scum&.play_pile&.any? %>
+        <div class="pile-cards">
+          <% @scum.play_pile.each do |card| %>
+            <%= image_tag "cards/#{card}.svg", class: "pile-card" %>
+          <% end %>
+        </div>
+        <p class="pile-info">
+          Played by <%= @game.players.find(@scum.last_played_by).user.name %>
+        </p>
+      <% else %>
+        <div class="pile-cards">
+          <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+        </div>
+        <p class="pile-info">Pile is empty — lead with anything</p>
+      <% end %>
+    </div>
+
+    <div class="hand-container">
+      <% if is_me_finished %>
+        <p class="hand-label">You've finished this round!</p>
+      <% else %>
+        <p class="hand-label">Your hand</p>
+        <%= render partial: 'hand', locals: { hand: @current_player.hand } %>
+      <% end %>
+    </div>
+
+    <div class="game-footer">
+      <% if @game.current_turn == @current_player&.id && !is_me_finished %>
+        <%= form_with url: play_cards_game_path(@game), method: :post, html: { id: "play-form" } do |f| %>
+          <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
+          <%= f.submit "Play Cards", class: "btn-play", id: "play-cards-btn" %>
+        <% end %>
+        <% if @scum&.play_pile&.any? %>
+          <%= button_to "Pass", pass_game_path(@game), method: :post, class: "btn-pass" %>
+        <% end %>
+      <% end %>
+    </div>
+
+  <% else %>
+
+    <div class="pregame">
+      <p>Waiting for players to join…</p>
+      <% if all_players.length < 2 %>
+        <p>You need at least 2 players to start.</p>
+      <% end %>
+      <% if @is_host %>
+        <%= button_to 'Start Game', start_game_path(@game), method: :post,
+              class: 'btn-start',
+              disabled: all_players.length < 2 %>
+      <% else %>
+        <p style="opacity:0.5;font-size:0.9rem;">Waiting for the host to start the game…</p>
+      <% end %>
+    </div>
+
+  <% end %>
+
+</div>

@@ -15,6 +15,10 @@ Rails.application.routes.draw do
       post 'leave'
       post 'start_round'
       post 'give_cards'
+      post 'draw'
+      post 'pickup_discard'
+      post 'discard'
+      post 'meld'
     end
   end  
 
