@@ -47,6 +47,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
     @game.players.find_by(user_id: current_user.id)&.destroy
     ActionCable.server.broadcast "lobby", { message: "update" }
+    ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
     redirect_to games_path
   end
 
@@ -95,6 +96,7 @@ class GamesController < ApplicationController
 
     @game.players.create(user: current_user)
     ActionCable.server.broadcast "lobby", { message: "update" }
+    ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
     redirect_to @game
   end
 

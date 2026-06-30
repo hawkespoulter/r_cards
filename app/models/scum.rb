@@ -42,6 +42,7 @@
     end
 
     aces_played     = ranks.first == CARD_VALUES["a"]
+    fresh_hand      = play_pile.blank? || aces_played
     new_hand        = remove_cards_from_hand(player.hand, cards)
     player_finished = new_hand.flatten.empty?
 
@@ -49,12 +50,15 @@
 
     new_finished = player_finished ? finished_player_ids + [player.id] : finished_player_ids
 
+    # Players who already passed this hand stay locked out even when someone
+    # else extends the pile — only a genuinely new hand (fresh lead or an
+    # ace clearing the pile) resets who's eligible to act.
     write_game_state!(
       "play_pile"         => aces_played ? [] : cards,
       "play_pile_count"   => aces_played ? nil : cards.length,
       "last_played_by"    => aces_played ? nil : player.id,
       "last_played_cards" => cards,
-      "passed_this_round" => [],
+      "passed_this_round" => fresh_hand ? [] : passed_this_round,
       "finished_players"  => new_finished
     )
 
