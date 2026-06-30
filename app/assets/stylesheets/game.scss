@@ -392,6 +392,46 @@
   }
 }
 
+.canasta-hand-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 24px 20px;
+  justify-content: center;
+
+  .game-card {
+    position: relative;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      transform: translateY(-10px);
+    }
+
+    &.selected {
+      transform: translateY(-12px);
+      box-shadow: 0 0 0 3px #fbbf24, 0 8px 20px rgba(0,0,0,0.45);
+    }
+  }
+
+  &.meld-group {
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+
+    .game-card {
+      width: 50px;
+      min-width: 50px;
+      max-width: 50px;
+    }
+  }
+
+  &.canasta-complete {
+    box-shadow: 0 0 0 2px #10b981 inset;
+  }
+}
+
 .game-card {
   position: absolute;
   width: 80px;

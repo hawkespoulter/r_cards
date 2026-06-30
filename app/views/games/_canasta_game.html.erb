@@ -113,7 +113,7 @@
         <div class="discard-pile-block">
           <p class="pile-info">Discard <%= @canasta.frozen ? "(frozen ❄)" : "" %></p>
           <% if (@canasta.discard_pile || []).any? %>
-            <%= image_tag "cards/#{@canasta.discard_pile.last}.svg", class: "pile-card" %>
+            <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card" %>
           <% else %>
             <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
           <% end %>
@@ -128,9 +128,9 @@
             <p class="pile-info">No melds yet</p>
           <% else %>
             <% team_melds.each do |rank, cards| %>
-              <div class="rank meld-group <%= 'canasta-complete' if cards.length >= 7 %>">
+              <div class="canasta-hand-row meld-group <%= 'canasta-complete' if cards.length >= 7 %>">
                 <% cards.each do |card| %>
-                  <%= image_tag "cards/#{card}.svg", class: "game-card meld-card" %>
+                  <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
                 <% end %>
                 <% if cards.length >= 7 %>
                   <span class="player-title-badge"><%= cards.none? { |c| c == "jo" || c[1..-1].downcase == "2" } ? "Clean Canasta" : "Dirty Canasta" %></span>
@@ -144,9 +144,9 @@
 
     <div class="hand-container">
       <p class="hand-label">Your hand</p>
-      <div class="rank" id="canasta-hand">
-        <% (@current_player.hand || []).each do |card| %>
-          <%= image_tag "cards/#{card}.svg", class: "game-card", data: { card: card } %>
+      <div class="canasta-hand-row" id="canasta-hand">
+        <% canasta_sort(@current_player.hand).each do |card| %>
+          <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card", data: { card: card } %>
         <% end %>
       </div>
       <p class="pile-info" id="meld-selection-info" data-threshold="<%= my_turn && turn_phase == 'discard' ? 0 : 0 %>">

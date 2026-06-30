@@ -94,22 +94,28 @@ class Canasta < ApplicationRecord
     pile = draw_pile.dup
 
     hand = player.hand.dup
-    drawn_card = nil
-    loop do
-      return { error: "No cards left to draw" } if pile.empty?
-      card = pile.pop
-      if red_three?(card)
-        log_red_three!(player.team, card)
-        next
+    drawn_cards = []
+    2.times do
+      loop do
+        if pile.empty?
+          reshuffle_stock!(pile)
+          pile = draw_pile.dup
+        end
+        return { error: "No cards left to draw" } if pile.empty?
+        card = pile.pop
+        if red_three?(card)
+          log_red_three!(player.team, card)
+          next
+        end
+        drawn_cards << card
+        break
       end
-      drawn_card = card
-      break
     end
 
-    hand << drawn_card
+    hand.concat(drawn_cards)
     player.update!(hand: hand)
     write_game_state!("draw_pile" => pile, "turn_phase" => "discard")
-    { success: true }
+    { success: true, drawn_cards: drawn_cards }
   end
 
   def pickup_discard(player, meld_cards)
