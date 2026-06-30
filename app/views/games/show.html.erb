@@ -111,12 +111,25 @@
         my_received = my_log["received"] || []
       %>
       <% if my_gave.any? || my_received.any? %>
-        <div class="trade-exchange-info">
+        <div class="trade-exchange-info"
+             data-trade-info="true"
+             data-round="<%= @scum.round_number %>"
+             data-received-cards="<%= my_received.to_json %>">
           <% if my_gave.any? %>
-            <p>You gave: <%= my_gave.join(", ") %></p>
+            <div class="trade-card-row">
+              <span>You gave:</span>
+              <% my_gave.each do |card| %>
+                <%= image_tag "cards/#{card}.svg", class: "trade-card-img" %>
+              <% end %>
+            </div>
           <% end %>
           <% if my_received.any? %>
-            <p>You received: <%= my_received.join(", ") %></p>
+            <div class="trade-card-row">
+              <span>You received:</span>
+              <% my_received.each do |card| %>
+                <%= image_tag "cards/#{card}.svg", class: "trade-card-img" %>
+              <% end %>
+            </div>
           <% end %>
         </div>
       <% end %>

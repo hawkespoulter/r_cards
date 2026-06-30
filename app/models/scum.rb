@@ -58,19 +58,25 @@
       "finished_players"  => new_finished
     )
 
+    common_extras = {
+      finished_player_name: player_finished ? player.user.name : nil,
+      aces_played_by:       aces_played ? player.user.name : nil,
+      aces_played_cards:    aces_played ? cards : nil
+    }
+
     remaining_active = active_player_ids
     if remaining_active.length <= 1
       write_game_state!("finished_players" => finished_player_ids + remaining_active)
-      return { game_over: true, rankings: rankings, finished_player_name: player_finished ? player.user.name : nil }
+      return { game_over: true, rankings: rankings }.merge(common_extras)
     end
 
     if aces_played
       player_finished ? advance_turn(from_player_id: player.id) : set_turn(player.id)
-      return { success: true, finished_player_name: player_finished ? player.user.name : nil }
+      return { success: true }.merge(common_extras)
     end
 
     advance_turn(from_player_id: player.id)
-    { success: true, finished_player_name: player_finished ? player.user.name : nil }
+    { success: true }.merge(common_extras)
   end
 
   def pass_turn(player)
@@ -78,34 +84,33 @@
     return { error: "Game is over" } if game_over?
     return { error: "Must play a card to lead" } if play_pile.blank?
 
+    leader_id      = last_played_by.to_i
     current_passed = (passed_this_round || []).map(&:to_i) | [player.id]
     write_game_state!("passed_this_round" => current_passed)
 
-    leader_id  = last_played_by&.to_i
-    active_ids = active_player_ids
+    active_ids           = active_player_ids
+    others_active        = active_ids.reject { |id| id == leader_id }
+    everyone_else_passed = others_active.all? { |id| current_passed.include?(id) }
 
-    if leader_id
-      non_leader_active = active_ids.reject { |id| id == leader_id }
-      if non_leader_active.all? { |id| current_passed.include?(id) }
-        if active_ids.include?(leader_id)
-          leader_also_passed = current_passed.include?(leader_id)
-          if game.leader_can_continue? && !leader_also_passed
-            set_turn(leader_id)
-            return { success: true }
-          else
-            clear_pile
-            set_turn(leader_id)
-          end
-        else
-          clear_pile
-          advance_turn(from_player_id: leader_id)
-        end
-        return { success: true, pile_cleared: true }
-      end
+    unless everyone_else_passed
+      advance_turn(from_player_id: player.id)
+      return { success: true }
     end
 
-    advance_turn(from_player_id: player.id)
-    { success: true }
+    leader_still_active = active_ids.include?(leader_id)
+    leader_passed        = current_passed.include?(leader_id)
+
+    # Leader gets one extra turn to extend the hand, unless they've already
+    # passed themselves or the setting is off.
+    if leader_still_active && !leader_passed && game.leader_can_continue?
+      set_turn(leader_id)
+      return { success: true }
+    end
+
+    # Hand is over: clear the pile and move on to whoever's next after the leader.
+    clear_pile
+    advance_turn(from_player_id: leader_id)
+    { success: true, pile_cleared: true }
   end
 
   def start_new_round
@@ -213,7 +218,7 @@
       set_turn(new_pending.first)
     end
 
-    { success: true }
+    { success: true, target_player_id: target_id }
   end
 
   def game_over?
@@ -282,12 +287,11 @@
     game.turn_order.reject { |id| finished.include?(id) }
   end
 
+  # Once a player passes, they're locked out of the current hand until the
+  # pile clears — this is unconditional, not gated by a setting.
   def eligible_player_ids
-    ids = active_player_ids
-    return ids unless game.pass_locks_out?
-
     passed = (passed_this_round || []).map(&:to_i)
-    ids.reject { |id| passed.include?(id) }
+    active_player_ids.reject { |id| passed.include?(id) }
   end
 
   def best_cards(hand, count)

@@ -1,16 +1,9 @@
 import consumer from "channels/consumer"
 import { playKnock, playCardSound } from "sound_effects"
+import { showCardModal } from "card_modal"
 
 let currentSubscription = null;
 let currentGameId = null;
-
-function showFinishToast(name) {
-  const toast = document.createElement("div");
-  toast.className = "finish-toast";
-  toast.textContent = `🎉 ${name} is out!`;
-  document.body.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add("show"));
-}
 
 document.addEventListener("turbo:load", function () {
   const container = document.querySelector("[data-game-id]");
@@ -52,9 +45,20 @@ document.addEventListener("turbo:load", function () {
 
         playCardSound();
 
-        if (data.finished_player_name) {
-          showFinishToast(data.finished_player_name);
-          setTimeout(() => location.reload(), 1400);
+        if (data.aces_played_by) {
+          showCardModal({
+            title: `🔥 ${data.aces_played_by} threw down Aces!`,
+            subtitle: "Pile cleared",
+            cards: data.aces_played_cards || [],
+            confetti: true
+          });
+          setTimeout(() => location.reload(), 1600);
+        } else if (data.finished_player_name) {
+          showCardModal({
+            title: `🎉 ${data.finished_player_name} is out!`,
+            confetti: true
+          });
+          setTimeout(() => location.reload(), 1600);
         } else {
           location.reload();
         }

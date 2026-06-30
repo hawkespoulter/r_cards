@@ -1,26 +1,76 @@
-// ── Finish toast ─────────────────────────────────────────────────────────────
+// ── Card celebration modal ──────────────────────────────────────────────────
 
-.finish-toast {
+.card-modal-overlay {
   position: fixed;
-  top: 24px;
-  left: 50%;
-  transform: translate(-50%, -20px);
-  background: #1f2937;
-  color: #fff;
-  padding: 14px 28px;
-  border-radius: 999px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  opacity: 0;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0);
+  transition: background 0.25s ease;
   z-index: 1000;
   pointer-events: none;
 
   &.show {
-    opacity: 1;
-    transform: translate(-50%, 0);
+    background: rgba(0,0,0,0.45);
   }
+}
+
+.card-modal {
+  background: #1f2937;
+  color: #fff;
+  padding: 24px 36px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  transform: scale(0.85);
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+
+  .show & {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.card-modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.card-modal-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.75;
+  margin: 0 0 12px;
+}
+
+.card-modal-cards {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.card-modal-card-img {
+  width: 60px;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.confetti-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36px;
+  margin: -25px 0 0 -18px;
+  opacity: 0;
+  animation: confetti-burst 1.1s ease-out forwards;
+}
+
+@keyframes confetti-burst {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--x), var(--y)) rotate(var(--rot)); }
 }
 
 .trade-exchange-info {
@@ -28,8 +78,19 @@
   padding: 8px 20px;
   font-size: 0.9rem;
   opacity: 0.85;
+}
 
-  p { margin: 2px 0; }
+.trade-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 6px 0;
+
+  .trade-card-img {
+    width: 36px;
+    border-radius: 3px;
+  }
 }
 
 // ── Game layout ──────────────────────────────────────────────────────────────

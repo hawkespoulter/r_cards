@@ -7,6 +7,10 @@
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <% card_codes = Scum::CARD_VALUES.keys.flat_map { |r| %w[h d c s].map { |s| "#{s}#{r}" } } + ["blank_card"] %>
+    <script>
+      window.CARD_ASSET_MAP = <%= raw(card_codes.index_with { |c| asset_path("cards/#{c}.svg") }.to_json) %>;
+    </script>
   </head>
 
   <body>

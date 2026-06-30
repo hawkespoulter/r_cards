@@ -1,4 +1,21 @@
+import { showCardModal } from "card_modal"
+
 document.addEventListener("turbo:load", function () {
+  // ── Trade exchange "you received" popup (once per round) ───────────────────
+  const tradeInfo = document.querySelector("[data-trade-info]");
+  if (tradeInfo) {
+    const round    = tradeInfo.dataset.round;
+    const received = JSON.parse(tradeInfo.dataset.receivedCards || "[]");
+    const gameId   = document.querySelector("[data-game-id]")?.dataset.gameId;
+    if (received.length && gameId) {
+      const key = `r_cards_received_${gameId}_${round}`;
+      if (sessionStorage.getItem(key) !== "1") {
+        sessionStorage.setItem(key, "1");
+        showCardModal({ title: "You received", cards: received });
+      }
+    }
+  }
+
   // ── Settings panel toggle ──────────────────────────────────────────────────
   const settingsTrigger = document.getElementById("settings-trigger");
   const settingsPanel   = document.getElementById("settings-panel");
@@ -26,34 +43,35 @@ document.addEventListener("turbo:load", function () {
   // ── Click-to-select ────────────────────────────────────────────────────────
 
   if (isGivePhase) {
-    // Give phase: multi-select, total selected cards must equal giveCount
-    const selectedGroups = new Set();
+    // Give phase: select any individual cards (including splitting a set),
+    // total selected must equal giveCount.
+    const selectedCards = new Set();
+
+    function refreshGiveSelection() {
+      input.value = JSON.stringify(Array.from(selectedCards));
+      if (playBtn) playBtn.disabled = selectedCards.size !== giveCount;
+    }
 
     rankGroups.forEach((rankEl) => {
-      rankEl.addEventListener("click", function () {
-        if (selectedGroups.has(this)) {
-          selectedGroups.delete(this);
-          this.classList.remove("selected");
-        } else {
-          selectedGroups.add(this);
-          this.classList.add("selected");
-        }
+      rankEl.querySelectorAll(".game-card").forEach((cardEl) => {
+        cardEl.addEventListener("click", function (e) {
+          e.stopPropagation();
+          const card = this.dataset.card;
 
-        const allCards = [];
-        selectedGroups.forEach(el => {
-          const cards = JSON.parse(el.dataset.cards || "[]");
-          allCards.push(...cards);
+          if (selectedCards.has(card)) {
+            selectedCards.delete(card);
+            this.classList.remove("selected");
+          } else {
+            selectedCards.add(card);
+            this.classList.add("selected");
+          }
+
+          refreshGiveSelection();
         });
-
-        input.value = JSON.stringify(allCards);
-
-        if (playBtn) {
-          playBtn.disabled = allCards.length !== giveCount;
-        }
       });
     });
 
-    if (playBtn) playBtn.disabled = true;
+    refreshGiveSelection();
 
   } else {
     // Play phase: select individual cards of a single rank (allows playing

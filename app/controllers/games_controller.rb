@@ -81,7 +81,7 @@ class GamesController < ApplicationController
     if result[:error]
       redirect_to @game, alert: result[:error]
     else
-      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update', finished_player_name: result[:finished_player_name] }
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
       redirect_to @game
     end
   end
@@ -131,7 +131,12 @@ class GamesController < ApplicationController
     if result[:error]
       redirect_to @game, alert: result[:error]
     else
-      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
+      ActionCable.server.broadcast "game_#{@game.id}", {
+        message:              'update',
+        finished_player_name: result[:finished_player_name],
+        aces_played_by:       result[:aces_played_by],
+        aces_played_cards:    result[:aces_played_cards]
+      }
       redirect_to @game
     end
   end
