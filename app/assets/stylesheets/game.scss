@@ -766,6 +766,34 @@
   opacity: 0.5;
 }
 
+.btn-edit-bug {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  opacity: 0.5;
+  padding: 2px 6px;
+  &:hover { opacity: 1; }
+}
+
+.bug-inline-textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: #e2e8f0;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.bug-edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
 // ── Lobby (index page) ────────────────────────────────────────────────────────
 
 .lobby-header {

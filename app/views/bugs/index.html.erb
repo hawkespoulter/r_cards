@@ -43,12 +43,24 @@
           <% @bugs.each do |bug| %>
             <tr class="bug-row <%= bug.resolved? ? "bug-resolved" : "" %>">
               <td class="col-id"><%= bug.id %></td>
-              <td class="col-desc"><%= bug.description %></td>
+              <td class="col-desc">
+                <span class="bug-desc-text" data-bug-id="<%= bug.id %>"><%= bug.description %></span>
+                <div class="bug-edit-form" id="bug-edit-<%= bug.id %>" style="display:none;">
+                  <%= form_with url: bug_path(bug, q: params[:q], filter_status: params[:status]), method: :patch, data: { turbo: false } do |f| %>
+                    <%= f.text_area :description, value: bug.description, class: "bug-inline-textarea", rows: 3 %>
+                    <div class="bug-edit-actions">
+                      <%= f.submit "Save", class: "btn-resolve" %>
+                      <button type="button" class="btn-reopen bug-edit-cancel" data-bug-id="<%= bug.id %>">Cancel</button>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
               <td class="col-date"><%= bug.created_at.strftime("%b %-d, %Y") %></td>
               <td class="col-status">
                 <span class="status-badge status-<%= bug.status %>"><%= bug.status.capitalize %></span>
               </td>
               <td class="col-action">
+                <button type="button" class="btn-edit-bug" data-bug-id="<%= bug.id %>" title="Edit">✏️</button>
                 <% if bug.open? %>
                   <%= button_to "Resolve", bug_path(bug, status: "resolved", q: params[:q], filter_status: params[:status]),
                         method: :patch, class: "btn-resolve", data: { turbo: false } %>
@@ -69,3 +81,24 @@
   <% end %>
 
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".btn-edit-bug").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const id = btn.dataset.bugId;
+        document.getElementById("bug-edit-" + id).style.display = "block";
+        document.querySelector(".bug-desc-text[data-bug-id='" + id + "']").style.display = "none";
+        btn.style.display = "none";
+      });
+    });
+    document.querySelectorAll(".bug-edit-cancel").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const id = btn.dataset.bugId;
+        document.getElementById("bug-edit-" + id).style.display = "none";
+        document.querySelector(".bug-desc-text[data-bug-id='" + id + "']").style.display = "";
+        document.querySelector(".btn-edit-bug[data-bug-id='" + id + "']").style.display = "";
+      });
+    });
+  });
+</script>

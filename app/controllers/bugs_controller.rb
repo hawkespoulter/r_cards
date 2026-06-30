@@ -19,7 +19,8 @@ class BugsController < ApplicationController
 
   def update
     @bug = Bug.find(params[:id])
-    @bug.update!(status: params[:status])
-    redirect_to bugs_path(q: params[:q], status: params[:filter_status]), notice: nil
+    @bug.update!(status: params[:status]) if params[:status].present?
+    @bug.update!(description: params[:description]) if params[:description].present?
+    redirect_to bugs_path(q: params[:q], status: params[:filter_status])
   end
 end
