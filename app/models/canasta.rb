@@ -221,6 +221,11 @@ class Canasta < ApplicationRecord
     new_frozen = frozen || wild?(card)
     write_game_state!("discard_pile" => discard_pile + [card], "frozen" => new_frozen)
 
+    team_str = player.team.to_s
+    team_has_canasta = (melds[team_str] || {}).values.any? { |c| c.length >= CANASTA_SIZE }
+    team_peak_pending = (peak_hands || {}).key?(player.id.to_s)
+    pickup_peak_hands!(player.team) if team_has_canasta && team_peak_pending
+
     if going_out
       result = end_round!(going_out_team: player.team)
       { success: true, round_ended: true }.merge(result)
@@ -272,12 +277,6 @@ class Canasta < ApplicationRecord
     write_game_state!("melds" => all_melds)
 
     completed_canasta = team_melds[rank].length >= CANASTA_SIZE && (team_melds[rank].length - cards.length) < CANASTA_SIZE
-
-    if completed_canasta
-      prior_canastas = team_melds.values.count { |c| c.length >= CANASTA_SIZE } - 1
-      pickup_peak_hands!(team) if prior_canastas == 0
-    end
-
     { canasta_completed: completed_canasta, canasta_rank: completed_canasta ? rank : nil }
   end
 
