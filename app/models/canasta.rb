@@ -15,7 +15,8 @@ class Canasta < ApplicationRecord
     :team_scores,      # { "0" => Integer, "1" => Integer } cumulative across rounds
     :round_scores,     # { "0" => Integer, "1" => Integer } this round's running tally (display only until scored)
     :red_threes,       # { "0" => [cards...], "1" => [cards...] } collected red 3s per team
-    :last_draw         # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last draw, for the "you got these cards" popup
+    :last_draw,        # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last draw, for the "you got these cards" popup
+    :peak_hands        # { "player_id" => [cards] } - face-down foot pile; nil once picked up (auto on first canasta)
 
   MELD_THRESHOLDS = [
     [3000, 50],
@@ -31,9 +32,10 @@ class Canasta < ApplicationRecord
   # --- Setup ---
 
   def initialize_round
-    florida   = game.florida_rules?
-    hand_size = florida ? 15 : 13
-    jokers    = florida ? 3 : 2
+    florida    = game.florida_rules?
+    hand_size  = 13
+    peak_size  = florida ? 15 : 11
+    jokers     = florida ? 3 : 2
 
     deck = game.decks.create
     deck.initialize_deck(deck_count: 3, joker_count: jokers)
@@ -41,18 +43,13 @@ class Canasta < ApplicationRecord
 
     players = game.players.order(:created_at).to_a
     collected_red_threes = { "0" => [], "1" => [] }
+    dealt_peak_hands = {}
 
     players.each do |player|
-      hand = []
-      while hand.length < hand_size
-        card = shoe.pop
-        if red_three?(card)
-          collected_red_threes[player.team.to_s] << card
-          next
-        end
-        hand << card
-      end
+      hand = deal_n_naturals(shoe, hand_size, collected_red_threes, player.team.to_s)
+      peak = deal_n_naturals(shoe, peak_size, collected_red_threes, player.team.to_s)
       player.update!(hand: hand)
+      dealt_peak_hands[player.id.to_s] = peak
     end
 
     discard_top = nil
@@ -74,7 +71,8 @@ class Canasta < ApplicationRecord
       "round_number"   => (round_number || 0) + 1,
       "team_scores"    => team_scores || { "0" => 0, "1" => 0 },
       "round_scores"   => { "0" => 0, "1" => 0 },
-      "red_threes"     => collected_red_threes
+      "red_threes"     => collected_red_threes,
+      "peak_hands"     => dealt_peak_hands
     )
 
     game.players.update_all(is_turn: false)
@@ -273,6 +271,12 @@ class Canasta < ApplicationRecord
     write_game_state!("melds" => all_melds)
 
     completed_canasta = team_melds[rank].length >= CANASTA_SIZE && (team_melds[rank].length - cards.length) < CANASTA_SIZE
+
+    if completed_canasta
+      prior_canastas = team_melds.values.count { |c| c.length >= CANASTA_SIZE } - 1
+      pickup_peak_hands!(team) if prior_canastas == 0
+    end
+
     { canasta_completed: completed_canasta, canasta_rank: completed_canasta ? rank : nil }
   end
 
@@ -319,6 +323,30 @@ class Canasta < ApplicationRecord
       initialize_round
       { next_round: true }
     end
+  end
+
+  def deal_n_naturals(shoe, n, collected_red_threes, team_str)
+    cards = []
+    while cards.length < n
+      card = shoe.pop
+      if red_three?(card)
+        collected_red_threes[team_str] << card
+        next
+      end
+      cards << card
+    end
+    cards
+  end
+
+  def pickup_peak_hands!(team)
+    current_peak = (peak_hands || {}).dup
+    team_players = game.players.where(team: team.to_i)
+    team_players.each do |player|
+      foot = current_peak.delete(player.id.to_s)
+      next unless foot.present?
+      player.update!(hand: (player.hand || []) + foot)
+    end
+    write_game_state!("peak_hands" => current_peak)
   end
 
   def wild?(card)

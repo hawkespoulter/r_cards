@@ -498,6 +498,17 @@
     border-radius: 5px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   }
+
+  &.peak-hand-picked-up {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(16,185,129,0.15);
+    border: 2px solid #10b981;
+    border-radius: 5px;
+    color: #10b981;
+    font-size: 1.5rem;
+  }
 }
 
 .peak-hand-count {
