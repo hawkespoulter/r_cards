@@ -109,6 +109,13 @@
       <% end %>
     </div>
 
+    <% if (fp = (@canasta.foot_pickups || {})[@current_player&.id.to_s]).present? %>
+      <div data-foot-pickup="true"
+           data-foot-cards="<%= fp["cards"].to_json %>"
+           data-foot-seq="<%= fp["seq"] %>"
+           style="display:none;"></div>
+    <% end %>
+
     <% if (@canasta.last_draw || {})["cards"].present? %>
       <div data-last-draw="true"
            data-draw-player="<%= @canasta.last_draw["player_id"] %>"
@@ -221,9 +228,7 @@
       <p class="hand-label">
         Your hand
         <% if my_peak %>
-          <span class="player-title-badge" style="margin-left:8px;">Peak hand: <%= my_peak.length %> cards — complete a canasta to pick it up</span>
-        <% else %>
-          <span class="player-title-badge" style="margin-left:8px;color:#10b981;">✓ Foot picked up</span>
+          <span class="player-title-badge" style="margin-left:6px;">Peak hand: <%= my_peak.length %> cards (face-down until first canasta)</span>
         <% end %>
       </p>
       <div class="canasta-hand-row" id="canasta-hand">
@@ -239,6 +244,20 @@
         <% end %>
       </p>
     </div>
+
+    <% if my_peak %>
+      <div class="hand-container peak-hand-own">
+        <p class="hand-label">
+          Your peak hand
+          <span class="player-title-badge" style="margin-left:6px;">Face-down to opponents — picked up after your team's first canasta</span>
+        </p>
+        <div class="canasta-hand-row">
+          <% canasta_sort(my_peak).each do |card| %>
+            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
 
     <% if my_turn %>
       <div class="game-footer" id="canasta-actions" data-turn-phase="<%= turn_phase %>">

@@ -20,6 +20,22 @@ document.addEventListener("turbo:load", function () {
     }
   }
 
+  // ── "Your peak hand" popup on first canasta ───────────────────────────────
+  const footInfo = document.querySelector("[data-foot-pickup]");
+  if (footInfo) {
+    const container2 = document.querySelector("[data-game-id]");
+    const gameId2 = container2?.dataset.gameId;
+    const seq2 = footInfo.dataset.footSeq;
+    const footCards = JSON.parse(footInfo.dataset.footCards || "[]");
+    if (gameId2 && footCards.length) {
+      const key2 = `r_cards_canasta_foot_${gameId2}_${seq2}`;
+      if (sessionStorage.getItem(key2) !== "1") {
+        sessionStorage.setItem(key2, "1");
+        showCardModal({ title: "Your peak hand — added to your hand!", cards: footCards });
+      }
+    }
+  }
+
   const hand = document.getElementById("canasta-hand");
   if (!hand) return;
 

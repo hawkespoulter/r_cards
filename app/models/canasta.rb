@@ -16,7 +16,8 @@ class Canasta < ApplicationRecord
     :round_scores,     # { "0" => Integer, "1" => Integer } this round's running tally (display only until scored)
     :red_threes,       # { "0" => [cards...], "1" => [cards...] } collected red 3s per team
     :last_draw,        # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last draw, for the "you got these cards" popup
-    :peak_hands        # { "player_id" => [cards] } - face-down foot pile; nil once picked up (auto on first canasta)
+    :peak_hands,       # { "player_id" => [cards] } - face-down foot pile; nil once picked up (auto on first canasta)
+    :foot_pickups      # { "player_id" => { "cards" => [...], "seq" => N } } - cleared after client sees it
 
   MELD_THRESHOLDS = [
     [3000, 50],
@@ -340,13 +341,16 @@ class Canasta < ApplicationRecord
 
   def pickup_peak_hands!(team)
     current_peak = (peak_hands || {}).dup
-    team_players = game.players.where(team: team.to_i)
-    team_players.each do |player|
+    new_foot_pickups = (foot_pickups || {}).dup
+    next_seq = new_foot_pickups.values.map { |fp| fp["seq"].to_i }.max.to_i + 1
+
+    game.players.where(team: team.to_i).each do |player|
       foot = current_peak.delete(player.id.to_s)
       next unless foot.present?
       player.update!(hand: (player.hand || []) + foot)
+      new_foot_pickups[player.id.to_s] = { "cards" => foot, "seq" => next_seq }
     end
-    write_game_state!("peak_hands" => current_peak)
+    write_game_state!("peak_hands" => current_peak, "foot_pickups" => new_foot_pickups)
   end
 
   def wild?(card)
