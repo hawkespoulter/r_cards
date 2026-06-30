@@ -15,7 +15,7 @@
     <% already_in_game = Player.exists?(user_id: current_user.id) %>
     <% in_this_game    = game.players.any? { |p| p.user_id == current_user.id } %>
     <% if in_this_game %>
-      <%= link_to 'Join', game_path(game), class: 'btn-join' %>
+      <%= link_to 'Enter', game_path(game), class: 'btn-join' %>
     <% elsif !already_in_game %>
       <%= form_with url: join_game_path(game), method: :post, data: { turbo: false } do |form| %>
         <%= form.submit 'Join', class: 'btn-join' %>
