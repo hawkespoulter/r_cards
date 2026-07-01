@@ -35,7 +35,7 @@
       <% end %>
     </div>
 
-    <% if @is_host %>
+    <% if @is_host && !@game_started %>
       <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
     <% end %>
     <% if @is_host %>
