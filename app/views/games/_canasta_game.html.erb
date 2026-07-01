@@ -99,31 +99,6 @@
 
   <% else %>
 
-    <div class="status-bar">
-      <% if my_turn %>
-        <span class="your-turn-text">⚡ Your turn! —
-          <%= turn_phase == "draw" ? "Draw from the stock, or pick up the discard pile." : "Meld if you can, then discard to end your turn." %>
-        </span>
-      <% else %>
-        Waiting for <strong><%= @current_turn_name %></strong>…
-      <% end %>
-    </div>
-
-    <% if (fp = (@canasta.foot_pickups || {})[@current_player&.id.to_s]).present? %>
-      <div data-foot-pickup="true"
-           data-foot-cards="<%= fp["cards"].to_json %>"
-           data-foot-seq="<%= fp["seq"] %>"
-           style="display:none;"></div>
-    <% end %>
-
-    <% if (@canasta.last_draw || {})["cards"].present? %>
-      <div data-last-draw="true"
-           data-draw-player="<%= @canasta.last_draw["player_id"] %>"
-           data-draw-seq="<%= @canasta.last_draw["seq"] %>"
-           data-draw-cards="<%= @canasta.last_draw["cards"].to_json %>"
-           style="display:none;"></div>
-    <% end %>
-
     <% [opponent_team = 1 - my_team.to_i].each do %>
       <div class="team-melds opponent-melds">
         <p class="hand-label">Opposing team's melds (Team <%= opponent_team + 1 %>)</p>
@@ -143,6 +118,38 @@
           <% end %>
         <% end %>
       </div>
+    <% end %>
+
+    <div class="status-bar">
+      <% if my_turn %>
+        <span class="your-turn-text">⚡ Your turn! —
+          <%= turn_phase == "draw" ? "Draw from the stock, or pick up the discard pile." : "Meld if you can, then discard to end your turn." %>
+        </span>
+      <% else %>
+        Waiting for <strong><%= @current_turn_name %></strong>…
+      <% end %>
+    </div>
+
+    <% if (lc = @canasta.last_canasta).present? %>
+      <div data-last-canasta="true"
+           data-canasta-rank="<%= lc["rank"] %>"
+           data-canasta-seq="<%= lc["seq"] %>"
+           style="display:none;"></div>
+    <% end %>
+
+    <% if (fp = (@canasta.foot_pickups || {})[@current_player&.id.to_s]).present? %>
+      <div data-foot-pickup="true"
+           data-foot-cards="<%= fp["cards"].to_json %>"
+           data-foot-seq="<%= fp["seq"] %>"
+           style="display:none;"></div>
+    <% end %>
+
+    <% if (@canasta.last_draw || {})["cards"].present? %>
+      <div data-last-draw="true"
+           data-draw-player="<%= @canasta.last_draw["player_id"] %>"
+           data-draw-seq="<%= @canasta.last_draw["seq"] %>"
+           data-draw-cards="<%= @canasta.last_draw["cards"].to_json %>"
+           style="display:none;"></div>
     <% end %>
 
     <div class="center-table-grid">
@@ -177,10 +184,18 @@
       <div class="piles-center">
         <div class="draw-pile-block">
           <p class="pile-info">Stock: <%= (@canasta.draw_pile || []).length %> cards</p>
-          <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+          <% if my_turn && turn_phase == "draw" %>
+            <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
+              <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+            <% end %>
+          <% else %>
+            <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+          <% end %>
         </div>
         <div class="discard-pile-block">
-          <p class="pile-info">Discard <%= @canasta.frozen ? "(frozen ❄)" : "" %></p>
+          <% discard_top = @canasta.discard_pile&.last %>
+          <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
+          <p class="pile-info">Discard <%= frozen_by_wild ? "(frozen ❄)" : "" %></p>
           <% if (@canasta.discard_pile || []).any? %>
             <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card" %>
           <% else %>
@@ -253,7 +268,6 @@
     <% if my_turn %>
       <div class="game-footer" id="canasta-actions" data-turn-phase="<%= turn_phase %>">
         <% if turn_phase == "draw" %>
-          <%= button_to "Draw Card", draw_game_path(@game), method: :post, class: "btn-play" %>
           <%= form_with url: pickup_discard_game_path(@game), method: :post, html: { id: "pickup-form" } do |f| %>
             <%= f.hidden_field :meld_cards, id: "pickup-cards-input", value: "" %>
             <%= f.submit "Pick Up Pile (with selected cards)", class: "btn-play", id: "pickup-btn" %>

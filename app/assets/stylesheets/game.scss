@@ -324,6 +324,23 @@
   box-shadow: 0 6px 18px rgba(0,0,0,0.5);
 }
 
+.pile-card-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+
+  &:hover .pile-card {
+    box-shadow: 0 0 0 3px #6366f1, 0 6px 18px rgba(0,0,0,0.5);
+    transform: translateY(-2px);
+  }
+
+  .pile-card {
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+}
+
 .pile-info {
   font-size: 0.85rem;
   opacity: 0.75;

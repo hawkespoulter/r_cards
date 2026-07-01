@@ -17,7 +17,8 @@ class Canasta < ApplicationRecord
     :red_threes,       # { "0" => [cards...], "1" => [cards...] } collected red 3s per team
     :last_draw,        # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last draw, for the "you got these cards" popup
     :peak_hands,       # { "player_id" => [cards] } - face-down foot pile; nil once picked up (auto on first canasta)
-    :foot_pickups      # { "player_id" => { "cards" => [...], "seq" => N } } - cleared after client sees it
+    :foot_pickups,     # { "player_id" => { "cards" => [...], "seq" => N } } - cleared after client sees it
+    :last_canasta      # { "rank" => rank, "seq" => N } - last completed canasta, for acting-player notification
 
   MELD_THRESHOLDS = [
     [3000, 50],
@@ -155,9 +156,15 @@ class Canasta < ApplicationRecord
 
     remaining_hand = hand.dup
     meld_cards.each { |c| remaining_hand.delete_at(remaining_hand.index(c)) }
+
+    # Only natural cards of the matching rank from the pile go into the meld.
+    # Everything else (other ranks, wilds in the pile) goes into the hand.
+    pile_for_meld = pile.select { |c| !wild?(c) && rank_of(c) == rank }
+    pile_to_hand  = pile.reject { |c| !wild?(c) && rank_of(c) == rank }
+    remaining_hand.concat(pile_to_hand)
     player.update!(hand: remaining_hand)
 
-    result = add_to_meld(player.team, rank, meld_cards + pile)
+    result = add_to_meld(player.team, rank, meld_cards + pile_for_meld)
     write_game_state!("discard_pile" => [], "turn_phase" => "discard", "frozen" => false)
     result.merge(success: true)
   end
@@ -182,6 +189,8 @@ class Canasta < ApplicationRecord
 
     team_melds = (melds[player.team.to_s] || {}).dup
     existing   = team_melds[rank] || []
+
+    return { error: "Need at least 3 cards to start a new meld" } if existing.empty? && cards.length < 3
 
     total_wild    = existing.count { |c| wild?(c) } + wilds.length
     total_natural = existing.count { |c| !wild?(c) } + naturals.length
@@ -278,6 +287,10 @@ class Canasta < ApplicationRecord
     write_game_state!("melds" => all_melds)
 
     completed_canasta = team_melds[rank].length >= CANASTA_SIZE && (team_melds[rank].length - cards.length) < CANASTA_SIZE
+    if completed_canasta
+      next_seq = (last_canasta || {})["seq"].to_i + 1
+      write_game_state!("last_canasta" => { "rank" => rank, "seq" => next_seq })
+    end
     { canasta_completed: completed_canasta, canasta_rank: completed_canasta ? rank : nil }
   end
 

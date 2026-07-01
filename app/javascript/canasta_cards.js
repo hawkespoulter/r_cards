@@ -20,6 +20,28 @@ document.addEventListener("turbo:load", function () {
     }
   }
 
+  // ── Play errors as centred popup ──────────────────────────────────────────
+  const flashError = document.querySelector("[data-flash-error]");
+  if (flashError) {
+    showCardModal({ title: flashError.dataset.flashError, duration: 2400 });
+  }
+
+  // ── Canasta completed popup (for the acting player who gets a redirect) ──
+  const canastaInfo = document.querySelector("[data-last-canasta]");
+  if (canastaInfo) {
+    const container0 = document.querySelector("[data-game-id]");
+    const gameId0 = container0?.dataset.gameId;
+    const rank0 = canastaInfo.dataset.canastaRank;
+    const seq0 = canastaInfo.dataset.canastaSeq;
+    if (gameId0 && rank0) {
+      const key0 = `r_cards_canasta_made_${gameId0}_${seq0}`;
+      if (sessionStorage.getItem(key0) !== "1") {
+        sessionStorage.setItem(key0, "1");
+        showCardModal({ title: `🃏 Canasta completed! (${rank0})`, confetti: true });
+      }
+    }
+  }
+
   // ── "Your peak hand" popup on first canasta ───────────────────────────────
   const footInfo = document.querySelector("[data-foot-pickup]");
   if (footInfo) {
