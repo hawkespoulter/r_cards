@@ -137,17 +137,8 @@ class Canasta < ApplicationRecord
 
     rank = rank_of(top)
     hand = player.hand.dup
-    team_melds   = (melds[player.team.to_s] || {})
-    has_existing = team_melds[rank].present?
-    has_natural  = hand.any? { |c| !wild?(c) && rank_of(c) == rank }
-
-    if frozen
-      natural_count = hand.count { |c| !wild?(c) && rank_of(c) == rank }
-      return { error: "The pile is frozen — need 2 matching natural cards in hand to pick it up" } if natural_count < 2
-    else
-      return { error: "Need a matching card or an existing meld of that rank to pick up the pile" } \
-        unless has_natural || has_existing
-    end
+    natural_count = hand.count { |c| !wild?(c) && rank_of(c) == rank }
+    return { error: "Need 2 matching natural cards in hand to pick up the pile" } if natural_count < 2
 
     player.update!(hand: hand + pile)
     write_game_state!("discard_pile" => [], "turn_phase" => "discard", "frozen" => false)
