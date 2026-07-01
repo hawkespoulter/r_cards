@@ -137,36 +137,21 @@ class Canasta < ApplicationRecord
 
     rank = rank_of(top)
     hand = player.hand.dup
-    meld_cards = Array(meld_cards)
-
-    return { error: "Select matching cards from your hand to pick up the pile" } if meld_cards.empty?
-    return { error: "Invalid cards selected" } unless meld_cards.all? { |c| hand.include?(c) }
-    return { error: "Cards used to pick up must be natural cards matching the pile's rank" } \
-      unless meld_cards.all? { |c| !wild?(c) && rank_of(c) == rank }
-
     team_melds   = (melds[player.team.to_s] || {})
     has_existing = team_melds[rank].present?
+    has_natural  = hand.any? { |c| !wild?(c) && rank_of(c) == rank }
 
     if frozen
-      return { error: "The pile is frozen - need 2 matching natural cards to pick it up" } if meld_cards.length < 2
+      natural_count = hand.count { |c| !wild?(c) && rank_of(c) == rank }
+      return { error: "The pile is frozen — need 2 matching natural cards in hand to pick it up" } if natural_count < 2
     else
-      return { error: "Need a matching card, or an existing meld of that rank, to pick up" } \
-        if meld_cards.empty? || (meld_cards.length < 1 && !has_existing)
+      return { error: "Need a matching card or an existing meld of that rank to pick up the pile" } \
+        unless has_natural || has_existing
     end
 
-    remaining_hand = hand.dup
-    meld_cards.each { |c| remaining_hand.delete_at(remaining_hand.index(c)) }
-
-    # Only natural cards of the matching rank from the pile go into the meld.
-    # Everything else (other ranks, wilds in the pile) goes into the hand.
-    pile_for_meld = pile.select { |c| !wild?(c) && rank_of(c) == rank }
-    pile_to_hand  = pile.reject { |c| !wild?(c) && rank_of(c) == rank }
-    remaining_hand.concat(pile_to_hand)
-    player.update!(hand: remaining_hand)
-
-    result = add_to_meld(player.team, rank, meld_cards + pile_for_meld)
+    player.update!(hand: hand + pile)
     write_game_state!("discard_pile" => [], "turn_phase" => "discard", "frozen" => false)
-    result.merge(success: true)
+    { success: true, canasta_completed: false, canasta_rank: nil }
   end
 
   def meld(player, cards)
