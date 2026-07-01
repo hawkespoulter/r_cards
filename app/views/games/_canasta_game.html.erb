@@ -23,7 +23,7 @@
       <% end %>
       <% @game.players.order(:created_at).each do |player| %>
         <% is_active = @game.current_turn && player.id == @game.current_turn %>
-        <div class="player-chip <%= 'active-turn' if is_active %>">
+        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == @current_player&.id %>">
           <span class="player-name">
             <%= player.user_id == current_user.id ? "You" : player.user.name %>
             <span class="player-title-badge">· Team <%= player.team.to_i + 1 %></span>
@@ -249,7 +249,7 @@
       <% end %>
     </div>
 
-    <div class="hand-container">
+    <div class="hand-container team-color-<%= my_team.to_i + 1 %>">
       <p class="hand-label">Your hand</p>
       <div class="canasta-hand-row" id="canasta-hand">
         <% canasta_sort(@current_player.hand).each do |card| %>
