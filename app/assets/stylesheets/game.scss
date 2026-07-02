@@ -556,6 +556,9 @@ li.nav-center {
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  margin-left: -55px;
+
+  &:first-child { margin-left: 0; }
 
   .canasta-rep-card {
     position: relative;
