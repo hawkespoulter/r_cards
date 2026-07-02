@@ -143,23 +143,44 @@
            style="display:none;"></div>
     <% end %>
 
+    <%
+      my_melds_all    = sort_melds((@canasta.melds || {})[my_team.to_s] || {})
+      opp_melds_all   = sort_melds((@canasta.melds || {})[opponent_team.to_s] || {})
+      my_completed    = my_melds_all.select  { |_, c| c.length >= 7 }
+      opp_completed   = opp_melds_all.select { |_, c| c.length >= 7 }
+      my_red_threes   = (@canasta.red_threes || {})[my_team.to_s] || []
+      opp_red_threes  = (@canasta.red_threes || {})[opponent_team.to_s] || []
+    %>
+
     <div class="center-table-grid">
       <div class="peak-left-col">
         <% if peak_left %>
-          <% left_peak = (@canasta.peak_hands || {})[peak_left.id.to_s] %>
-          <% if left_peak %>
+          <% if (@canasta.peak_hands || {})[peak_left.id.to_s] %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
           <% end %>
         <% end %>
         <% if peak_top %>
-          <% top_peak = (@canasta.peak_hands || {})[peak_top.id.to_s] %>
-          <% if top_peak %>
+          <% if (@canasta.peak_hands || {})[peak_top.id.to_s] %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
           <% end %>
+        <% end %>
+      </div>
+
+      <div class="center-canastas my-center-canastas">
+        <% my_red_threes.each do |card| %>
+          <div class="canasta-single red-three-single">
+            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
+          </div>
+        <% end %>
+        <% my_completed.each_with_index do |(rank, cards), idx| %>
+          <% rep = canasta_representative_card(rank, cards) %>
+          <div class="canasta-single <%= canasta_clean?(cards) ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
+            <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
+          </div>
         <% end %>
       </div>
 
@@ -186,18 +207,30 @@
         </div>
       </div>
 
+      <div class="center-canastas opp-center-canastas">
+        <% opp_completed.each_with_index do |(rank, cards), idx| %>
+          <% rep = canasta_representative_card(rank, cards) %>
+          <div class="canasta-single <%= canasta_clean?(cards) ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
+            <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
+          </div>
+        <% end %>
+        <% opp_red_threes.each do |card| %>
+          <div class="canasta-single red-three-single">
+            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
+          </div>
+        <% end %>
+      </div>
+
       <div class="peak-right-col">
         <% if peak_right %>
-          <% right_peak = (@canasta.peak_hands || {})[peak_right.id.to_s] %>
-          <% if right_peak %>
+          <% if (@canasta.peak_hands || {})[peak_right.id.to_s] %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
           <% end %>
         <% end %>
         <% if @current_player %>
-          <% my_peak_cards = (@canasta.peak_hands || {})[@current_player.id.to_s] %>
-          <% if my_peak_cards %>
+          <% if (@canasta.peak_hands || {})[@current_player.id.to_s] %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
