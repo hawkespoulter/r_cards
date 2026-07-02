@@ -165,20 +165,24 @@ class Canasta < ApplicationRecord
     rank_groups = naturals_all.group_by { |c| rank_of(c) }
     wilds_pool  = cards.select { |c| wild?(c) }
 
-    # Assign wilds to groups in order until pool is exhausted
     groups = {}
     rank_groups.each do |rank, naturals|
       groups[rank] = { naturals: naturals, wilds: [] }
     end
 
-    # Distribute wilds round-robin across groups that need them
-    wilds_pool.each_with_index do |wild, i|
-      rank = groups.keys[i % groups.size]
-      groups[rank][:wilds] << wild
-    end
-
     team_melds = (melds[player.team.to_s] || {}).dup
     team_has_melded = team_melds.values.any?(&:present?)
+
+    # Distribute wilds: first give to groups that need them to reach 3, then round-robin
+    remaining_wilds = wilds_pool.dup
+    groups.each do |rank, g|
+      existing = team_melds[rank] || []
+      needed = [3 - existing.length - g[:naturals].length, 0].max
+      needed.times { groups[rank][:wilds] << remaining_wilds.shift if remaining_wilds.any? }
+    end
+    remaining_wilds.each_with_index do |wild, i|
+      groups[groups.keys[i % groups.size]][:wilds] << wild
+    end
 
     # Validate each group
     groups.each do |rank, g|
