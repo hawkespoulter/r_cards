@@ -236,7 +236,7 @@
       });
       if (saved) {
         document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
-          img.src = saved;
+          if (img.src.includes("blank_card")) img.src = saved;
         });
       }
     }
