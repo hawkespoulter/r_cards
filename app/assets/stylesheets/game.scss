@@ -411,22 +411,26 @@
 
 .canasta-hand-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 0;
   padding: 8px 24px 20px;
   justify-content: center;
+  overflow: visible;
 
   .game-card {
     position: relative;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, margin-left 0s;
 
     &:hover {
       transform: translateY(-10px);
+      z-index: 10;
     }
 
     &.selected {
       transform: translateY(-12px);
       box-shadow: 0 0 0 3px #fbbf24, 0 8px 20px rgba(0,0,0,0.45);
+      z-index: 10;
     }
   }
 

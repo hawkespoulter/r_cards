@@ -75,6 +75,33 @@ document.addEventListener("turbo:load", function () {
     });
   });
 
+  // ── Condense hand into single row by overlapping cards ───────────────────
+  function condenseHand() {
+    const hand = document.getElementById("canasta-hand");
+    if (!hand) return;
+    const cards = Array.from(hand.querySelectorAll(".game-card"));
+    if (cards.length === 0) return;
+
+    // Reset margins to measure natural card width
+    cards.forEach(c => c.style.marginLeft = "");
+    const cardWidth = cards[0].getBoundingClientRect().width;
+    const gap = 8;
+    const naturalWidth = cards.length * cardWidth + (cards.length - 1) * gap;
+    const available = hand.parentElement.getBoundingClientRect().width - 48; // account for padding
+
+    if (naturalWidth <= available) {
+      // Enough space — use normal gap
+      cards.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${gap}px`; });
+    } else {
+      // Compress: calculate overlap needed
+      const overlap = (naturalWidth - available) / (cards.length - 1);
+      const marginLeft = gap - overlap;
+      cards.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${marginLeft}px`; });
+    }
+  }
+  condenseHand();
+  window.addEventListener("resize", condenseHand);
+
   const hand = document.getElementById("canasta-hand");
   if (!hand) return;
 
