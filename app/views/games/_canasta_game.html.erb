@@ -9,7 +9,7 @@
 <% peak_top   = other_players[1] %>
 <% peak_right = other_players[2] %>
 
-<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>">
+<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-card-back="<%= asset_path("cards/backs/#{@game.card_back_key}.jpg") %>">
 
   <header class="game-header">
     <div class="game-title">♣ Canasta<%= " (Florida Rules)" if @game.florida_rules? %></div>
@@ -59,6 +59,18 @@
             <span class="toggle-hint">15-card hands and an extra joker per deck.</span>
           </span>
         </label>
+        <div class="card-back-picker">
+          <p class="settings-label">Card Back</p>
+          <div class="card-back-options">
+            <% Game::CARD_BACKS.each do |key, label| %>
+              <label class="card-back-option <%= 'selected' if @game.card_back_key == key %>">
+                <input type="radio" name="card_back" value="<%= key %>" <%= 'checked' if @game.card_back_key == key %> style="display:none;">
+                <%= image_tag "cards/backs/#{key}.jpg", class: "card-back-thumb", title: label %>
+                <span class="card-back-name"><%= label %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
         <%= f.submit "Save", class: "btn-settings-save" %>
       <% end %>
     </div>

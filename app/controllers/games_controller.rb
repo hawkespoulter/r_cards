@@ -255,6 +255,7 @@ class GamesController < ApplicationController
   end
 
   def settings_params
-    { pass_locks_out: params[:pass_locks_out], leader_can_continue: params[:leader_can_continue] }
+    { pass_locks_out: params[:pass_locks_out], leader_can_continue: params[:leader_can_continue],
+      florida_rules: params[:florida_rules], card_back: params[:card_back] }
   end
 end

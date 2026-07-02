@@ -20,6 +20,15 @@ document.addEventListener("turbo:load", function () {
     }
   }
 
+  // ── Apply selected card back to all face-down card images ────────────────
+  const gameContainer = document.querySelector("[data-card-back]");
+  if (gameContainer) {
+    const backSrc = gameContainer.dataset.cardBack;
+    document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
+      if (img.src.includes("blank_card")) img.src = backSrc;
+    });
+  }
+
   // ── Play errors as centred popup ──────────────────────────────────────────
   const flashError = document.querySelector("[data-flash-error]");
   if (flashError) {
@@ -57,6 +66,14 @@ document.addEventListener("turbo:load", function () {
       }
     }
   }
+
+  // ── Card back picker selection highlight ──────────────────────────────────
+  document.querySelectorAll(".card-back-option").forEach(opt => {
+    opt.addEventListener("click", function () {
+      document.querySelectorAll(".card-back-option").forEach(o => o.classList.remove("selected"));
+      this.classList.add("selected");
+    });
+  });
 
   const hand = document.getElementById("canasta-hand");
   if (!hand) return;

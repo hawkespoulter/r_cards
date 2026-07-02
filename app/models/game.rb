@@ -7,7 +7,24 @@ class Game < ApplicationRecord
 
   enum game_type: { scum: 0, canasta: 1, lucky_seven: 2 }
 
-  store_accessor :settings, :pass_locks_out, :leader_can_continue, :florida_rules
+  store_accessor :settings, :pass_locks_out, :leader_can_continue, :florida_rules, :card_back
+
+  CARD_BACKS = {
+    "hawkes_sam_blue"  => "Hawkes + Sam Blue",
+    "hawkes_sam_red"   => "Hawkes + Sam Red",
+    "gabbitas_blue"    => "Gabbitas Blue",
+    "gabbitas_green"   => "Gabbitas Green",
+    "gabbitas_red"     => "Gabbitas Red",
+    "fifes_purple"     => "Fifes Purple",
+    "fifes_yellow"     => "Fifes Yellow",
+    "dad"              => "Dad",
+    "mom"              => "Mom",
+    "sicily"           => "Sicily"
+  }.freeze
+
+  def card_back_key
+    card_back.presence || "hawkes_sam_blue"
+  end
 
   def pass_locks_out?
     pass_locks_out == true || pass_locks_out == "true" || pass_locks_out == "1"
