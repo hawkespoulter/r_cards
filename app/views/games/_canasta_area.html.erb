@@ -9,6 +9,18 @@
     <%# ── Opponent layout: [canastas | red threes] row, then [in-progress melds] below ── %>
     <div class="canasta-area canasta-area-opponent">
 
+      <% if in_progress.any? %>
+        <div class="canasta-melds-row">
+          <% in_progress.each do |rank, cards| %>
+            <div class="meld-group">
+              <% cards.each do |card| %>
+                <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
       <% if red_threes.any? || completed.any? %>
         <div class="canasta-completed-row canasta-completed-row-opponent">
           <% completed.each_with_index do |(rank, cards), idx| %>
@@ -24,18 +36,6 @@
             <div class="canasta-single red-three-single">
               <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
               <span class="canasta-badge">Red 3</span>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
-
-      <% if in_progress.any? %>
-        <div class="canasta-melds-row">
-          <% in_progress.each do |rank, cards| %>
-            <div class="meld-group">
-              <% cards.each do |card| %>
-                <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
-              <% end %>
             </div>
           <% end %>
         </div>
