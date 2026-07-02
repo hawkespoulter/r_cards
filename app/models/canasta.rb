@@ -96,6 +96,7 @@ class Canasta < ApplicationRecord
 
     hand = player.hand.dup
     drawn_cards = []
+    red_threes_drawn = []
     2.times do
       loop do
         if pile.empty?
@@ -106,6 +107,7 @@ class Canasta < ApplicationRecord
         card = pile.pop
         if red_three?(card)
           log_red_three!(player.team, card)
+          red_threes_drawn << card
           next
         end
         drawn_cards << card
@@ -119,7 +121,12 @@ class Canasta < ApplicationRecord
     write_game_state!(
       "draw_pile" => pile,
       "turn_phase" => "discard",
-      "last_draw" => { "player_id" => player.id, "cards" => drawn_cards, "seq" => next_seq }
+      "last_draw" => {
+        "player_id" => player.id,
+        "cards" => drawn_cards,
+        "red_threes_drawn" => red_threes_drawn,
+        "seq" => next_seq
+      }
     )
     { success: true, drawn_cards: drawn_cards }
   end

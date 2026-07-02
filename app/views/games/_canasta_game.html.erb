@@ -126,11 +126,12 @@
            style="display:none;"></div>
     <% end %>
 
-    <% if (@canasta.last_draw || {})["cards"].present? %>
+    <% if (@canasta.last_draw || {})["cards"].present? || (@canasta.last_draw || {})["red_threes_drawn"].present? %>
       <div data-last-draw="true"
            data-draw-player="<%= @canasta.last_draw["player_id"] %>"
            data-draw-seq="<%= @canasta.last_draw["seq"] %>"
            data-draw-cards="<%= @canasta.last_draw["cards"].to_json %>"
+           data-draw-red-threes="<%= (@canasta.last_draw["red_threes_drawn"] || []).to_json %>"
            style="display:none;"></div>
     <% end %>
 

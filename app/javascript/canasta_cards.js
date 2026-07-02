@@ -10,12 +10,23 @@ document.addEventListener("turbo:load", function () {
     const drawPlayer = drawInfo.dataset.drawPlayer;
     const seq        = drawInfo.dataset.drawSeq;
     const cards      = JSON.parse(drawInfo.dataset.drawCards || "[]");
+    const redThrees  = JSON.parse(drawInfo.dataset.drawRedThrees || "[]");
 
-    if (gameId && myPlayerId && drawPlayer === myPlayerId && cards.length) {
+    if (gameId && myPlayerId && drawPlayer === myPlayerId) {
       const key = `r_cards_canasta_draw_${gameId}_${seq}`;
       if (sessionStorage.getItem(key) !== "1") {
         sessionStorage.setItem(key, "1");
-        showCardModal({ title: "You drew these cards", cards });
+        if (redThrees.length > 0) {
+          // Show red three modal first, then normal draw modal after
+          showCardModal({
+            title: "🟥 Red three auto-played — replaced!",
+            subtitle: redThrees.length > 1 ? `${redThrees.length} red threes collected` : null,
+            cards: [...redThrees, ...cards],
+            duration: 2800
+          });
+        } else if (cards.length) {
+          showCardModal({ title: "You drew these cards", cards });
+        }
       }
     }
   }
