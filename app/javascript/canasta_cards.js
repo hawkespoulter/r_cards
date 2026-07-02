@@ -217,8 +217,10 @@ document.addEventListener("turbo:load", function () {
         this.classList.add("drag-over");
       });
 
-      group.addEventListener("dragleave", function () {
-        this.classList.remove("drag-over");
+      group.addEventListener("dragleave", function (e) {
+        if (!this.contains(e.relatedTarget)) {
+          this.classList.remove("drag-over");
+        }
       });
 
       group.addEventListener("drop", function (e) {

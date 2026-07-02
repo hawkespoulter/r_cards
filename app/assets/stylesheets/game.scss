@@ -491,6 +491,7 @@ li.nav-center {
     max-width: 50px;
     margin-left: -36px;
     box-shadow: 1px 0 4px rgba(0,0,0,0.4);
+    pointer-events: none;
 
     &:first-child {
       margin-left: 0;
