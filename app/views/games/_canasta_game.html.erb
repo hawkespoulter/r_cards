@@ -112,7 +112,6 @@
 
     <% opponent_team = 1 - my_team.to_i %>
     <div class="team-melds opponent-melds">
-      <p class="hand-label">Opposing team (Team <%= opponent_team + 1 %>)</p>
       <%= render "canasta_area",
             team_num: opponent_team,
             melds: ((@canasta.melds || {})[opponent_team.to_s] || {}),
@@ -225,7 +224,6 @@
     </div>
 
     <div class="team-melds my-team-melds">
-      <p class="hand-label">Your team (Team <%= my_team.to_i + 1 %>)</p>
       <%= render "canasta_area",
             team_num: my_team.to_i,
             melds: ((@canasta.melds || {})[my_team.to_s] || {}),

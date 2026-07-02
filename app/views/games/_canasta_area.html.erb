@@ -28,7 +28,6 @@
             <% clean = canasta_clean?(cards) %>
             <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
               <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
-              <span class="canasta-badge"><%= clean ? "♦ Clean" : "♠ Dirty" %></span>
             </div>
           <% end %>
 
@@ -61,7 +60,6 @@
             <% clean = canasta_clean?(cards) %>
             <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
               <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
-              <span class="canasta-badge"><%= clean ? "♦ Clean" : "♠ Dirty" %></span>
             </div>
           <% end %>
         </div>
