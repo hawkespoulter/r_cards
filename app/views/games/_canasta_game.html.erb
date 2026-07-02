@@ -111,15 +111,6 @@
   <% else %>
 
     <% opponent_team = 1 - my_team.to_i %>
-    <div class="team-melds opponent-melds">
-      <%= render "canasta_area",
-            team_num: opponent_team,
-            melds: ((@canasta.melds || {})[opponent_team.to_s] || {}),
-            red_threes: ((@canasta.red_threes || {})[opponent_team.to_s] || []),
-            opponent: true %>
-    </div>
-
-
 
     <% if (lc = @canasta.last_canasta).present? %>
       <div data-last-canasta="true"
@@ -143,44 +134,59 @@
            style="display:none;"></div>
     <% end %>
 
-    <div class="piles-row">
-      <% [[peak_left, peak_top], [peak_right, @current_player]].flatten.compact.each do |player| %>
-        <% if (@canasta.peak_hands || {})[player.id.to_s] %>
-          <div class="peak-hand-box">
-            <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+    <div class="table-row">
+      <div class="my-melds-col">
+        <%= render "canasta_area",
+              team_num: my_team.to_i,
+              melds: ((@canasta.melds || {})[my_team.to_s] || {}),
+              red_threes: ((@canasta.red_threes || {})[my_team.to_s] || []) %>
+      </div>
+
+      <div class="piles-col">
+        <% all_players = [peak_left, peak_top, peak_right, @current_player].compact %>
+        <% peak_row = all_players.select { |p| (@canasta.peak_hands || {})[p.id.to_s] } %>
+        <% if peak_row.any? %>
+          <div class="peak-hands-row">
+            <% peak_row.each do %>
+              <div class="peak-hand-box">
+                <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+              </div>
+            <% end %>
           </div>
         <% end %>
-      <% end %>
-      <div class="piles-center">
-        <div class="draw-pile-block">
-          <p class="pile-info">Stock: <%= (@canasta.draw_pile || []).length %> cards</p>
-          <% if my_turn && turn_phase == "draw" %>
-            <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
+        <div class="piles-center">
+          <div class="draw-pile-block">
+            <p class="pile-info">Stock: <%= (@canasta.draw_pile || []).length %> cards</p>
+            <% if my_turn && turn_phase == "draw" %>
+              <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
+                <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+              <% end %>
+            <% else %>
               <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
             <% end %>
-          <% else %>
-            <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
-          <% end %>
+          </div>
+          <div class="discard-pile-block">
+            <% discard_top = @canasta.discard_pile&.last %>
+            <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
+            <p class="pile-info">Discard <%= frozen_by_wild ? "(frozen ❄)" : "" %></p>
+            <% if (@canasta.discard_pile || []).any? %>
+              <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card" %>
+            <% else %>
+              <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+            <% end %>
+          </div>
         </div>
-        <div class="discard-pile-block">
-          <% discard_top = @canasta.discard_pile&.last %>
-          <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
-          <p class="pile-info">Discard <%= frozen_by_wild ? "(frozen ❄)" : "" %></p>
-          <% if (@canasta.discard_pile || []).any? %>
-            <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card" %>
-          <% else %>
-            <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
-          <% end %>
-        </div>
+      </div>
+
+      <div class="opp-melds-col">
+        <%= render "canasta_area",
+              team_num: opponent_team,
+              melds: ((@canasta.melds || {})[opponent_team.to_s] || {}),
+              red_threes: ((@canasta.red_threes || {})[opponent_team.to_s] || []),
+              opponent: true %>
       </div>
     </div>
 
-    <div class="team-melds my-team-melds">
-      <%= render "canasta_area",
-            team_num: my_team.to_i,
-            melds: ((@canasta.melds || {})[my_team.to_s] || {}),
-            red_threes: ((@canasta.red_threes || {})[my_team.to_s] || []) %>
-    </div>
 
     <div class="hand-container team-color-<%= my_team.to_i + 1 %>">
       <p class="hand-label">Your hand</p>
