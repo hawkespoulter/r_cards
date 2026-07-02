@@ -133,23 +133,16 @@
 
       <div class="piles-col">
         <% peak_hands = @canasta.peak_hands || {} %>
-        <% left_peak  = peak_left  && peak_hands[peak_left.id.to_s]  ? peak_left  : nil %>
-        <% right_peak = peak_right && peak_hands[peak_right.id.to_s] ? peak_right : nil %>
-        <% top_peak   = peak_top   && peak_hands[peak_top.id.to_s]   ? peak_top   : nil %>
-        <% my_peak    = @current_player && peak_hands[@current_player.id.to_s] ? @current_player : nil %>
-        <% if top_peak || my_peak %>
-          <div class="peak-hands-top-row">
-            <% [top_peak, my_peak].compact.each do %>
-              <div class="peak-hand-box">
-                <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
+        <% left_peaks  = [peak_left, peak_top].compact.select { |p| peak_hands[p.id.to_s] } %>
+        <% right_peaks = [peak_right, @current_player].compact.select { |p| peak_hands[p.id.to_s] } %>
         <div class="piles-with-flanks">
-          <% if left_peak %>
-            <div class="peak-hand-box peak-hand-flank">
-              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+          <% if left_peaks.any? %>
+            <div class="peak-hand-flank">
+              <% left_peaks.each do %>
+                <div class="peak-hand-box">
+                  <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+                </div>
+              <% end %>
             </div>
           <% end %>
         <div class="piles-center">
@@ -176,9 +169,13 @@
             <% end %>
           </div>
         </div>
-          <% if right_peak %>
-            <div class="peak-hand-box peak-hand-flank">
-              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+          <% if right_peaks.any? %>
+            <div class="peak-hand-flank">
+              <% right_peaks.each do %>
+                <div class="peak-hand-box">
+                  <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+                </div>
+              <% end %>
             </div>
           <% end %>
         </div><%# piles-with-flanks %>
