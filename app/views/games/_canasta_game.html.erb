@@ -119,15 +119,7 @@
             red_threes: ((@canasta.red_threes || {})[opponent_team.to_s] || []) %>
     </div>
 
-    <div class="status-bar">
-      <% if my_turn %>
-        <span class="your-turn-text">⚡ Your turn! —
-          <%= turn_phase == "draw" ? "Draw from the stock, or pick up the discard pile." : "Meld if you can, then discard to end your turn." %>
-        </span>
-      <% else %>
-        Waiting for <strong><%= @current_turn_name %></strong>…
-      <% end %>
-    </div>
+
 
     <% if (lc = @canasta.last_canasta).present? %>
       <div data-last-canasta="true"
