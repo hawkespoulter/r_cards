@@ -9,16 +9,13 @@
 <% peak_top   = other_players[1] %>
 <% peak_right = other_players[2] %>
 
-<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-card-back="<%= asset_path("cards/backs/#{@game.card_back_key}.jpg") %>">
-
-  <header class="game-header">
-    <div class="game-title">♣ Canasta<%= " (Florida Rules)" if @game.florida_rules? %></div>
-
+<% content_for :nav_center do %>
+  <div class="nav-game-info">
+    <span class="nav-game-title">♣ Canasta<%= " (FL)" if @game.florida_rules? %></span>
     <div class="players-list">
       <% [0, 1].each do |team| %>
         <div class="team-score-chip <%= 'my-team' if team == my_team %>">
-          Team <%= team + 1 %><%= " (you)" if team == my_team %> —
-          <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
+          T<%= team + 1 %><%= " (you)" if team == my_team %> — <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
         </div>
       <% end %>
       <% @game.players.order(:created_at).each do |player| %>
@@ -26,25 +23,27 @@
         <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == @current_player&.id %>">
           <span class="player-name">
             <%= player.user_id == current_user.id ? "You" : player.user.name %>
-            <span class="player-title-badge">· Team <%= player.team.to_i + 1 %></span>
+            <span class="player-title-badge">· T<%= player.team.to_i + 1 %></span>
           </span>
           <% if @game_started %>
-            <span class="card-count">· <%= (player.hand || []).length %> cards</span>
+            <span class="card-count">· <%= (player.hand || []).length %></span>
           <% end %>
         </div>
       <% end %>
     </div>
-
     <% if @is_host && !@game_started %>
       <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
     <% end %>
     <% if @is_host %>
-      <%= button_to 'End Game', game_path(@game), method: :delete, class: 'btn-quit',
+      <%= button_to 'End', game_path(@game), method: :delete, class: 'btn-quit',
             form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
     <% else %>
       <%= button_to 'Leave', leave_game_path(@game), method: :post, class: 'btn-quit' %>
     <% end %>
-  </header>
+  </div>
+<% end %>
+
+<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-card-back="<%= asset_path("cards/backs/#{@game.card_back_key}.jpg") %>">
 
   <% if @is_host && !@game_started %>
   <div class="settings-panel" id="settings-panel">

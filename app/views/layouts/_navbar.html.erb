@@ -3,6 +3,11 @@
     <li>
       <%= link_to '♠ RCards', games_path %>
     </li>
+    <% if content_for?(:nav_center) %>
+      <li class="nav-center">
+        <%= yield :nav_center %>
+      </li>
+    <% end %>
     <li class="nav-right">
       <% unless user_signed_in? %>
         <div class="profile-menu" id="test-accounts-menu">
