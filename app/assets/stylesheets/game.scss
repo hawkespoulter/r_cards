@@ -731,7 +731,14 @@ li.nav-center {
 .piles-center {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 28px;
+}
+
+.draw-pile-block, .discard-pile-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .game-card {
