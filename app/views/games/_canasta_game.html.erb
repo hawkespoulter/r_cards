@@ -153,33 +153,34 @@
     <% end %>
 
     <div class="center-table-grid">
-      <% if peak_top %>
-        <% top_peak = (@canasta.peak_hands || {})[peak_top.id.to_s] %>
-        <div class="peak-hand-box peak-top">
-          <p class="peak-hand-label"><%= peak_top.user.name %> <span class="player-title-badge">Team <%= peak_top.team.to_i + 1 %></span></p>
-          <% if top_peak %>
-            <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            <p class="peak-hand-count">Peak: <%= top_peak.length %> cards</p>
-          <% else %>
-            <div class="peak-hand-stack peak-hand-picked-up"><span>✓</span></div>
-            <p class="peak-hand-count">Foot picked up</p>
-          <% end %>
-        </div>
-      <% end %>
-
-      <% if peak_left %>
-        <% left_peak = (@canasta.peak_hands || {})[peak_left.id.to_s] %>
-        <div class="peak-hand-box peak-left">
-          <p class="peak-hand-label"><%= peak_left.user.name %> <span class="player-title-badge">Team <%= peak_left.team.to_i + 1 %></span></p>
-          <% if left_peak %>
-            <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            <p class="peak-hand-count">Peak: <%= left_peak.length %> cards</p>
-          <% else %>
-            <div class="peak-hand-stack peak-hand-picked-up"><span>✓</span></div>
-            <p class="peak-hand-count">Foot picked up</p>
-          <% end %>
-        </div>
-      <% end %>
+      <div class="peak-left-col">
+        <% if peak_left %>
+          <% left_peak = (@canasta.peak_hands || {})[peak_left.id.to_s] %>
+          <div class="peak-hand-box">
+            <p class="peak-hand-label"><%= peak_left.user.name %> <span class="player-title-badge">T<%= peak_left.team.to_i + 1 %></span></p>
+            <% if left_peak %>
+              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+              <p class="peak-hand-count">Peak: <%= left_peak.length %></p>
+            <% else %>
+              <div class="peak-hand-stack peak-hand-picked-up"><span>✓</span></div>
+              <p class="peak-hand-count">Picked up</p>
+            <% end %>
+          </div>
+        <% end %>
+        <% if peak_top %>
+          <% top_peak = (@canasta.peak_hands || {})[peak_top.id.to_s] %>
+          <div class="peak-hand-box">
+            <p class="peak-hand-label"><%= peak_top.user.name %> <span class="player-title-badge">T<%= peak_top.team.to_i + 1 %></span></p>
+            <% if top_peak %>
+              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+              <p class="peak-hand-count">Peak: <%= top_peak.length %></p>
+            <% else %>
+              <div class="peak-hand-stack peak-hand-picked-up"><span>✓</span></div>
+              <p class="peak-hand-count">Picked up</p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
 
       <div class="piles-center">
         <div class="draw-pile-block">
@@ -204,30 +205,31 @@
         </div>
       </div>
 
-      <% if peak_right %>
-        <% right_peak = (@canasta.peak_hands || {})[peak_right.id.to_s] %>
-        <div class="peak-hand-box peak-right">
-          <p class="peak-hand-label"><%= peak_right.user.name %> <span class="player-title-badge">Team <%= peak_right.team.to_i + 1 %></span></p>
-          <% if right_peak %>
-            <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            <p class="peak-hand-count">Peak: <%= right_peak.length %> cards</p>
-          <% else %>
-            <div class="peak-hand-stack peak-hand-picked-up"><span>✓</span></div>
-            <p class="peak-hand-count">Foot picked up</p>
-          <% end %>
-        </div>
-      <% end %>
-
-      <% if @current_player %>
-        <% my_peak_cards = (@canasta.peak_hands || {})[@current_player.id.to_s] %>
-        <% if my_peak_cards %>
-          <div class="peak-hand-box peak-mine">
-            <p class="peak-hand-label">You <span class="player-title-badge">Team <%= my_team.to_i + 1 %></span></p>
-            <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            <p class="peak-hand-count">Peak: <%= my_peak_cards.length %> cards</p>
+      <div class="peak-right-col">
+        <% if peak_right %>
+          <% right_peak = (@canasta.peak_hands || {})[peak_right.id.to_s] %>
+          <div class="peak-hand-box">
+            <p class="peak-hand-label"><%= peak_right.user.name %> <span class="player-title-badge">T<%= peak_right.team.to_i + 1 %></span></p>
+            <% if right_peak %>
+              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+              <p class="peak-hand-count">Peak: <%= right_peak.length %></p>
+            <% else %>
+              <div class="peak-hand-stack peak-hand-picked-up"><span>✓</span></div>
+              <p class="peak-hand-count">Picked up</p>
+            <% end %>
           </div>
         <% end %>
-      <% end %>
+        <% if @current_player %>
+          <% my_peak_cards = (@canasta.peak_hands || {})[@current_player.id.to_s] %>
+          <% if my_peak_cards %>
+            <div class="peak-hand-box">
+              <p class="peak-hand-label">You <span class="player-title-badge">T<%= my_team.to_i + 1 %></span></p>
+              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+              <p class="peak-hand-count">Peak: <%= my_peak_cards.length %></p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
     </div>
 
     <div class="team-melds my-team-melds">
