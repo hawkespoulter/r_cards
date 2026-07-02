@@ -116,7 +116,8 @@
       <%= render "canasta_area",
             team_num: opponent_team,
             melds: ((@canasta.melds || {})[opponent_team.to_s] || {}),
-            red_threes: ((@canasta.red_threes || {})[opponent_team.to_s] || []) %>
+            red_threes: ((@canasta.red_threes || {})[opponent_team.to_s] || []),
+            opponent: true %>
     </div>
 
 

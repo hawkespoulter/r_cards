@@ -483,6 +483,36 @@ li.nav-center {
   width: 100%;
 }
 
+.canasta-area-opponent {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 16px;
+  width: 100%;
+
+  .canasta-melds-row {
+    flex: 1;
+    justify-content: flex-end;
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}
+
+.canasta-opponent-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+
+  .canasta-completed-row {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding: 0;
+    justify-content: flex-end;
+  }
+}
+
 .canasta-completed-row {
   display: flex;
   flex-wrap: wrap;
