@@ -550,7 +550,7 @@ li.nav-center {
   margin-left: -68px;
 }
 
-.canasta-single + .canasta-single {
+.canasta-single:not(.red-three-single) + .canasta-single:not(.red-three-single) {
   margin-left: -55px;
 }
 
