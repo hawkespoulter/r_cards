@@ -46,6 +46,9 @@ document.addEventListener("turbo:load", function () {
         playCardSound();
 
         if (data.canasta_completed) {
+          if (data.canasta_seq != null) {
+            sessionStorage.setItem(`r_cards_canasta_made_${gameId}_${data.canasta_seq}`, "1");
+          }
           showCardModal({
             title: `🃏 Canasta completed! (${data.canasta_rank})`,
             confetti: true

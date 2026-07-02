@@ -293,7 +293,8 @@ class Canasta < ApplicationRecord
       next_seq = (last_canasta || {})["seq"].to_i + 1
       write_game_state!("last_canasta" => { "rank" => rank, "seq" => next_seq })
     end
-    { canasta_completed: completed_canasta, canasta_rank: completed_canasta ? rank : nil }
+    { canasta_completed: completed_canasta, canasta_rank: completed_canasta ? rank : nil,
+      canasta_seq: completed_canasta ? next_seq : nil }
   end
 
   def meld_threshold(team)
