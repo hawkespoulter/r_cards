@@ -27,4 +27,8 @@ module ApplicationHelper
   def canasta_clean?(cards)
     cards.none? { |c| c == "jo" || c[1..-1]&.downcase == "2" }
   end
+
+  def sort_melds(melds)
+    melds.sort_by { |rank, _| CANASTA_SORT_VALUES[rank.downcase] || 0 }.to_h
+  end
 end

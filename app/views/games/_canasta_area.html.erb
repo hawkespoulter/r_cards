@@ -1,7 +1,7 @@
 <%# locals: team_num (integer 0/1), melds (hash rank=>cards), red_threes (array), opponent (bool) %>
 <% opponent ||= false %>
-<% completed = melds.select { |_rank, cards| cards.length >= 7 } %>
-<% in_progress = melds.reject { |_rank, cards| cards.length >= 7 } %>
+<% completed = sort_melds(melds.select { |_rank, cards| cards.length >= 7 }) %>
+<% in_progress = sort_melds(melds.reject { |_rank, cards| cards.length >= 7 }) %>
 <% has_anything = completed.any? || red_threes.any? || in_progress.any? %>
 
 <% if has_anything %>
