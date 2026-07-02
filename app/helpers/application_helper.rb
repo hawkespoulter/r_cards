@@ -11,4 +11,20 @@ module ApplicationHelper
       CANASTA_SORT_VALUES[rank] || 0
     end
   end
+
+  # Single representative card for a completed canasta display.
+  # Clean → red-suited natural; Dirty → black-suited natural, else wild.
+  def canasta_representative_card(rank, cards)
+    wilds    = cards.select { |c| c == "jo" || c[1..-1]&.downcase == "2" }
+    naturals = cards - wilds
+    if wilds.empty?
+      naturals.find { |c| %w[h d].include?(c[0]) } || naturals.first
+    else
+      naturals.find { |c| %w[s c].include?(c[0]) } || wilds.first
+    end
+  end
+
+  def canasta_clean?(cards)
+    cards.none? { |c| c == "jo" || c[1..-1]&.downcase == "2" }
+  end
 end
