@@ -156,21 +156,23 @@
         <% end %>
         <div class="piles-center">
           <div class="draw-pile-block">
-            <p class="pile-info">Stock: <%= (@canasta.draw_pile || []).length %> cards</p>
             <% if my_turn && turn_phase == "draw" %>
               <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
-                <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+                <%= image_tag "cards/blank_card.svg", class: "pile-card", title: "#{(@canasta.draw_pile || []).length} cards" %>
+                <span class="stock-count-tooltip"><%= (@canasta.draw_pile || []).length %></span>
               <% end %>
             <% else %>
-              <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+              <div class="stock-pile-wrapper">
+                <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+                <span class="stock-count-tooltip"><%= (@canasta.draw_pile || []).length %></span>
+              </div>
             <% end %>
           </div>
           <div class="discard-pile-block">
             <% discard_top = @canasta.discard_pile&.last %>
             <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
-            <p class="pile-info">Discard <%= frozen_by_wild ? "(frozen ❄)" : "" %></p>
             <% if (@canasta.discard_pile || []).any? %>
-              <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card" %>
+              <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card #{'pile-card-frozen' if frozen_by_wild}", title: frozen_by_wild ? "Frozen ❄" : nil %>
             <% else %>
               <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
             <% end %>
@@ -189,7 +191,6 @@
 
 
     <div class="hand-container team-color-<%= my_team.to_i + 1 %>">
-      <p class="hand-label">Your hand</p>
       <div class="canasta-hand-row" id="canasta-hand">
         <% canasta_sort(@current_player.hand).each do |card| %>
           <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card", data: { card: card } %>
