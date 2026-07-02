@@ -10,12 +10,9 @@
     <% if red_threes.any? || completed.any? %>
       <div class="canasta-completed-row">
 
-        <% if red_threes.any? %>
-          <div class="meld-group red-three-group">
-            <% red_threes.each do |card| %>
-              <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
-            <% end %>
-            <span class="player-title-badge">Red 3s (+<%= red_threes.length * 100 %> pts)</span>
+        <% red_threes.each do |card| %>
+          <div class="canasta-single red-three-single">
+            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
           </div>
         <% end %>
 
