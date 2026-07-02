@@ -38,6 +38,20 @@
             <div class="dropdown-header"><span class="dropdown-name">Game Settings</span></div>
             <div class="dropdown-divider"></div>
             <div class="color-team-row">
+              <span class="color-team-label">Card Back</span>
+              <div class="card-back-options card-back-options-inline" id="navbar-card-back-options">
+                <% Game::CARD_BACKS.each do |key, label| %>
+                  <button class="card-back-option-btn"
+                          data-back-key="<%= key %>"
+                          data-back-src="<%= asset_path("cards/backs/#{key}.jpg") %>"
+                          title="<%= label %>">
+                    <%= image_tag "cards/backs/#{key}.jpg", class: "card-back-thumb-sm" %>
+                  </button>
+                <% end %>
+              </div>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="color-team-row">
               <span class="color-team-label">Team 1 Name</span>
               <input type="text" class="team-name-input" data-team="1" placeholder="Team 1" maxlength="14">
             </div>
@@ -214,9 +228,34 @@
       document.querySelectorAll(".team-name-input[data-team='2']").forEach(i => { if (document.activeElement !== i) i.value = n2; });
     }
 
+    // Card back picker
+    function applyCardBack() {
+      const saved = localStorage.getItem("r_cards_card_back");
+      document.querySelectorAll("#navbar-card-back-options .card-back-option-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.backSrc === saved);
+      });
+      if (saved) {
+        document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
+          img.src = saved;
+        });
+      }
+    }
+
+    const cardBackOptions = document.getElementById("navbar-card-back-options");
+    if (cardBackOptions) {
+      cardBackOptions.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const btn = e.target.closest(".card-back-option-btn");
+        if (!btn) return;
+        localStorage.setItem("r_cards_card_back", btn.dataset.backSrc);
+        applyCardBack();
+      });
+    }
+
     const colorTrigger  = document.getElementById("color-picker-trigger");
     const colorDropdown = document.getElementById("color-picker-dropdown");
     if (colorTrigger) {
+      applyCardBack();
       applyTeamSettings();
       colorTrigger.addEventListener("click", function (e) {
         e.stopPropagation();

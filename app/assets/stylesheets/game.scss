@@ -980,6 +980,33 @@ li.nav-center {
   padding: 8px 14px 4px;
 }
 
+.card-back-options-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.card-back-option-btn {
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  padding: 2px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover { border-color: rgba(255,255,255,0.4); }
+  &.active { border-color: #6366f1; }
+}
+
+.card-back-thumb-sm {
+  width: 36px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 3px;
+  display: block;
+}
+
 .team-name-input {
   width: 100%;
   margin-top: 4px;

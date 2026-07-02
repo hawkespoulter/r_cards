@@ -34,7 +34,7 @@ document.addEventListener("turbo:load", function () {
   // ── Apply selected card back to all face-down card images ────────────────
   const gameContainer = document.querySelector("[data-card-back]");
   if (gameContainer) {
-    const backSrc = gameContainer.dataset.cardBack;
+    const backSrc = localStorage.getItem("r_cards_card_back") || gameContainer.dataset.cardBack;
     document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
       if (img.src.includes("blank_card")) img.src = backSrc;
     });
