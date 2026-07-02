@@ -188,4 +188,45 @@ document.addEventListener("turbo:load", function () {
       discardInput.value = selectedCards()[0];
     });
   }
+
+  // ── Drag cards from hand onto melds ──────────────────────────────────────
+  if (meldForm && meldInput) {
+    let dragCards = [];
+
+    hand.querySelectorAll(".game-card").forEach((cardEl, idx) => {
+      cardEl.setAttribute("draggable", "true");
+
+      cardEl.addEventListener("dragstart", function (e) {
+        const card = this.dataset.card;
+        // Carry selected set if this card is among them, otherwise just this card
+        dragCards = selected.has(idx) ? selectedCards() : [card];
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", JSON.stringify(dragCards));
+        this.classList.add("dragging");
+      });
+
+      cardEl.addEventListener("dragend", function () {
+        this.classList.remove("dragging");
+      });
+    });
+
+    document.querySelectorAll(".meld-group[data-meld-rank]").forEach(function (group) {
+      group.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        this.classList.add("drag-over");
+      });
+
+      group.addEventListener("dragleave", function () {
+        this.classList.remove("drag-over");
+      });
+
+      group.addEventListener("drop", function (e) {
+        e.preventDefault();
+        this.classList.remove("drag-over");
+        meldInput.value = JSON.stringify(dragCards);
+        meldForm.requestSubmit();
+      });
+    });
+  }
 });

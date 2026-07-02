@@ -66,7 +66,7 @@
       <% if in_progress.any? %>
         <div class="canasta-melds-row">
           <% in_progress.each do |rank, cards| %>
-            <div class="meld-group">
+            <div class="meld-group" data-meld-rank="<%= rank %>">
               <% cards.each do |card| %>
                 <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
               <% end %>

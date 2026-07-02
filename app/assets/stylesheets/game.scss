@@ -500,6 +500,12 @@ li.nav-center {
   &.canasta-complete {
     box-shadow: 0 0 0 2px #10b981 inset;
   }
+
+  &.drag-over {
+    background: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 0 0 2px #6366f1;
+    transition: background 0.1s, box-shadow 0.1s;
+  }
 }
 
 .team-melds {
