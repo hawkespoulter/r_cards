@@ -567,20 +567,14 @@ li.nav-center {
 
 // ── Canasta center table: draw/discard piles flanked by opponents' peek hands ──
 
-.center-table-grid {
-  display: grid;
-  grid-template-areas: "left piles right";
-  grid-template-columns: auto 1fr auto;
-  grid-template-rows: auto;
-  gap: 28px;
+.piles-row {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  justify-items: center;
-  margin: 10px auto;
-  max-width: 900px;
+  gap: 28px;
+  padding: 10px 0;
+  flex-wrap: wrap;
 }
-
-.peak-left-col  { grid-area: left;  display: flex; flex-direction: row; gap: 28px; align-items: center; }
-.peak-right-col { grid-area: right; display: flex; flex-direction: row; gap: 28px; align-items: center; }
 
 .card-back-picker {
   margin-top: 14px;
@@ -671,7 +665,6 @@ li.nav-center {
 }
 
 .piles-center {
-  grid-area: piles;
   display: flex;
   justify-content: center;
   gap: 28px;

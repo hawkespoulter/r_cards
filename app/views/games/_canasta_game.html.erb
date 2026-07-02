@@ -143,26 +143,14 @@
            style="display:none;"></div>
     <% end %>
 
-    <div class="center-table-grid">
-      <div class="peak-left-col">
-        <% if peak_left %>
-          <% left_peak = (@canasta.peak_hands || {})[peak_left.id.to_s] %>
-          <% if left_peak %>
-            <div class="peak-hand-box">
-              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            </div>
-          <% end %>
+    <div class="piles-row">
+      <% [[peak_left, peak_top], [peak_right, @current_player]].flatten.compact.each do |player| %>
+        <% if (@canasta.peak_hands || {})[player.id.to_s] %>
+          <div class="peak-hand-box">
+            <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
+          </div>
         <% end %>
-        <% if peak_top %>
-          <% top_peak = (@canasta.peak_hands || {})[peak_top.id.to_s] %>
-          <% if top_peak %>
-            <div class="peak-hand-box">
-              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            </div>
-          <% end %>
-        <% end %>
-      </div>
-
+      <% end %>
       <div class="piles-center">
         <div class="draw-pile-block">
           <p class="pile-info">Stock: <%= (@canasta.draw_pile || []).length %> cards</p>
@@ -184,25 +172,6 @@
             <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
           <% end %>
         </div>
-      </div>
-
-      <div class="peak-right-col">
-        <% if peak_right %>
-          <% right_peak = (@canasta.peak_hands || {})[peak_right.id.to_s] %>
-          <% if right_peak %>
-            <div class="peak-hand-box">
-              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            </div>
-          <% end %>
-        <% end %>
-        <% if @current_player %>
-          <% my_peak_cards = (@canasta.peak_hands || {})[@current_player.id.to_s] %>
-          <% if my_peak_cards %>
-            <div class="peak-hand-box">
-              <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
-            </div>
-          <% end %>
-        <% end %>
       </div>
     </div>
 
