@@ -33,20 +33,29 @@
 
       <% if user_signed_in? %>
         <div class="color-picker-menu" id="color-picker-menu">
-          <button class="bug-report-trigger" id="color-picker-trigger" title="Team colors">🎨</button>
+          <button class="bug-report-trigger" id="color-picker-trigger" title="Game settings">⚙</button>
           <div class="color-picker-dropdown" id="color-picker-dropdown">
-            <div class="dropdown-header"><span class="dropdown-name">Team Colors</span></div>
+            <div class="dropdown-header"><span class="dropdown-name">Game Settings</span></div>
             <div class="dropdown-divider"></div>
             <div class="color-team-row">
-              <span class="color-team-label">Team 1</span>
+              <span class="color-team-label">Team 1 Name</span>
+              <input type="text" class="team-name-input" data-team="1" placeholder="Team 1" maxlength="14">
+            </div>
+            <div class="color-team-row">
+              <span class="color-team-label">Team 1 Color</span>
               <div class="color-swatches" data-team="1">
                 <% %w[#ef4444 #f97316 #eab308 #22c55e #3b82f6 #8b5cf6 #ec4899 #ffffff].each do |color| %>
                   <button class="color-swatch" data-color="<%= color %>" style="background:<%= color %>;" title="<%= color %>"></button>
                 <% end %>
               </div>
             </div>
+            <div class="dropdown-divider"></div>
             <div class="color-team-row">
-              <span class="color-team-label">Team 2</span>
+              <span class="color-team-label">Team 2 Name</span>
+              <input type="text" class="team-name-input" data-team="2" placeholder="Team 2" maxlength="14">
+            </div>
+            <div class="color-team-row">
+              <span class="color-team-label">Team 2 Color</span>
               <div class="color-swatches" data-team="2">
                 <% %w[#ef4444 #f97316 #eab308 #22c55e #3b82f6 #8b5cf6 #ec4899 #ffffff].each do |color| %>
                   <button class="color-swatch" data-color="<%= color %>" style="background:<%= color %>;" title="<%= color %>"></button>
@@ -157,26 +166,58 @@
       });
     }
 
-    // Team color picker
-    function applyTeamColors() {
+    // Team settings (colors + names)
+    function applyTeamSettings() {
       const c1 = localStorage.getItem("r_cards_team1_color") || "#3b82f6";
       const c2 = localStorage.getItem("r_cards_team2_color") || "#ef4444";
-      let style = document.getElementById("team-color-style");
-      if (!style) { style = document.createElement("style"); style.id = "team-color-style"; document.head.appendChild(style); }
-      style.textContent = `
-        .hand-container.team-color-1 { border: 2px solid ${c1}; border-radius: 8px; padding: 8px; box-shadow: 0 0 8px ${c1}55; }
-        .hand-container.team-color-2 { border: 2px solid ${c2}; border-radius: 8px; padding: 8px; box-shadow: 0 0 8px ${c2}55; }
-        .team-score-chip.my-team { border: 2px solid ${c1}; }
-        .player-chip.my-player { border-left: 3px solid ${c1}; padding-left: 6px; }
-      `;
+      const n1 = localStorage.getItem("r_cards_team1_name") || "";
+      const n2 = localStorage.getItem("r_cards_team2_name") || "";
+
+      // Color player chips by team
+      document.querySelectorAll(".player-chip[data-team='1']").forEach(el => {
+        el.style.borderLeft = "3px solid " + c1;
+        el.style.paddingLeft = "9px";
+      });
+      document.querySelectorAll(".player-chip[data-team='2']").forEach(el => {
+        el.style.borderLeft = "3px solid " + c2;
+        el.style.paddingLeft = "9px";
+      });
+
+      // Color team score chips
+      document.querySelectorAll(".team-score-chip[data-team='1']").forEach(el => {
+        el.style.borderLeft = "3px solid " + c1;
+        el.style.paddingLeft = "9px";
+      });
+      document.querySelectorAll(".team-score-chip[data-team='2']").forEach(el => {
+        el.style.borderLeft = "3px solid " + c2;
+        el.style.paddingLeft = "9px";
+      });
+
+      // Apply team names
+      document.querySelectorAll(".team-name-label[data-team]").forEach(el => {
+        const name = el.dataset.team === "1" ? n1 : n2;
+        el.textContent = name || "T" + el.dataset.team;
+      });
+      // Score chip name labels (no data-team on the span, use parent chip)
+      document.querySelectorAll(".team-score-chip[data-team] .team-name-label").forEach(el => {
+        const team = el.closest("[data-team]").dataset.team;
+        const name = team === "1" ? n1 : n2;
+        el.textContent = name || "T" + team;
+      });
+
+      // Sync swatch active states
       document.querySelectorAll(".color-swatches[data-team='1'] .color-swatch").forEach(s => s.classList.toggle("active", s.dataset.color === c1));
       document.querySelectorAll(".color-swatches[data-team='2'] .color-swatch").forEach(s => s.classList.toggle("active", s.dataset.color === c2));
+
+      // Sync name inputs
+      document.querySelectorAll(".team-name-input[data-team='1']").forEach(i => { if (document.activeElement !== i) i.value = n1; });
+      document.querySelectorAll(".team-name-input[data-team='2']").forEach(i => { if (document.activeElement !== i) i.value = n2; });
     }
 
     const colorTrigger  = document.getElementById("color-picker-trigger");
     const colorDropdown = document.getElementById("color-picker-dropdown");
     if (colorTrigger) {
-      applyTeamColors();
+      applyTeamSettings();
       colorTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
         colorDropdown.classList.toggle("open");
@@ -187,8 +228,15 @@
           const swatch = e.target.closest(".color-swatch");
           if (!swatch) return;
           localStorage.setItem("r_cards_team" + group.dataset.team + "_color", swatch.dataset.color);
-          applyTeamColors();
+          applyTeamSettings();
         });
+      });
+      document.querySelectorAll(".team-name-input").forEach(function (input) {
+        input.addEventListener("input", function () {
+          localStorage.setItem("r_cards_team" + input.dataset.team + "_name", input.value.trim());
+          applyTeamSettings();
+        });
+        input.addEventListener("click", function (e) { e.stopPropagation(); });
       });
     }
   });

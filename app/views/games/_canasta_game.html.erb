@@ -14,13 +14,13 @@
     <span class="nav-game-title">♣ Canasta<%= " (FL)" if @game.florida_rules? %></span>
     <div class="players-list">
       <% [0, 1].each do |team| %>
-        <div class="team-score-chip <%= 'my-team' if team == my_team %>">
-          T<%= team + 1 %><%= " (you)" if team == my_team %> — <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
+        <div class="team-score-chip <%= 'my-team' if team == my_team %>" data-team="<%= team + 1 %>">
+          <span class="team-name-label">T<%= team + 1 %></span><%= " (you)" if team == my_team %> — <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
         </div>
       <% end %>
       <% @game.players.order(:created_at).each do |player| %>
         <% is_active = @game.current_turn && player.id == @game.current_turn %>
-        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == @current_player&.id %>">
+        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == @current_player&.id %>" data-team="<%= player.team.to_i + 1 %>">
           <span class="player-name">
             <%= player.user_id == current_user.id ? "You" : player.user.name %>
             <span class="player-title-badge">· T<%= player.team.to_i + 1 %></span>
@@ -190,7 +190,7 @@
     </div>
 
 
-    <div class="hand-container team-color-<%= my_team.to_i + 1 %>">
+    <div class="hand-container">
       <div class="canasta-hand-row" id="canasta-hand">
         <% canasta_sort(@current_player.hand).each do |card| %>
           <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card", data: { card: card } %>
