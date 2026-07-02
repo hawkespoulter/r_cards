@@ -493,10 +493,10 @@
 
   .red-three-card {
     position: relative;
-    width: 54px;
-    min-width: 54px;
-    max-width: 54px;
-    margin-left: -36px;
+    width: 85px;
+    min-width: 85px;
+    max-width: 85px;
+    margin-left: -60px;
     border-radius: 5px;
     box-shadow: 1px 0 4px rgba(0,0,0,0.4);
 
@@ -513,15 +513,15 @@
 
   .canasta-rep-card {
     position: relative;
-    width: 54px;
-    border-radius: 5px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+    width: 85px;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.5);
     transition: transform 0.2s;
   }
 
   &.canasta-horizontal .canasta-rep-card {
     transform: rotate(90deg);
-    margin: 14px 6px;
+    margin: 22px 10px;
   }
 
   &.canasta-clean .canasta-rep-card {
