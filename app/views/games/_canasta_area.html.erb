@@ -6,8 +6,28 @@
 
 <% if has_anything %>
   <% if opponent %>
-    <%# ── Opponent layout: [in-progress melds] on left, [canastas / red-threes] stacked on right ── %>
+    <%# ── Opponent layout: [canastas | red threes] row, then [in-progress melds] below ── %>
     <div class="canasta-area canasta-area-opponent">
+
+      <% if red_threes.any? || completed.any? %>
+        <div class="canasta-completed-row canasta-completed-row-opponent">
+          <% completed.each_with_index do |(rank, cards), idx| %>
+            <% rep = canasta_representative_card(rank, cards) %>
+            <% clean = canasta_clean?(cards) %>
+            <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
+              <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
+              <span class="canasta-badge"><%= clean ? "♦ Clean" : "♠ Dirty" %></span>
+            </div>
+          <% end %>
+
+          <% red_threes.each do |card| %>
+            <div class="canasta-single red-three-single">
+              <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
+              <span class="canasta-badge">Red 3</span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
 
       <% if in_progress.any? %>
         <div class="canasta-melds-row">
@@ -15,34 +35,6 @@
             <div class="meld-group">
               <% cards.each do |card| %>
                 <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
-
-      <% if red_threes.any? || completed.any? %>
-        <div class="canasta-opponent-right">
-          <% if completed.any? %>
-            <div class="canasta-completed-row">
-              <% completed.each_with_index do |(rank, cards), idx| %>
-                <% rep = canasta_representative_card(rank, cards) %>
-                <% clean = canasta_clean?(cards) %>
-                <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
-                  <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
-                  <span class="canasta-badge"><%= clean ? "♦ Clean" : "♠ Dirty" %></span>
-                </div>
-              <% end %>
-            </div>
-          <% end %>
-
-          <% if red_threes.any? %>
-            <div class="canasta-completed-row">
-              <% red_threes.each do |card| %>
-                <div class="canasta-single red-three-single">
-                  <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
-                  <span class="canasta-badge">Red 3</span>
-                </div>
               <% end %>
             </div>
           <% end %>
