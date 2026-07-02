@@ -455,10 +455,13 @@ li.nav-center {
   justify-content: center;
   overflow: visible;
 
-  .game-card {
+  .hand-card-wrap {
     position: relative;
     flex-shrink: 0;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, margin-left 0s;
+    cursor: grab;
+    transition: transform 0.15s ease, margin-left 0s;
+
+    &:active { cursor: grabbing; }
 
     &:hover {
       transform: translateY(-10px);
@@ -467,11 +470,20 @@ li.nav-center {
 
     &.selected {
       transform: translateY(-12px);
-      box-shadow: 0 0 0 3px #fbbf24, 0 8px 20px rgba(0,0,0,0.45);
       z-index: 10;
+
+      .game-card {
+        box-shadow: 0 0 0 3px #fbbf24, 0 8px 20px rgba(0,0,0,0.45);
+      }
+    }
+
+    &.dragging { opacity: 0.25; }
+
+    .game-card {
+      display: block;
+      pointer-events: none;
     }
   }
-
 }
 
 // Team melds: cards overlap so only the rank/suit corner of each card peeks

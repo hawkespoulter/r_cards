@@ -182,7 +182,9 @@
     <div class="hand-container">
       <div class="canasta-hand-row" id="canasta-hand">
         <% canasta_sort(@current_player.hand).each do |card| %>
-          <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card", data: { card: card } %>
+          <div class="hand-card-wrap" data-card="<%= card %>">
+            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card", draggable: "false" %>
+          </div>
         <% end %>
       </div>
       <p class="pile-info" id="meld-selection-info" data-threshold="<%= my_turn && turn_phase == 'discard' ? 0 : 0 %>">

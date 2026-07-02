@@ -91,24 +91,21 @@ document.addEventListener("turbo:load", function () {
   function condenseHand() {
     const hand = document.getElementById("canasta-hand");
     if (!hand) return;
-    const cards = Array.from(hand.querySelectorAll(".game-card"));
-    if (cards.length === 0) return;
+    const wraps = Array.from(hand.querySelectorAll(".hand-card-wrap"));
+    if (wraps.length === 0) return;
 
-    // Reset margins to measure natural card width
-    cards.forEach(c => c.style.marginLeft = "");
-    const cardWidth = cards[0].getBoundingClientRect().width;
+    wraps.forEach(c => c.style.marginLeft = "");
+    const cardWidth = wraps[0].getBoundingClientRect().width;
     const gap = 8;
-    const naturalWidth = cards.length * cardWidth + (cards.length - 1) * gap;
-    const available = hand.parentElement.getBoundingClientRect().width - 48; // account for padding
+    const naturalWidth = wraps.length * cardWidth + (wraps.length - 1) * gap;
+    const available = hand.parentElement.getBoundingClientRect().width - 48;
 
     if (naturalWidth <= available) {
-      // Enough space — use normal gap
-      cards.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${gap}px`; });
+      wraps.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${gap}px`; });
     } else {
-      // Compress: calculate overlap needed
-      const overlap = (naturalWidth - available) / (cards.length - 1);
+      const overlap = (naturalWidth - available) / (wraps.length - 1);
       const marginLeft = gap - overlap;
-      cards.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${marginLeft}px`; });
+      wraps.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${marginLeft}px`; });
     }
   }
   condenseHand();
@@ -142,8 +139,8 @@ document.addEventListener("turbo:load", function () {
     return Array.from(selected.values());
   }
 
-  hand.querySelectorAll(".game-card").forEach((cardEl, idx) => {
-    cardEl.addEventListener("click", function () {
+  hand.querySelectorAll(".hand-card-wrap").forEach((wrap, idx) => {
+    wrap.addEventListener("click", function () {
       const card = this.dataset.card;
       if (selected.has(idx)) {
         selected.delete(idx);
@@ -193,19 +190,19 @@ document.addEventListener("turbo:load", function () {
   if (meldForm && meldInput) {
     let dragCards = [];
 
-    hand.querySelectorAll(".game-card").forEach((cardEl, idx) => {
-      cardEl.setAttribute("draggable", "true");
+    hand.querySelectorAll(".hand-card-wrap").forEach((wrap, idx) => {
+      wrap.setAttribute("draggable", "true");
 
-      cardEl.addEventListener("dragstart", function (e) {
+      wrap.addEventListener("dragstart", function (e) {
         const card = this.dataset.card;
-        // Carry selected set if this card is among them, otherwise just this card
         dragCards = selected.has(idx) ? selectedCards() : [card];
+        e.dataTransfer.clearData();
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", JSON.stringify(dragCards));
         this.classList.add("dragging");
       });
 
-      cardEl.addEventListener("dragend", function () {
+      wrap.addEventListener("dragend", function () {
         this.classList.remove("dragging");
       });
     });
