@@ -57,7 +57,8 @@ document.addEventListener("turbo:load", function () {
       const key0 = `r_cards_canasta_made_${gameId0}_${seq0}`;
       if (sessionStorage.getItem(key0) !== "1") {
         sessionStorage.setItem(key0, "1");
-        showCardModal({ title: `🃏 Canasta completed! (${rank0})`, confetti: true });
+        const rankCard0 = rank0 === "jo" ? "jo" : "h" + rank0;
+        showCardModal({ title: "🃏 Canasta!", cards: [rankCard0], confetti: true, confettiCard: rankCard0 });
       }
     }
   }

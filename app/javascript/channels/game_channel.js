@@ -49,9 +49,12 @@ document.addEventListener("turbo:load", function () {
           if (data.canasta_seq != null) {
             sessionStorage.setItem(`r_cards_canasta_made_${gameId}_${data.canasta_seq}`, "1");
           }
+          const rankCard = data.canasta_rank === "jo" ? "jo" : "h" + data.canasta_rank;
           showCardModal({
-            title: `🃏 Canasta completed! (${data.canasta_rank})`,
-            confetti: true
+            title: "🃏 Canasta!",
+            cards: [rankCard],
+            confetti: true,
+            confettiCard: rankCard
           });
           setTimeout(() => location.reload(), 1600);
         } else if (data.game_over) {

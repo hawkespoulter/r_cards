@@ -2,10 +2,11 @@ function cardImageSrc(card) {
   return (window.CARD_ASSET_MAP && window.CARD_ASSET_MAP[card]) || "";
 }
 
-function spawnConfetti(overlay) {
+function spawnConfetti(overlay, card = "blank_card") {
+  const src = cardImageSrc(card) || cardImageSrc("blank_card");
   for (let i = 0; i < 14; i++) {
     const piece = document.createElement("img");
-    piece.src = cardImageSrc("blank_card");
+    piece.src = src;
     piece.className = "confetti-card";
     const angle    = Math.random() * 360;
     const distance = 120 + Math.random() * 140;
@@ -19,7 +20,7 @@ function spawnConfetti(overlay) {
   }
 }
 
-export function showCardModal({ title, subtitle = "", cards = [], confetti = false, duration = 1800 }) {
+export function showCardModal({ title, subtitle = "", cards = [], confetti = false, confettiCard = "blank_card", duration = 1800 }) {
   const overlay = document.createElement("div");
   overlay.className = "card-modal-overlay";
 
@@ -51,7 +52,7 @@ export function showCardModal({ title, subtitle = "", cards = [], confetti = fal
   }
 
   overlay.appendChild(modal);
-  if (confetti) spawnConfetti(overlay);
+  if (confetti) spawnConfetti(overlay, confettiCard);
   document.body.appendChild(overlay);
 
   requestAnimationFrame(() => overlay.classList.add("show"));
