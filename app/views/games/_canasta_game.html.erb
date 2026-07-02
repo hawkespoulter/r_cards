@@ -111,6 +111,13 @@
   <% else %>
 
     <% opponent_team = 1 - my_team.to_i %>
+    <div class="team-melds opponent-melds">
+      <%= render "canasta_area",
+            team_num: opponent_team,
+            melds: ((@canasta.melds || {})[opponent_team.to_s] || {}),
+            red_threes: ((@canasta.red_threes || {})[opponent_team.to_s] || []),
+            opponent: true %>
+    </div>
 
 
 
@@ -139,23 +146,21 @@
     <div class="center-table-grid">
       <div class="peak-left-col">
         <% if peak_left %>
-          <% if (@canasta.peak_hands || {})[peak_left.id.to_s] %>
+          <% left_peak = (@canasta.peak_hands || {})[peak_left.id.to_s] %>
+          <% if left_peak %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
           <% end %>
         <% end %>
         <% if peak_top %>
-          <% if (@canasta.peak_hands || {})[peak_top.id.to_s] %>
+          <% top_peak = (@canasta.peak_hands || {})[peak_top.id.to_s] %>
+          <% if top_peak %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
           <% end %>
         <% end %>
-        <%= render "canasta_area",
-              team_num: my_team.to_i,
-              melds: ((@canasta.melds || {})[my_team.to_s] || {}),
-              red_threes: ((@canasta.red_threes || {})[my_team.to_s] || []) %>
       </div>
 
       <div class="piles-center">
@@ -183,25 +188,29 @@
 
       <div class="peak-right-col">
         <% if peak_right %>
-          <% if (@canasta.peak_hands || {})[peak_right.id.to_s] %>
+          <% right_peak = (@canasta.peak_hands || {})[peak_right.id.to_s] %>
+          <% if right_peak %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
           <% end %>
         <% end %>
         <% if @current_player %>
-          <% if (@canasta.peak_hands || {})[@current_player.id.to_s] %>
+          <% my_peak_cards = (@canasta.peak_hands || {})[@current_player.id.to_s] %>
+          <% if my_peak_cards %>
             <div class="peak-hand-box">
               <div class="peak-hand-stack"><%= image_tag "cards/blank_card.svg" %></div>
             </div>
           <% end %>
         <% end %>
-        <%= render "canasta_area",
-              team_num: opponent_team,
-              melds: ((@canasta.melds || {})[opponent_team.to_s] || {}),
-              red_threes: ((@canasta.red_threes || {})[opponent_team.to_s] || []),
-              opponent: true %>
       </div>
+    </div>
+
+    <div class="team-melds my-team-melds">
+      <%= render "canasta_area",
+            team_num: my_team.to_i,
+            melds: ((@canasta.melds || {})[my_team.to_s] || {}),
+            red_threes: ((@canasta.red_threes || {})[my_team.to_s] || []) %>
     </div>
 
     <div class="hand-container team-color-<%= my_team.to_i + 1 %>">
