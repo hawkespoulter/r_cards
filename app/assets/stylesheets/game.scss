@@ -541,17 +541,17 @@
 .center-table-grid {
   display: grid;
   grid-template-areas: "left piles right";
-  grid-template-columns: 110px 1fr 110px;
+  grid-template-columns: auto 1fr auto;
   grid-template-rows: auto;
   gap: 10px;
   align-items: center;
   justify-items: center;
   margin: 10px auto;
-  max-width: 720px;
+  max-width: 900px;
 }
 
-.peak-left-col  { grid-area: left;  display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.peak-right-col { grid-area: right; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.peak-left-col  { grid-area: left;  display: flex; flex-direction: row; gap: 8px; align-items: center; }
+.peak-right-col { grid-area: right; display: flex; flex-direction: row; gap: 8px; align-items: center; }
 
 .card-back-picker {
   margin-top: 14px;
