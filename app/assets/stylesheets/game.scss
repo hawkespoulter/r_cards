@@ -573,14 +573,14 @@ li.nav-center {
   grid-template-columns: auto 1fr auto;
   grid-template-rows: auto;
   gap: 28px;
-  align-items: center;
+  align-items: flex-start;
   justify-items: center;
   margin: 10px auto;
   max-width: 900px;
 }
 
-.peak-left-col  { grid-area: left;  display: flex; flex-direction: row; gap: 28px; align-items: center; }
-.peak-right-col { grid-area: right; display: flex; flex-direction: row; gap: 28px; align-items: center; }
+.peak-left-col  { grid-area: left;  display: flex; flex-direction: column; gap: 16px; align-items: flex-start; justify-content: flex-start; .peak-hand-box { display: flex; flex-direction: row; gap: 28px; } }
+.peak-right-col { grid-area: right; display: flex; flex-direction: column; gap: 16px; align-items: flex-end;   justify-content: flex-start; .peak-hand-box { display: flex; flex-direction: row; gap: 28px; } }
 
 .card-back-picker {
   margin-top: 14px;
