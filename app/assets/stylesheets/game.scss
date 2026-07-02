@@ -661,10 +661,21 @@ li.nav-center {
   align-self: flex-start;
 }
 
-.peak-hands-row {
+.peak-hands-top-row {
   display: flex;
   gap: 28px;
   justify-content: center;
+  margin-bottom: 12px;
+}
+
+.piles-with-flanks {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.peak-hand-flank {
+  flex-shrink: 0;
 }
 
 .card-back-picker {
