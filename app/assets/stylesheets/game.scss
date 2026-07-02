@@ -481,7 +481,11 @@ li.nav-center {
 
     .game-card {
       display: block;
+      position: relative;
       pointer-events: none;
+      width: 80px;
+      min-width: 80px;
+      max-width: 80px;
     }
   }
 }
