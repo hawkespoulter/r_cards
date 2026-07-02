@@ -10,9 +10,11 @@
     <% if red_threes.any? || completed.any? %>
       <div class="canasta-completed-row">
 
-        <% red_threes.each do |card| %>
-          <div class="canasta-single red-three-single">
-            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
+        <% if red_threes.any? %>
+          <div class="meld-group red-three-group">
+            <% red_threes.each do |card| %>
+              <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card red-three-card" %>
+            <% end %>
           </div>
         <% end %>
 

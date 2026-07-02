@@ -487,8 +487,21 @@
   gap: 0;
 }
 
-.red-three-single .canasta-rep-card {
-  box-shadow: 0 0 0 2px #ef4444, 0 3px 10px rgba(0,0,0,0.5);
+.red-three-group {
+  border: 1px solid rgba(239,68,68,0.4);
+  background: rgba(239,68,68,0.08);
+
+  .red-three-card {
+    position: relative;
+    width: 54px;
+    min-width: 54px;
+    max-width: 54px;
+    margin-left: -36px;
+    border-radius: 5px;
+    box-shadow: 1px 0 4px rgba(0,0,0,0.4);
+
+    &:first-child { margin-left: 0; }
+  }
 }
 
 // Single card representing a completed canasta, alternating orientation
