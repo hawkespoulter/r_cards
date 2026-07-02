@@ -154,25 +154,43 @@ class Canasta < ApplicationRecord
     hand = player.hand.dup
     return { error: "Invalid cards" } unless cards.all? { |c| hand.include?(c) }
 
-    naturals = cards.reject { |c| wild?(c) }
-    wilds    = cards.select { |c| wild?(c) }
-    return { error: "Need at least one natural card" } if naturals.empty?
-    return { error: "Threes cannot be melded" } if naturals.any? { |c| rank_of(c) == "3" }
+    naturals_all = cards.reject { |c| wild?(c) }
+    return { error: "Need at least one natural card" } if naturals_all.empty?
+    return { error: "Threes cannot be melded" } if naturals_all.any? { |c| rank_of(c) == "3" }
 
-    ranks = naturals.map { |c| rank_of(c) }.uniq
-    return { error: "All natural cards must be the same rank" } unless ranks.length == 1
-    rank = ranks.first
+    # Group cards into melds by rank. Wilds are distributed greedily to each rank group.
+    # Strategy: assign each wild card to the rank group it was selected with.
+    # Since we can't know which wild belongs to which group from a flat array,
+    # we split by rank then distribute wilds proportionally to each group.
+    rank_groups = naturals_all.group_by { |c| rank_of(c) }
+    wilds_pool  = cards.select { |c| wild?(c) }
+
+    # Assign wilds to groups in order until pool is exhausted
+    groups = {}
+    rank_groups.each do |rank, naturals|
+      groups[rank] = { naturals: naturals, wilds: [] }
+    end
+
+    # Distribute wilds round-robin across groups that need them
+    wilds_pool.each_with_index do |wild, i|
+      rank = groups.keys[i % groups.size]
+      groups[rank][:wilds] << wild
+    end
 
     team_melds = (melds[player.team.to_s] || {}).dup
-    existing   = team_melds[rank] || []
-
-    return { error: "Need at least 3 cards to start a new meld" } if existing.empty? && cards.length < 3
-
-    total_wild    = existing.count { |c| wild?(c) } + wilds.length
-    total_natural = existing.count { |c| !wild?(c) } + naturals.length
-    return { error: "A meld cannot contain more wild cards than natural cards" } if total_wild > total_natural
-
     team_has_melded = team_melds.values.any?(&:present?)
+
+    # Validate each group
+    groups.each do |rank, g|
+      existing      = team_melds[rank] || []
+      group_cards   = g[:naturals] + g[:wilds]
+      total_wild    = existing.count { |c| wild?(c) } + g[:wilds].length
+      total_natural = existing.count { |c| !wild?(c) } + g[:naturals].length
+
+      return { error: "Need at least 3 cards to start a new meld for #{rank}s" } if existing.empty? && group_cards.length < 3
+      return { error: "A meld cannot contain more wild cards than natural cards (#{rank}s)" } if total_wild > total_natural
+    end
+
     unless team_has_melded
       total_points = cards.sum { |c| card_points(c) }
       threshold    = meld_threshold(player.team)
@@ -184,8 +202,12 @@ class Canasta < ApplicationRecord
     cards.each { |c| remaining_hand.delete_at(remaining_hand.index(c)) }
     player.update!(hand: remaining_hand)
 
-    result = add_to_meld(player.team, rank, cards)
-    result.merge(success: true)
+    last_result = {}
+    groups.each do |rank, g|
+      last_result = add_to_meld(player.team, rank, g[:naturals] + g[:wilds])
+    end
+
+    last_result.merge(success: true)
   end
 
   def discard(player, card)
