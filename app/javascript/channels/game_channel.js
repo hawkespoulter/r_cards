@@ -46,17 +46,29 @@ document.addEventListener("turbo:load", function () {
         playCardSound();
 
         if (data.canasta_completed) {
-          if (data.canasta_seq != null) {
-            sessionStorage.setItem(`r_cards_canasta_made_${gameId}_${data.canasta_seq}`, "1");
+          const myPlayerId = document.querySelector("[data-game-id]")?.dataset.playerId;
+          const isActingPlayer = myPlayerId != null && String(data.acting_player_id) === myPlayerId;
+
+          if (!isActingPlayer) {
+            // The acting player is about to be navigated to a fresh page by
+            // their own meld POST's redirect — showing the modal here, on
+            // the page they're already leaving, just gets it wiped out
+            // early by that navigation. Their own canasta_cards.js check
+            // (once the fresh page loads) shows it uninterrupted instead.
+            const key = data.canasta_seq != null ? `r_cards_canasta_made_${gameId}_${data.canasta_seq}` : null;
+            const alreadyShown = key && sessionStorage.getItem(key) === "1";
+            if (!alreadyShown) {
+              if (key) sessionStorage.setItem(key, "1");
+              const rankCard = data.canasta_rank === "jo" ? "jo" : "h" + data.canasta_rank;
+              showCardModal({
+                title: "Canasta!",
+                cards: [rankCard],
+                confetti: true,
+                confettiCard: rankCard
+              });
+              setTimeout(() => location.reload(), 1600);
+            }
           }
-          const rankCard = data.canasta_rank === "jo" ? "jo" : "h" + data.canasta_rank;
-          showCardModal({
-            title: "🃏 Canasta!",
-            cards: [rankCard],
-            confetti: true,
-            confettiCard: rankCard
-          });
-          setTimeout(() => location.reload(), 1600);
         } else if (data.game_over) {
           showCardModal({
             title: `🏆 Team ${parseInt(data.winning_team, 10) + 1} wins the game!`,

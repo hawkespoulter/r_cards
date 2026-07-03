@@ -4,8 +4,8 @@
 <% in_progress = sort_melds(melds.reject { |_rank, cards| cards.length >= 7 }) %>
 <% has_anything = completed.any? || red_threes.any? || in_progress.any? %>
 
-<% if has_anything %>
-  <% if opponent %>
+<% if opponent %>
+  <% if has_anything %>
     <%# ── Opponent layout: [canastas | red threes] row, then [in-progress melds] below ── %>
     <div class="canasta-area canasta-area-opponent">
 
@@ -40,41 +40,48 @@
       <% end %>
 
     </div>
+  <% end %>
 
-  <% else %>
-    <%# ── My team layout: [red threes | completed canastas] on top, [in-progress melds] below ── %>
-    <div class="canasta-area">
+<% else %>
+  <%# ── My team layout: [red threes | completed canastas] on top, [in-progress melds] below ──
+      Always rendered (even with nothing melded yet) so there's a drop zone to start a new meld. %>
+  <div class="canasta-area">
 
-      <% if red_threes.any? || completed.any? %>
-        <div class="canasta-completed-row">
+    <div class="canasta-completed-row">
+      <%# Always present so a red three can be played (and replaced) any time,
+          regardless of whose turn it is. If you already have red threes,
+          drop directly onto the stack instead of a separate empty-slot outline. %>
+      <div class="red-three-stack" id="red-three-drop">
+        <% if red_threes.any? %>
           <% red_threes.each do |card| %>
             <div class="canasta-single red-three-single">
               <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
             </div>
           <% end %>
+        <% else %>
+          <div class="red-three-drop-zone"></div>
+        <% end %>
+      </div>
 
-          <% completed.each_with_index do |(rank, cards), idx| %>
-            <% rep = canasta_representative_card(rank, cards) %>
-            <% clean = canasta_clean?(cards) %>
-            <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
-              <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
-            </div>
-          <% end %>
+      <% completed.each_with_index do |(rank, cards), idx| %>
+        <% rep = canasta_representative_card(rank, cards) %>
+        <% clean = canasta_clean?(cards) %>
+        <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
+          <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
         </div>
       <% end %>
-
-      <% if in_progress.any? %>
-        <div class="canasta-melds-row">
-          <% in_progress.each do |rank, cards| %>
-            <div class="meld-group" data-meld-rank="<%= rank %>">
-              <% cards.each do |card| %>
-                <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
-
     </div>
-  <% end %>
+
+    <div class="canasta-melds-row">
+      <% in_progress.each do |rank, cards| %>
+        <div class="meld-group" data-meld-rank="<%= rank %>">
+          <% cards.each do |card| %>
+            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
+          <% end %>
+        </div>
+      <% end %>
+      <div class="meld-group meld-group-new" id="new-meld-drop"></div>
+    </div>
+
+  </div>
 <% end %>

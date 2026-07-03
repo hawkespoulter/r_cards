@@ -105,6 +105,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
     is_host = @game.players.order(:created_at).first&.user_id == current_user.id
     return redirect_to @game, alert: "Only the host can start the game." unless is_host
+    return redirect_to @game if @game.turn_order.present?
 
     if @game.canasta? && @game.players.count != 4
       return redirect_to @game, alert: "Canasta needs exactly 4 players to start."
@@ -184,23 +185,49 @@ class GamesController < ApplicationController
     end
   end
 
+  def play_red_three
+    @game           = Game.find(params[:id])
+    @canasta        = @game.canasta
+    @current_player = @game.players.find_by(user_id: current_user.id)
+
+    result = @canasta.play_red_three(@current_player, params[:card])
+
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
+      redirect_to @game
+    end
+  end
+
+  def draw_red_three_replacement
+    @game           = Game.find(params[:id])
+    @canasta        = @game.canasta
+    @current_player = @game.players.find_by(user_id: current_user.id)
+
+    result = @canasta.draw_red_three_replacement(@current_player)
+
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
+      redirect_to @game
+    end
+  end
+
   def pickup_discard
     @game           = Game.find(params[:id])
     @canasta        = @game.canasta
     @current_player = @game.players.find_by(user_id: current_user.id)
 
-    meld_cards = begin
-      params[:meld_cards].present? ? JSON.parse(params[:meld_cards]) : []
-    rescue JSON::ParserError
-      []
-    end
-    result = @canasta.pickup_discard(@current_player, meld_cards)
+    result = @canasta.pickup_discard(@current_player)
 
     if result[:error]
       redirect_to @game, alert: result[:error]
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
-        message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank]
+        message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
+        canasta_seq: result[:canasta_seq]
       }
       redirect_to @game
     end
@@ -216,14 +243,31 @@ class GamesController < ApplicationController
     rescue JSON::ParserError
       []
     end
-    result = @canasta.meld(@current_player, cards)
+    target_rank = params[:target_rank].presence
+    result = @canasta.meld(@current_player, cards, target_rank: target_rank)
 
     if result[:error]
       redirect_to @game, alert: result[:error]
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
-        message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank]
+        message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
+        canasta_seq: result[:canasta_seq], acting_player_id: @current_player.id
       }
+      redirect_to @game
+    end
+  end
+
+  def undo_meld
+    @game           = Game.find(params[:id])
+    @canasta        = @game.canasta
+    @current_player = @game.players.find_by(user_id: current_user.id)
+
+    result = @canasta.undo_meld(@current_player)
+
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
       redirect_to @game
     end
   end

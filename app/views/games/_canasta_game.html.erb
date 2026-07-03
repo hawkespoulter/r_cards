@@ -31,6 +31,9 @@
         </div>
       <% end %>
     </div>
+    <% if my_turn && (@canasta&.turn_meld_log || []).any? %>
+      <%= button_to "↺", undo_meld_game_path(@game), method: :post, class: "btn-undo", title: "Undo last meld" %>
+    <% end %>
     <% if @is_host && !@game_started %>
       <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
     <% end %>
@@ -114,12 +117,19 @@
            style="display:none;"></div>
     <% end %>
 
-    <% if (@canasta.last_draw || {})["cards"].present? || (@canasta.last_draw || {})["red_threes_drawn"].present? %>
+    <% if (@canasta.last_draw || {})["cards"].present? %>
       <div data-last-draw="true"
            data-draw-player="<%= @canasta.last_draw["player_id"] %>"
            data-draw-seq="<%= @canasta.last_draw["seq"] %>"
            data-draw-cards="<%= @canasta.last_draw["cards"].to_json %>"
-           data-draw-red-threes="<%= (@canasta.last_draw["red_threes_drawn"] || []).to_json %>"
+           style="display:none;"></div>
+    <% end %>
+
+    <% if (@canasta.last_pickup || {})["cards"].present? %>
+      <div data-last-pickup="true"
+           data-pickup-player="<%= @canasta.last_pickup["player_id"] %>"
+           data-pickup-seq="<%= @canasta.last_pickup["seq"] %>"
+           data-pickup-cards="<%= @canasta.last_pickup["cards"].to_json %>"
            style="display:none;"></div>
     <% end %>
 
@@ -146,8 +156,16 @@
             </div>
           <% end %>
         <div class="piles-center">
+          <% pending_red_three_draws = (@canasta.pending_red_three_draws || {})[@current_player&.id.to_s].to_i %>
           <div class="draw-pile-block">
-            <% if my_turn && turn_phase == "draw" %>
+            <% if pending_red_three_draws > 0 %>
+              <%# Red three replacement takes priority — the stock pile is only
+                  active for this one card, regardless of whose turn it is. %>
+              <%= button_to draw_red_three_replacement_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
+                <%= image_tag "cards/blank_card.svg", class: "pile-card pile-card-red-three-pending", title: "Draw your red three replacement" %>
+                <span class="stock-count-tooltip">Draw replacement</span>
+              <% end %>
+            <% elsif my_turn && turn_phase == "draw" %>
               <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
                 <%= image_tag "cards/blank_card.svg", class: "pile-card", title: "#{(@canasta.draw_pile || []).length} cards" %>
                 <span class="stock-count-tooltip"><%= (@canasta.draw_pile || []).length %></span>
@@ -159,13 +177,13 @@
               </div>
             <% end %>
           </div>
-          <div class="discard-pile-block">
+          <div class="discard-pile-block" id="discard-pile-drop">
             <% discard_top = @canasta.discard_pile&.last %>
             <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
             <% if (@canasta.discard_pile || []).any? %>
               <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card #{'pile-card-frozen' if frozen_by_wild}", title: frozen_by_wild ? "Frozen ❄" : nil %>
             <% else %>
-              <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+              <div class="pile-card pile-card-empty">∅</div>
             <% end %>
           </div>
         </div>
@@ -201,33 +219,28 @@
       </div>
       <p class="pile-info" id="meld-selection-info" data-threshold="<%= my_turn && turn_phase == 'discard' ? 0 : 0 %>">
         Selected total: <span id="meld-running-total">0</span> pts
-        <% if my_turn %>
-          — initial meld for your team needs at least <strong><%= meld_threshold = ((@canasta.team_scores || {})[my_team.to_s].to_i) %></strong> pts
-          (threshold scales with score; see status bar)
-        <% end %>
       </p>
     </div>
 
-    <% if my_turn %>
-      <div class="game-footer" id="canasta-actions" data-turn-phase="<%= turn_phase %>">
-        <% if turn_phase == "draw" %>
-          <%= form_with url: pickup_discard_game_path(@game), method: :post, html: { id: "pickup-form" } do |f| %>
-            <%= f.hidden_field :meld_cards, id: "pickup-cards-input", value: "" %>
-            <%= f.submit "Pick Up Pile (with selected cards)", class: "btn-play", id: "pickup-btn" %>
-          <% end %>
-        <% else %>
-          <%= form_with url: meld_game_path(@game), method: :post, html: { id: "meld-form" } do |f| %>
-            <%= f.hidden_field :cards, id: "meld-cards-input", value: "" %>
-            <%= f.submit "Meld Selected", class: "btn-play", id: "meld-btn" %>
-          <% end %>
-          <%= form_with url: discard_game_path(@game), method: :post, html: { id: "discard-form" } do |f| %>
-            <%= f.hidden_field :card, id: "discard-card-input", value: "" %>
-            <%= f.submit "Discard Selected", class: "btn-pass", id: "discard-btn" %>
-          <% end %>
-        <% end %>
-      </div>
+    <%# Playing a red three isn't gated by whose turn it is, so this form is
+        always available regardless of my_turn/turn_phase. %>
+    <%= form_with url: play_red_three_game_path(@game), method: :post, html: { id: "red-three-form", style: "display:none;" } do |f| %>
+      <%= f.hidden_field :card, id: "red-three-card-input", value: "" %>
     <% end %>
 
+    <% if my_turn && turn_phase == "draw" %>
+      <%= form_with url: pickup_discard_game_path(@game), method: :post, html: { id: "pickup-form", style: "display:none;" } %>
+    <% end %>
+
+    <% if my_turn && turn_phase != "draw" %>
+      <%= form_with url: meld_game_path(@game), method: :post, html: { id: "meld-form", style: "display:none;" } do |f| %>
+        <%= f.hidden_field :cards, id: "meld-cards-input", value: "" %>
+        <%= f.hidden_field :target_rank, id: "meld-target-rank-input", value: "" %>
+      <% end %>
+      <%= form_with url: discard_game_path(@game), method: :post, html: { id: "discard-form", style: "display:none;" } do |f| %>
+        <%= f.hidden_field :card, id: "discard-card-input", value: "" %>
+      <% end %>
+    <% end %>
   <% end %>
 
 </div>

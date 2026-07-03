@@ -1,6 +1,35 @@
 import { showCardModal } from "card_modal"
 
+// Builds an off-screen fanned stack of the given cards to use as a custom
+// drag image, so dragging a multi-card selection shows all of it instead of
+// just the single card the browser grabbed under the cursor.
+function buildDragImage(cards) {
+  const el = document.createElement("div");
+  el.style.position = "fixed";
+  el.style.top = "-9999px";
+  el.style.left = "-9999px";
+  el.style.display = "flex";
+  el.style.pointerEvents = "none";
+
+  cards.forEach((card, i) => {
+    const img = document.createElement("img");
+    img.src = (window.CARD_ASSET_MAP && window.CARD_ASSET_MAP[card]) || "";
+    img.style.width = "60px";
+    img.style.borderRadius = "5px";
+    img.style.boxShadow = "0 4px 10px rgba(0,0,0,0.5)";
+    img.style.marginLeft = i === 0 ? "0" : "-36px";
+    el.appendChild(img);
+  });
+
+  document.body.appendChild(el);
+  return el;
+}
+
 document.addEventListener("turbo:load", function () {
+  // ── Recolor the whole page background to match "my turn" state ───────────
+  const gameContainerEl = document.querySelector(".game-container");
+  document.body.classList.toggle("my-turn-bg", !!gameContainerEl?.classList.contains("my-turn"));
+
   // ── "You drew these cards" popup (once per draw) ───────────────────────────
   const drawInfo = document.querySelector("[data-last-draw]");
   if (drawInfo) {
@@ -10,22 +39,40 @@ document.addEventListener("turbo:load", function () {
     const drawPlayer = drawInfo.dataset.drawPlayer;
     const seq        = drawInfo.dataset.drawSeq;
     const cards      = JSON.parse(drawInfo.dataset.drawCards || "[]");
-    const redThrees  = JSON.parse(drawInfo.dataset.drawRedThrees || "[]");
 
     if (gameId && myPlayerId && drawPlayer === myPlayerId) {
       const key = `r_cards_canasta_draw_${gameId}_${seq}`;
       if (sessionStorage.getItem(key) !== "1") {
         sessionStorage.setItem(key, "1");
-        if (redThrees.length > 0) {
-          // Show red three modal first, then normal draw modal after
+        if (cards.length) {
+          const hasRedThree = cards.some((c) => c === "h3" || c === "d3");
           showCardModal({
-            title: "🟥 Red three auto-played — replaced!",
-            subtitle: redThrees.length > 1 ? `${redThrees.length} red threes collected` : null,
-            cards: [...redThrees, ...cards],
-            duration: 2800
+            title: "You drew these cards",
+            cards,
+            duration: hasRedThree ? 2800 : 1800
           });
-        } else if (cards.length) {
-          showCardModal({ title: "You drew these cards", cards });
+        }
+      }
+    }
+  }
+
+  // ── "You picked up the pile" popup (once per pickup) ───────────────────────
+  const pickupInfo = document.querySelector("[data-last-pickup]");
+  if (pickupInfo) {
+    const container3    = document.querySelector("[data-game-id]");
+    const gameId3        = container3?.dataset.gameId;
+    const myPlayerId3    = container3?.dataset.playerId;
+    const pickupPlayer   = pickupInfo.dataset.pickupPlayer;
+    const seq3           = pickupInfo.dataset.pickupSeq;
+    const pickedUpCards  = JSON.parse(pickupInfo.dataset.pickupCards || "[]");
+
+    if (gameId3 && myPlayerId3 && pickupPlayer === myPlayerId3) {
+      const key3 = `r_cards_canasta_pickup_${gameId3}_${seq3}`;
+      if (sessionStorage.getItem(key3) !== "1") {
+        sessionStorage.setItem(key3, "1");
+        if (pickedUpCards.length) {
+          const duration = Math.min(7000, 3000 + pickedUpCards.length * 250);
+          showCardModal({ title: "You picked up the pile!", cards: pickedUpCards, duration });
         }
       }
     }
@@ -58,7 +105,7 @@ document.addEventListener("turbo:load", function () {
       if (sessionStorage.getItem(key0) !== "1") {
         sessionStorage.setItem(key0, "1");
         const rankCard0 = rank0 === "jo" ? "jo" : "h" + rank0;
-        showCardModal({ title: "🃏 Canasta!", cards: [rankCard0], confetti: true, confettiCard: rankCard0 });
+        showCardModal({ title: "Canasta!", cards: [rankCard0], confetti: true, confettiCard: rankCard0 });
       }
     }
   }
@@ -153,60 +200,79 @@ document.addEventListener("turbo:load", function () {
     });
   });
 
+  // ── Drag cards from hand — always enabled, since playing a red three isn't
+  // gated by whose turn it is (unlike melding/discarding/pickup below). ──────
+  let dragCards = [];
+
+  hand.querySelectorAll(".hand-card-wrap").forEach((wrap, idx) => {
+    wrap.setAttribute("draggable", "true");
+
+    wrap.addEventListener("dragstart", function (e) {
+      const card = this.dataset.card;
+      dragCards = selected.has(idx) ? selectedCards() : [card];
+      e.dataTransfer.clearData();
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", JSON.stringify(dragCards));
+      this.classList.add("dragging");
+
+      if (dragCards.length > 1) {
+        const dragImg = buildDragImage(dragCards);
+        const totalWidth = 60 + (dragCards.length - 1) * 24;
+        e.dataTransfer.setDragImage(dragImg, totalWidth / 2, 42);
+        setTimeout(() => dragImg.remove(), 0);
+      }
+    });
+
+    wrap.addEventListener("dragend", function () {
+      this.classList.remove("dragging");
+    });
+  });
+
+  // ── Click the discard pile to pick it up (no hand selection required) ────
   const pickupForm = document.getElementById("pickup-form");
-  const pickupInput = document.getElementById("pickup-cards-input");
-  if (pickupForm && pickupInput) {
-    pickupForm.addEventListener("submit", function () {
-      pickupInput.value = JSON.stringify(selectedCards());
+  const discardPileForPickup = document.getElementById("discard-pile-drop");
+  if (pickupForm && discardPileForPickup) {
+    discardPileForPickup.classList.add("pile-clickable");
+    discardPileForPickup.addEventListener("click", function () {
+      pickupForm.requestSubmit();
+    });
+  }
+
+  // ── Drag a red three from hand onto your red-three area, any time ────────
+  const redThreeForm = document.getElementById("red-three-form");
+  const redThreeInput = document.getElementById("red-three-card-input");
+  const redThreeDrop = document.getElementById("red-three-drop");
+  if (redThreeForm && redThreeInput && redThreeDrop) {
+    redThreeDrop.addEventListener("dragover", function (e) {
+      if (dragCards.length !== 1) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      this.classList.add("drag-over");
+    });
+
+    redThreeDrop.addEventListener("dragleave", function (e) {
+      if (!this.contains(e.relatedTarget)) {
+        this.classList.remove("drag-over");
+      }
+    });
+
+    redThreeDrop.addEventListener("drop", function (e) {
+      e.preventDefault();
+      this.classList.remove("drag-over");
+      if (dragCards.length !== 1) return;
+      redThreeInput.value = dragCards[0];
+      redThreeForm.requestSubmit();
     });
   }
 
   const meldForm = document.getElementById("meld-form");
   const meldInput = document.getElementById("meld-cards-input");
-  if (meldForm && meldInput) {
-    meldForm.addEventListener("submit", function (e) {
-      if (selected.size === 0) {
-        e.preventDefault();
-        return;
-      }
-      meldInput.value = JSON.stringify(selectedCards());
-    });
-  }
-
+  const meldTargetRankInput = document.getElementById("meld-target-rank-input");
   const discardForm = document.getElementById("discard-form");
   const discardInput = document.getElementById("discard-card-input");
-  if (discardForm && discardInput) {
-    discardForm.addEventListener("submit", function (e) {
-      if (selected.size !== 1) {
-        e.preventDefault();
-        alert("Select exactly one card to discard.");
-        return;
-      }
-      discardInput.value = selectedCards()[0];
-    });
-  }
 
   // ── Drag cards from hand onto melds ──────────────────────────────────────
   if (meldForm && meldInput) {
-    let dragCards = [];
-
-    hand.querySelectorAll(".hand-card-wrap").forEach((wrap, idx) => {
-      wrap.setAttribute("draggable", "true");
-
-      wrap.addEventListener("dragstart", function (e) {
-        const card = this.dataset.card;
-        dragCards = selected.has(idx) ? selectedCards() : [card];
-        e.dataTransfer.clearData();
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", JSON.stringify(dragCards));
-        this.classList.add("dragging");
-      });
-
-      wrap.addEventListener("dragend", function () {
-        this.classList.remove("dragging");
-      });
-    });
-
     document.querySelectorAll(".meld-group[data-meld-rank]").forEach(function (group) {
       group.addEventListener("dragover", function (e) {
         e.preventDefault();
@@ -224,8 +290,60 @@ document.addEventListener("turbo:load", function () {
         e.preventDefault();
         this.classList.remove("drag-over");
         meldInput.value = JSON.stringify(dragCards);
+        if (meldTargetRankInput) meldTargetRankInput.value = this.dataset.meldRank;
         meldForm.requestSubmit();
       });
+    });
+
+    // ── Drag cards onto an empty spot to start a brand-new meld ──────────────
+    const newMeldDrop = document.getElementById("new-meld-drop");
+    if (newMeldDrop) {
+      newMeldDrop.classList.add("meld-drop-enabled");
+
+      newMeldDrop.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        this.classList.add("drag-over");
+      });
+
+      newMeldDrop.addEventListener("dragleave", function (e) {
+        if (!this.contains(e.relatedTarget)) {
+          this.classList.remove("drag-over");
+        }
+      });
+
+      newMeldDrop.addEventListener("drop", function (e) {
+        e.preventDefault();
+        this.classList.remove("drag-over");
+        meldInput.value = JSON.stringify(dragCards);
+        if (meldTargetRankInput) meldTargetRankInput.value = "";
+        meldForm.requestSubmit();
+      });
+    }
+  }
+
+  // ── Drag a single card from hand onto the discard pile ──────────────────
+  const discardPileEl = document.getElementById("discard-pile-drop");
+  if (discardPileEl && discardForm && discardInput) {
+    discardPileEl.addEventListener("dragover", function (e) {
+      if (dragCards.length !== 1) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      this.classList.add("drag-over");
+    });
+
+    discardPileEl.addEventListener("dragleave", function (e) {
+      if (!this.contains(e.relatedTarget)) {
+        this.classList.remove("drag-over");
+      }
+    });
+
+    discardPileEl.addEventListener("drop", function (e) {
+      e.preventDefault();
+      this.classList.remove("drag-over");
+      if (dragCards.length !== 1) return;
+      discardInput.value = dragCards[0];
+      discardForm.requestSubmit();
     });
   }
 });

@@ -23,6 +23,7 @@
   border-radius: 16px;
   text-align: center;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  max-width: #{"min(90vw, 620px)"};
   transform: scale(0.85);
   opacity: 0;
   transition: transform 0.25s ease, opacity 0.25s ease;
@@ -47,6 +48,7 @@
 
 .card-modal-cards {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
   margin-top: 12px;
@@ -95,6 +97,14 @@
 
 // ── Game layout ──────────────────────────────────────────────────────────────
 
+// Body itself (not just .game-container) picks up the navy turn color, so
+// there's no green (body's default --light background) peeking out below or
+// around the game area — e.g. if a flash message shifts the layout height.
+body.my-turn-bg {
+  background-color: rgb(15, 40, 100);
+  transition: background-color 0.4s ease;
+}
+
 .game-container {
   display: flex;
   flex-direction: column;
@@ -103,6 +113,10 @@
 
   &.my-turn {
     background-color: rgb(15, 40, 100); // deep navy pool-table felt
+
+    .game-footer {
+      background-color: rgb(15, 40, 100);
+    }
   }
 }
 
@@ -208,6 +222,28 @@ li.nav-center {
   }
 }
 
+.btn-undo {
+  background: transparent;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fbbf24;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: #fbbf24;
+  }
+}
+
 // Slide-down settings panel
 .settings-panel {
   max-height: 0;
@@ -267,11 +303,16 @@ li.nav-center {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.3);
   color: white;
-  padding: 6px 14px;
+  height: 32px;
+  padding: 0 14px;
   border-radius: 6px;
   font-size: 0.85rem;
   cursor: pointer;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 
   &:hover {
@@ -379,6 +420,28 @@ li.nav-center {
   box-shadow: 0 0 0 2px #60a5fa, 0 6px 18px rgba(0,0,0,0.5);
 }
 
+.pile-card-red-three-pending {
+  animation: red-three-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes red-three-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px #ef4444, 0 6px 18px rgba(0,0,0,0.5); }
+  50%      { box-shadow: 0 0 0 3px #ef4444, 0 0 20px rgba(239,68,68,0.8); }
+}
+
+.pile-card-empty {
+  aspect-ratio: 62 / 88;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16,185,129,0.15);
+  border: 2px solid #10b981;
+  color: #10b981;
+  font-size: 1.8rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
 .pile-info {
   font-size: 0.85rem;
   opacity: 0.75;
@@ -392,9 +455,11 @@ li.nav-center {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
   padding-top: 12px;
+  padding-bottom: 28px;
   border-top: 1px solid rgba(255,255,255,0.12);
-  flex: 1;
+  flex: 0 0 auto;
 }
 
 .hand-label {
@@ -525,6 +590,37 @@ li.nav-center {
   }
 }
 
+// Drop zone for starting a brand-new meld — invisible until it's your turn
+// to meld, then shows as a dashed empty slot alongside your existing melds.
+.meld-group-new {
+  display: none;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 87px;
+  background: transparent;
+  border: 2px dashed rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.35);
+  font-size: 1.6rem;
+  font-weight: 300;
+
+  &::before {
+    content: "+";
+  }
+
+  &.meld-drop-enabled {
+    display: flex;
+  }
+
+  &.drag-over {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: #6366f1;
+    border-style: solid;
+    color: #6366f1;
+  }
+}
+
 .team-melds {
   padding: 4px 24px 8px;
 }
@@ -551,7 +647,6 @@ li.nav-center {
   align-items: center;
   gap: 12px;
   padding: 6px 0 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
   margin-bottom: 8px;
 }
 
@@ -575,6 +670,46 @@ li.nav-center {
 
 .canasta-single:not(.red-three-single) + .canasta-single:not(.red-three-single) {
   margin-left: -55px;
+}
+
+// Always-present drop target for playing a red three from hand — not gated
+// by turn, since red threes can be played any time. Wraps either the actual
+// red-three card stack (if you have any) or a dashed empty-slot outline.
+.red-three-stack {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: box-shadow 0.1s;
+
+  &.drag-over {
+    box-shadow: 0 0 0 3px #6366f1;
+
+    .red-three-drop-zone {
+      background: rgba(239, 68, 68, 0.2);
+      border-style: solid;
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+  }
+}
+
+.red-three-drop-zone {
+  box-sizing: border-box;
+  width: 85px;
+  aspect-ratio: 62 / 88;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
+  color: rgba(239, 68, 68, 0.55);
+  font-size: 0.7rem;
+  text-align: center;
+  padding: 4px;
+
+  &::before {
+    content: "Red 3";
+  }
 }
 
 // Single card representing a completed canasta, alternating orientation
@@ -638,7 +773,7 @@ li.nav-center {
   align-items: flex-start;
   justify-content: flex-end;
   min-width: 0;
-  align-self: flex-end;
+  align-self: stretch;
 }
 
 .piles-col {
@@ -658,7 +793,7 @@ li.nav-center {
   align-items: flex-end;
   justify-content: flex-start;
   min-width: 0;
-  align-self: flex-start;
+  align-self: stretch;
 }
 
 .piles-with-flanks {
@@ -774,6 +909,24 @@ li.nav-center {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.discard-pile-block.drag-over {
+  box-shadow: 0 0 0 3px #6366f1;
+  border-radius: 8px;
+  transition: box-shadow 0.1s;
+}
+
+.discard-pile-block.pile-clickable {
+  cursor: pointer;
+
+  .pile-card {
+    transition: transform 0.15s ease;
+  }
+
+  &:hover .pile-card {
+    transform: translateY(-6px);
+  }
 }
 
 .game-card {

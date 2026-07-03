@@ -76,6 +76,7 @@ class Game < ApplicationRecord
   end
 
   def initialize_canasta_game_state
+    return if canasta.present?
     Canasta.create(game: self).initialize_round
   end
 
