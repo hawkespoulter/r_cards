@@ -71,8 +71,7 @@ document.addEventListener("turbo:load", function () {
       if (sessionStorage.getItem(key3) !== "1") {
         sessionStorage.setItem(key3, "1");
         if (pickedUpCards.length) {
-          const duration = Math.min(7000, 3000 + pickedUpCards.length * 250);
-          showCardModal({ title: "You picked up the pile!", cards: pickedUpCards, duration });
+          showCardModal({ title: "You picked up the pile!", cards: pickedUpCards, duration: 3000 });
         }
       }
     }
@@ -133,6 +132,20 @@ document.addEventListener("turbo:load", function () {
       this.classList.add("selected");
     });
   });
+
+  // ── Round-by-round score popup (click a team score chip to open) ─────────
+  const roundHistoryPopup = document.getElementById("round-history-popup");
+  if (roundHistoryPopup) {
+    document.querySelectorAll(".round-history-trigger").forEach((trigger) => {
+      trigger.addEventListener("click", () => roundHistoryPopup.classList.add("open"));
+    });
+
+    const closeRoundHistory = () => roundHistoryPopup.classList.remove("open");
+    document.getElementById("round-history-close")?.addEventListener("click", closeRoundHistory);
+    roundHistoryPopup.addEventListener("click", (e) => {
+      if (e.target === roundHistoryPopup) closeRoundHistory();
+    });
+  }
 
   // ── Condense hand into single row by overlapping cards ───────────────────
   function condenseHand() {
@@ -198,6 +211,15 @@ document.addEventListener("turbo:load", function () {
       }
       refreshTotal();
     });
+  });
+
+  // ── Clicking anywhere outside the hand deselects all selected cards ──────
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".hand-card-wrap")) return;
+    if (selected.size === 0) return;
+    selected.clear();
+    hand.querySelectorAll(".hand-card-wrap.selected").forEach((el) => el.classList.remove("selected"));
+    refreshTotal();
   });
 
   // ── Drag cards from hand — always enabled, since playing a red three isn't
@@ -271,9 +293,10 @@ document.addEventListener("turbo:load", function () {
   const discardForm = document.getElementById("discard-form");
   const discardInput = document.getElementById("discard-card-input");
 
-  // ── Drag cards from hand onto melds ──────────────────────────────────────
+  // ── Drag cards from hand onto melds (in-progress or already-completed
+  // canastas — you can still add matching cards to a finished canasta) ─────
   if (meldForm && meldInput) {
-    document.querySelectorAll(".meld-group[data-meld-rank]").forEach(function (group) {
+    document.querySelectorAll(".meld-group[data-meld-rank], .canasta-single[data-meld-rank]").forEach(function (group) {
       group.addEventListener("dragover", function (e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";

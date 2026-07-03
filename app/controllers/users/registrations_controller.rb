@@ -4,6 +4,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   # Before any action, configure the permitted parameters
   before_action :configure_permitted_parameters, if: :devise_controller?
+
   protected
 
   # Method to configure additional permitted parameters for Devise

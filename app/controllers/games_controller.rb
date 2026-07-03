@@ -227,7 +227,9 @@ class GamesController < ApplicationController
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
-        canasta_seq: result[:canasta_seq]
+        canasta_seq: result[:canasta_seq],
+        pickup_cards: result[:pickup_cards], pickup_seq: result[:pickup_seq],
+        acting_player_id: @current_player.id, acting_player_name: @current_player.user.name
       }
       redirect_to @game
     end
@@ -282,11 +284,30 @@ class GamesController < ApplicationController
     if result[:error]
       redirect_to @game, alert: result[:error]
     else
+      # Going out ends the round and puts up the score-summary screen for
+      # everyone; the "round over" / "game over" celebration toasts fire
+      # later, from advance_round, once the host actually dismisses it.
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update', round_ended: result[:round_ended] }
+      redirect_to @game
+    end
+  end
+
+  def advance_round
+    @game    = Game.find(params[:id])
+    @canasta = @game.canasta
+    is_host = @game.players.order(:created_at).first&.user_id == current_user.id
+    return redirect_to @game, alert: "Only the host can continue to the next round." unless is_host
+
+    result = @canasta.advance_round
+
+    if result[:error]
+      redirect_to @game, alert: result[:error]
+    else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message: 'update',
-        round_ended: result[:round_ended],
+        next_round: result[:next_round],
         game_over: result[:game_over],
-        winning_team: result[:game_over] && @canasta.reload.winning_team
+        winning_team: result[:game_over] && @canasta.winning_team
       }
       redirect_to @game
     end

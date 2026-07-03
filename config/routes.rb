@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   devise_for :users, controllers: {
     registrations: 'users/registrations'
   }
+  patch 'profile/name', to: 'profiles#update_name', as: :update_name
+
   resources :games
 
   resources :games do
@@ -22,6 +24,7 @@ Rails.application.routes.draw do
       post 'discard'
       post 'meld'
       post 'undo_meld'
+      post 'advance_round'
     end
   end  
 

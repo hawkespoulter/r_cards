@@ -1,0 +1,112 @@
+<%# locals: canasta, game, is_host, my_team %>
+<% summary = canasta.round_summary %>
+<% teams = summary["teams"] %>
+<% going_out_team = summary["going_out_team"].to_i %>
+
+<div class="round-summary-overlay">
+  <div class="round-summary-modal">
+    <h2 class="round-summary-title">Round Complete!</h2>
+    <p class="round-summary-subtitle">Team <%= going_out_team + 1 %> went out</p>
+
+    <div class="round-summary-teams">
+      <% [0, 1].each do |team| %>
+        <% t = teams[team.to_s] %>
+        <div class="round-summary-team <%= 'my-team' if team == my_team %>">
+          <h3 class="round-summary-team-title">
+            Team <%= team + 1 %>
+            <%= "— went out" if team == going_out_team %>
+          </h3>
+
+          <div class="round-summary-line round-summary-subtotal">
+            <span>Base score (canastas + red threes + going out)</span>
+            <span><%= t["base_score"] %></span>
+          </div>
+
+          <details class="round-summary-card-count">
+            <summary class="round-summary-line round-summary-subtotal">
+              <span>Card count (total from melded cards)</span>
+              <span><%= t["meld_points_total"] %></span>
+            </summary>
+
+            <% if t["melds"].any? %>
+              <table class="round-summary-melds">
+                <% t["melds"].each do |m| %>
+                  <tr>
+                    <td class="rs-cards">
+                      <% m["cards"].each do |card| %>
+                        <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "rs-card-img" %>
+                      <% end %>
+                    </td>
+                    <td class="rs-label">
+                      <%= m["rank"] == "jo" ? "Jokers" : m["rank"].upcase %>s
+                      <% if m["canasta"] %>
+                        <span class="rs-canasta-badge <%= m["clean"] ? 'rs-clean' : 'rs-dirty' %>">
+                          <%= m["clean"] ? "Clean Canasta" : "Dirty Canasta" %>
+                        </span>
+                      <% end %>
+                      <span class="rs-card-count"><%= m["cards"].length %> cards</span>
+                    </td>
+                    <td class="rs-points"><%= m["points"] %> pts</td>
+                  </tr>
+                <% end %>
+              </table>
+            <% end %>
+          </details>
+
+          <div class="round-summary-breakdown">
+            <div class="round-summary-line">
+              <span>Canasta bonus</span><span>+<%= t["canasta_bonus"] %></span>
+            </div>
+            <div class="round-summary-line">
+              <span>Red threes (<%= t["red_threes"].length %>)</span><span>+<%= t["red_three_bonus"] %></span>
+            </div>
+            <div class="round-summary-line">
+              <span>Going out bonus</span><span>+<%= t["going_out_bonus"] %></span>
+            </div>
+          </div>
+
+          <div class="round-summary-hands">
+            <p class="round-summary-hands-label">Cards left in hand (penalty)</p>
+            <% t["hands"].each do |h| %>
+              <details class="rs-hand-detail">
+                <summary class="round-summary-line">
+                  <span><%= h["name"] %>: <%= h["cards"].length %> card<%= "s" unless h["cards"].length == 1 %></span>
+                  <span>−<%= h["points"] %></span>
+                </summary>
+                <% if h["cards"].any? %>
+                  <div class="rs-hand-cards">
+                    <% h["cards"].each do |card| %>
+                      <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "rs-card-img" %>
+                    <% end %>
+                  </div>
+                <% end %>
+              </details>
+            <% end %>
+            <div class="round-summary-line round-summary-subtotal">
+              <span>Hand penalty total</span><span>−<%= t["hand_penalty"] %></span>
+            </div>
+          </div>
+
+          <div class="round-summary-total">
+            <span class="rs-total-formula">
+              <%= t["base_score"] %> (base) + <%= t["meld_points_total"] %> (cards) − <%= t["hand_penalty"] %> (hand)
+            </span>
+            <span class="rs-total-value">= <%= t["round_score"] %> pts this round</span>
+          </div>
+
+          <div class="round-summary-grand-total">
+            Team total: <strong><%= t["new_total"] %></strong> pts
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="round-summary-actions">
+      <% if is_host %>
+        <%= button_to "Continue", advance_round_game_path(game), method: :post, class: "btn-start" %>
+      <% else %>
+        <p class="waiting-hint">Waiting for the host to continue…</p>
+      <% end %>
+    </div>
+  </div>
+</div>

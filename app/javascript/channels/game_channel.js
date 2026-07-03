@@ -69,6 +69,27 @@ document.addEventListener("turbo:load", function () {
               setTimeout(() => location.reload(), 1600);
             }
           }
+        } else if (data.pickup_cards) {
+          // Same acting-player exclusion as canasta_completed above — the
+          // acting player already sees this via their own fresh page load
+          // (canasta_cards.js's [data-last-pickup] check), which shares the
+          // same sessionStorage key so neither path double-shows it.
+          const myPlayerId = document.querySelector("[data-game-id]")?.dataset.playerId;
+          const isActingPlayer = myPlayerId != null && String(data.acting_player_id) === myPlayerId;
+
+          if (!isActingPlayer) {
+            const key = data.pickup_seq != null ? `r_cards_canasta_pickup_${gameId}_${data.pickup_seq}` : null;
+            const alreadyShown = key && sessionStorage.getItem(key) === "1";
+            if (!alreadyShown) {
+              if (key) sessionStorage.setItem(key, "1");
+              showCardModal({
+                title: `${data.acting_player_name} picked up the pile!`,
+                cards: data.pickup_cards,
+                duration: 3000
+              });
+              setTimeout(() => location.reload(), 3000);
+            }
+          }
         } else if (data.game_over) {
           showCardModal({
             title: `🏆 Team ${parseInt(data.winning_team, 10) + 1} wins the game!`,
@@ -76,8 +97,13 @@ document.addEventListener("turbo:load", function () {
           });
           setTimeout(() => location.reload(), 1600);
         } else if (data.round_ended) {
+          // Reveals the round-summary screen — actual scoring toast/reload
+          // for starting the next round comes later, from `next_round`,
+          // once the host reviews the summary and continues.
+          location.reload();
+        } else if (data.next_round) {
           showCardModal({
-            title: `Round over — new hands dealt!`,
+            title: `New round — hands dealt!`,
             confetti: true
           });
           setTimeout(() => location.reload(), 1600);

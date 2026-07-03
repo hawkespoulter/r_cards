@@ -2,13 +2,18 @@
   <div class="new-game-card">
     <h2>Edit Profile</h2>
 
+    <%= form_with url: update_name_path, method: :patch do %>
+      <div class="form-group">
+        <%= label_tag "user_name", "Display Name" %>
+        <%= text_field_tag "user[name]", current_user.name, autofocus: true, autocomplete: "name", class: "form-input" %>
+      </div>
+      <%= submit_tag "Update Name", class: "btn-create" %>
+    <% end %>
+
+    <div style="margin:24px 0;padding-top:20px;border-top:1px solid rgba(255,255,255,0.1);"></div>
+
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
-
-      <div class="form-group">
-        <%= f.label :name %>
-        <%= f.text_field :name, autofocus: true, autocomplete: "name", class: "form-input" %>
-      </div>
 
       <div class="form-group">
         <%= f.label :email %>

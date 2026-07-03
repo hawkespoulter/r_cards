@@ -583,6 +583,11 @@ li.nav-center {
     box-shadow: 0 0 0 2px #10b981 inset;
   }
 
+  // 5-6 cards — one or two away from a canasta.
+  &.almost-canasta {
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45);
+  }
+
   &.drag-over {
     background: rgba(99, 102, 241, 0.25);
     box-shadow: 0 0 0 2px #6366f1;
@@ -738,6 +743,10 @@ li.nav-center {
 
   &.canasta-dirty .canasta-rep-card {
     box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+  }
+
+  &[data-meld-rank].drag-over .canasta-rep-card {
+    box-shadow: 0 0 0 3px #6366f1, 0 6px 18px rgba(0,0,0,0.5);
   }
 }
 
@@ -1071,10 +1080,92 @@ li.nav-center {
     &:first-child { background: rgba(245,158,11,0.25); border: 1px solid rgba(245,158,11,0.4); }
     &:last-child  { background: rgba(153,27,27,0.25);  border: 1px solid rgba(153,27,27,0.4); }
 
+    &.my-team { box-shadow: 0 0 0 2px rgba(96,165,250,0.7); }
+
     .ranking-title { font-weight: 700; }
     .ranking-you   { font-size: 0.8rem; opacity: 0.7; font-style: italic; }
   }
 }
+
+// ── Score progression chart (game-over screen) ────────────────────────────────
+
+.score-chart {
+  width: 100%;
+  max-width: 560px;
+  background: #1f2937;
+  border-radius: 12px;
+  padding: 16px 20px 12px;
+  margin-bottom: 28px;
+}
+
+.score-chart-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  margin: 0 0 8px;
+  text-align: left;
+}
+
+.score-chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.score-chart-grid {
+  stroke: #2c2c2a;
+  stroke-width: 1;
+}
+
+.score-chart-axis-label {
+  fill: #898781;
+  font-size: 9px;
+}
+
+.score-chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.score-chart-line-1 { stroke: #3987e5; }
+.score-chart-line-2 { stroke: #199e70; }
+
+.score-chart-dot {
+  stroke: #1f2937;
+  stroke-width: 2;
+}
+
+.score-chart-dot-1 { fill: #3987e5; }
+.score-chart-dot-2 { fill: #199e70; }
+
+.score-chart-legend {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+.score-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-chart-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.score-chart-swatch-1 { background: #3987e5; }
+.score-chart-swatch-2 { background: #199e70; }
 
 // ── Trading phase ─────────────────────────────────────────────────────────────
 
@@ -1135,6 +1226,356 @@ li.nav-center {
   font-size: 0.9rem;
   opacity: 0.55;
   margin: 0;
+}
+
+// ── Round summary (blocks the table until the host continues) ────────────────
+
+.round-summary-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0,0,0,0.6);
+  overflow-y: auto;
+}
+
+.round-summary-modal {
+  background: #1f2937;
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+  text-align: center;
+}
+
+.round-summary-title {
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+}
+
+.round-summary-subtitle {
+  font-size: 0.9rem;
+  opacity: 0.65;
+  margin: 0 0 20px;
+}
+
+.round-summary-teams {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.round-summary-team {
+  flex: 1 1 340px;
+  min-width: 300px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 18px 20px;
+  text-align: left;
+
+  &.my-team {
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(96, 165, 250, 0.06);
+  }
+}
+
+.round-summary-team-title {
+  font-size: 1.05rem;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.round-summary-card-count,
+.rs-hand-detail {
+  summary {
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "▸ ";
+      opacity: 0.5;
+      font-size: 0.75em;
+    }
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  &[open] summary::before {
+    content: "▾ ";
+  }
+}
+
+.rs-card-img {
+  width: 28px;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.round-summary-melds {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 12px;
+
+  tr {
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  td {
+    padding: 6px 4px;
+    vertical-align: middle;
+  }
+
+  .rs-cards {
+    white-space: nowrap;
+  }
+
+  .rs-card-img {
+    margin-right: -12px;
+
+    &:last-child { margin-right: 0; }
+  }
+
+  .rs-label {
+    font-size: 0.85rem;
+    padding-left: 14px;
+  }
+
+  .rs-card-count {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.55;
+  }
+
+  .rs-points {
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+}
+
+.rs-canasta-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  margin-left: 6px;
+
+  &.rs-clean { background: rgba(16,185,129,0.2); color: #10b981; }
+  &.rs-dirty { background: rgba(217,119,6,0.2); color: #d97706; }
+}
+
+.round-summary-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 3px 0;
+  opacity: 0.85;
+}
+
+.round-summary-subtotal {
+  font-weight: 700;
+  opacity: 1;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  margin-top: 4px;
+  padding-top: 6px;
+}
+
+.round-summary-breakdown {
+  margin: 8px 0 12px;
+}
+
+.round-summary-hands {
+  margin: 8px 0 12px;
+}
+
+.round-summary-hands-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+  margin: 0 0 4px;
+}
+
+.rs-hand-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 8px;
+}
+
+.round-summary-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255,255,255,0.15);
+}
+
+.rs-total-formula {
+  font-size: 0.75rem;
+  opacity: 0.55;
+}
+
+.rs-total-value {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.round-summary-grand-total {
+  text-align: center;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: 6px;
+
+  strong { font-size: 1.1rem; }
+}
+
+.round-summary-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+// ── Round-by-round score popup ────────────────────────────────────────────────
+
+.round-history-trigger {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.round-history-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0,0,0,0.6);
+  overflow-y: auto;
+
+  &.open {
+    display: flex;
+  }
+}
+
+.round-history-modal {
+  position: relative;
+  background: #1f2937;
+  border-radius: 16px;
+  padding: 28px 32px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+}
+
+.round-history-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
+
+  &:hover {
+    color: white;
+  }
+}
+
+.round-history-title {
+  font-size: 1.15rem;
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.round-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+
+  thead th {
+    text-align: right;
+    opacity: 0.55;
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 4px 6px;
+
+    &:first-child { text-align: left; }
+  }
+}
+
+.round-history-row td {
+  padding: 6px;
+  text-align: right;
+  border-top: 1px solid rgba(255,255,255,0.08);
+
+  &:first-child { text-align: left; opacity: 0.75; }
+}
+
+.round-history-detail-row td {
+  padding: 0 6px 8px;
+}
+
+.round-history-detail {
+  summary {
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    font-size: 0.75rem;
+    opacity: 0.55;
+
+    &::-webkit-details-marker { display: none; }
+    &::before { content: "▸ "; font-size: 0.9em; }
+    &:hover { opacity: 0.85; }
+  }
+
+  &[open] summary::before { content: "▾ "; }
+}
+
+.round-history-detail-grid {
+  display: flex;
+  gap: 20px;
+  margin-top: 8px;
+  text-align: left;
+}
+
+.round-history-detail-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+  margin: 0 0 4px;
 }
 
 // ── Bug report modal ──────────────────────────────────────────────────────────

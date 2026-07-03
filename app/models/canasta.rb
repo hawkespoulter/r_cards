@@ -21,7 +21,9 @@ class Canasta < ApplicationRecord
     :foot_pickups,     # { "player_id" => { "cards" => [...], "seq" => N } } - cleared after client sees it
     :last_canasta,     # { "rank" => rank, "seq" => N } - last completed canasta, for acting-player notification
     :pending_red_three_draws, # { "player_id" => Integer } - replacement draws owed for played red threes, not yet claimed
-    :turn_meld_log     # [{ "rank" => rank, "cards" => [...] }, ...] - this turn's meld additions, for undo; reset on draw/pickup/discard
+    :turn_meld_log,    # [{ "rank" => rank, "cards" => [...] }, ...] - this turn's meld additions, for undo; reset on draw/pickup/discard
+    :round_summary,    # full scoring breakdown for the round that just ended; blocks the table until the host advances (see #advance_round)
+    :round_history     # [{ "round_number", "going_out_team", "teams" => { "0"/"1" => { "round_score", "base_score", "card_count", "new_total" } } }, ...] - one compact entry per completed round, for the round-by-round score popup
 
   MELD_THRESHOLDS = [
     [3000, 50],
@@ -189,6 +191,7 @@ class Canasta < ApplicationRecord
 
     pile = discard_pile.dup
     return { error: "Discard pile is empty" } if pile.empty?
+    return { error: "Your team must make its first meld before picking up the pile" } unless team_melded?(player.team)
 
     top = pile.last
     return { error: "Black threes cannot be picked up" } if black_three?(top)
@@ -210,7 +213,7 @@ class Canasta < ApplicationRecord
       "turn_meld_log" => [],
       "last_pickup" => { "player_id" => player.id, "cards" => pile, "seq" => next_seq }
     )
-    { success: true, canasta_completed: false, canasta_rank: nil }
+    { success: true, canasta_completed: false, canasta_rank: nil, pickup_cards: pile, pickup_seq: next_seq }
   end
 
   def meld(player, cards, target_rank: nil)
@@ -353,6 +356,22 @@ class Canasta < ApplicationRecord
     end
   end
 
+  # Called once the host dismisses the round summary. Deals the next round,
+  # unless the round that just ended already won the game.
+  def advance_round
+    return { error: "No round summary to advance from" } if round_summary.blank?
+
+    game_ending = game_over?
+    write_game_state!("round_summary" => nil)
+
+    if game_ending
+      { game_over: true, winning_team: winning_team }
+    else
+      initialize_round
+      { next_round: true }
+    end
+  end
+
   def game_over?
     (team_scores || {}).values.any? { |v| v.to_i >= GOAL_SCORE }
   end
@@ -360,6 +379,16 @@ class Canasta < ApplicationRecord
   def winning_team
     return nil unless game_over?
     (team_scores || {}).max_by { |_team, score| score }&.first
+  end
+
+  # Points a team's very first meld must total, based on their cumulative score.
+  def meld_threshold(team)
+    score = (team_scores || {})[team.to_s].to_i
+    MELD_THRESHOLDS.find { |max, _threshold| score < max }.last
+  end
+
+  def team_melded?(team)
+    ((melds || {})[team.to_s] || {}).values.any?(&:present?)
   end
 
   # --- Private ---
@@ -402,49 +431,89 @@ class Canasta < ApplicationRecord
       canasta_seq: completed_canasta ? next_seq : nil }
   end
 
-  def meld_threshold(team)
-    score = (team_scores || {})[team.to_s].to_i
-    MELD_THRESHOLDS.find { |max, _threshold| score < max }.last
-  end
-
   def can_go_out?(team)
     team_melds = melds[team.to_s] || {}
     canastas   = team_melds.values.select { |cards| cards.length >= CANASTA_SIZE }
     canastas.length >= 5 && canastas.any? { |cards| cards.none? { |c| wild?(c) } }
   end
 
+  # Builds a full, itemized score breakdown for the round that just ended and
+  # stores it as `round_summary` instead of immediately dealing the next
+  # round. The table stays frozen on a summary screen — see #advance_round —
+  # until the host reviews it and explicitly continues.
   def end_round!(going_out_team:)
     new_team_scores  = (team_scores || { "0" => 0, "1" => 0 }).dup
     new_round_scores = {}
+    teams_summary    = {}
 
     %w[0 1].each do |team|
-      team_melds   = melds[team] || {}
-      meld_points  = team_melds.values.flatten.sum { |c| card_points(c) }
-      canasta_bonus = team_melds.values.sum do |cards|
-        next 0 unless cards.length >= CANASTA_SIZE
-        cards.none? { |c| wild?(c) } ? 500 : 300
-      end
-      red_three_bonus = (red_threes[team] || []).length * 100
-      going_out_bonus = team == going_out_team.to_s ? 100 : 0
+      team_melds = melds[team] || {}
 
-      team_player_ids = game.players.where(team: team.to_i).pluck(:id)
-      hand_penalty = game.players.where(id: team_player_ids).sum do |p|
-        p.hand.sum { |c| card_points(c) }
+      meld_breakdown = team_melds.keys.sort_by { |r| rank_sort_value(r) }.map do |rank|
+        cards      = team_melds[rank]
+        is_canasta = cards.length >= CANASTA_SIZE
+        clean      = is_canasta ? cards.none? { |c| wild?(c) } : nil
+        {
+          "rank"    => rank,
+          "cards"   => cards,
+          "canasta" => is_canasta,
+          "clean"   => clean,
+          "points"  => cards.sum { |c| card_points(c) }
+        }
       end
 
-      round_score = meld_points + canasta_bonus + red_three_bonus + going_out_bonus - hand_penalty
+      meld_points_total = meld_breakdown.sum { |m| m["points"] }
+      canasta_bonus     = meld_breakdown.sum { |m| m["canasta"] ? (m["clean"] ? 500 : 300) : 0 }
+      red_three_cards   = red_threes[team] || []
+      red_three_bonus   = red_three_cards.length * 100
+      going_out_bonus   = team == going_out_team.to_s ? 200 : 0
+      base_score        = canasta_bonus + red_three_bonus + going_out_bonus
+
+      hand_breakdown = game.players.where(team: team.to_i).map do |p|
+        { "player_id" => p.id, "name" => p.user.name, "cards" => p.hand, "points" => p.hand.sum { |c| card_points(c) } }
+      end
+      hand_penalty = hand_breakdown.sum { |h| h["points"] }
+
+      round_score = base_score + meld_points_total - hand_penalty
       new_round_scores[team] = round_score
       new_team_scores[team]  = new_team_scores[team].to_i + round_score
+
+      teams_summary[team] = {
+        "melds"             => meld_breakdown,
+        "meld_points_total" => meld_points_total,
+        "canasta_bonus"     => canasta_bonus,
+        "red_threes"        => red_three_cards,
+        "red_three_bonus"   => red_three_bonus,
+        "going_out_bonus"   => going_out_bonus,
+        "base_score"        => base_score,
+        "hands"             => hand_breakdown,
+        "hand_penalty"      => hand_penalty,
+        "round_score"       => round_score,
+        "new_total"         => new_team_scores[team]
+      }
     end
 
-    write_game_state!("team_scores" => new_team_scores, "round_scores" => new_round_scores)
+    history_entry = {
+      "round_number"   => round_number,
+      "going_out_team" => going_out_team.to_s,
+      "teams" => teams_summary.transform_values { |t|
+        {
+          "round_score" => t["round_score"],
+          "base_score"  => t["base_score"],
+          "card_count"  => t["meld_points_total"],
+          "new_total"   => t["new_total"]
+        }
+      }
+    }
 
-    if game_over?
-      { game_over: true, winning_team: winning_team }
-    else
-      initialize_round
-      { next_round: true }
-    end
+    write_game_state!(
+      "team_scores"   => new_team_scores,
+      "round_scores"  => new_round_scores,
+      "round_summary" => { "going_out_team" => going_out_team.to_s, "teams" => teams_summary },
+      "round_history" => (round_history || []) + [history_entry]
+    )
+
+    { round_ended: true }
   end
 
   def pickup_peak_hands!(team)
@@ -484,5 +553,11 @@ class Canasta < ApplicationRecord
     return 20 if %w[2 a].include?(rank)
     rank_value = RANK_VALUES[rank] || 0
     rank_value >= 9 ? 10 : 5
+  end
+
+  def rank_sort_value(rank)
+    return 100 if rank == "jo"
+    return 99 if rank == "2"
+    RANK_VALUES[rank] || 0
   end
 end

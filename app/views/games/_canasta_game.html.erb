@@ -14,15 +14,15 @@
     <span class="nav-game-title">♣ Canasta<%= " (FL)" if @game.florida_rules? %></span>
     <div class="players-list">
       <% [0, 1].each do |team| %>
-        <div class="team-score-chip <%= 'my-team' if team == my_team %>" data-team="<%= team + 1 %>">
-          <span class="team-name-label">T<%= team + 1 %></span><%= " (you)" if team == my_team %> — <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
+        <div class="team-score-chip round-history-trigger <%= 'my-team' if team == my_team %>" data-team="<%= team + 1 %>" title="See round-by-round scores">
+          <span class="team-name-label">T<%= team + 1 %></span>: <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
         </div>
       <% end %>
       <% @game.players.order(:created_at).each do |player| %>
         <% is_active = @game.current_turn && player.id == @game.current_turn %>
         <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == @current_player&.id %>" data-team="<%= player.team.to_i + 1 %>">
           <span class="player-name">
-            <%= player.user_id == current_user.id ? "You" : player.user.name %>
+            <%= player.user.name %>
             <span class="player-title-badge">· T<%= player.team.to_i + 1 %></span>
           </span>
           <% if @game_started %>
@@ -47,6 +47,58 @@
 <% end %>
 
 <div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-card-back="<%= asset_path("cards/backs/#{@game.card_back_key}.jpg") %>">
+
+  <% if @canasta %>
+    <div class="round-history-overlay" id="round-history-popup">
+      <div class="round-history-modal">
+        <button type="button" class="round-history-close" id="round-history-close" aria-label="Close">&times;</button>
+        <h3 class="round-history-title">Round-by-Round Scores</h3>
+
+        <% if (@canasta.round_history || []).empty? %>
+          <p class="waiting-hint">No rounds completed yet.</p>
+        <% else %>
+          <table class="round-history-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Team 1</th>
+                <th>Team 2</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @canasta.round_history.each do |entry| %>
+                <% t0 = entry["teams"]["0"]; t1 = entry["teams"]["1"] %>
+                <tr class="round-history-row">
+                  <td>Round <%= entry["round_number"] %></td>
+                  <td><%= t0["round_score"] %></td>
+                  <td><%= t1["round_score"] %></td>
+                </tr>
+                <tr class="round-history-detail-row">
+                  <td colspan="3">
+                    <details class="round-history-detail">
+                      <summary>Base &amp; card count</summary>
+                      <div class="round-history-detail-grid">
+                        <div>
+                          <p class="round-history-detail-label">Team 1</p>
+                          <div class="round-summary-line"><span>Base score</span><span><%= t0["base_score"] %></span></div>
+                          <div class="round-summary-line"><span>Card count</span><span><%= t0["card_count"] %></span></div>
+                        </div>
+                        <div>
+                          <p class="round-history-detail-label">Team 2</p>
+                          <div class="round-summary-line"><span>Base score</span><span><%= t1["base_score"] %></span></div>
+                          <div class="round-summary-line"><span>Card count</span><span><%= t1["card_count"] %></span></div>
+                        </div>
+                      </div>
+                    </details>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
 
   <% if @is_host && !@game_started %>
   <div class="settings-panel" id="settings-panel">
@@ -81,19 +133,27 @@
       <% end %>
     </div>
 
+  <% elsif @canasta&.round_summary.present? %>
+
+    <%= render "round_summary", canasta: @canasta, game: @game, is_host: @is_host, my_team: my_team %>
+
   <% elsif @canasta&.game_over? %>
 
     <div class="game-over">
       <h2>Game Over!</h2>
       <ol class="rankings-list">
-        <% [0, 1].each do |team| %>
-          <li>
-            <span class="ranking-title">Team <%= team + 1 %><%= " (you)" if team == my_team %></span>
+        <% ranked_teams = [0, 1].sort_by { |team| -((@canasta.team_scores || {})[team.to_s] || 0) } %>
+        <% ranked_teams.each do |team| %>
+          <li class="<%= 'my-team' if team == my_team %>">
+            <span class="ranking-title team-name-label" data-team="<%= team + 1 %>">T<%= team + 1 %></span>
             <span><%= (@canasta.team_scores || {})[team.to_s] || 0 %> pts</span>
           </li>
         <% end %>
       </ol>
-      <p><strong>Team <%= @canasta.winning_team.to_i + 1 %> wins!</strong></p>
+      <p><strong><span class="team-name-label" data-team="<%= @canasta.winning_team.to_i + 1 %>">T<%= @canasta.winning_team.to_i + 1 %></span> wins!</strong></p>
+
+      <%= render "score_chart", canasta: @canasta %>
+
       <div class="game-over-actions">
         <%= link_to 'Back to Lobby', games_path, class: 'btn-quit', style: 'display:inline-block;padding:10px 24px;border-radius:6px;text-decoration:none;' %>
       </div>
@@ -217,8 +277,11 @@
           </div>
         <% end %>
       </div>
-      <p class="pile-info" id="meld-selection-info" data-threshold="<%= my_turn && turn_phase == 'discard' ? 0 : 0 %>">
+      <p class="pile-info" id="meld-selection-info">
         Selected total: <span id="meld-running-total">0</span> pts
+        <% unless @canasta.team_melded?(my_team) %>
+          — your team's first meld needs at least <strong><%= @canasta.meld_threshold(my_team) %></strong> pts
+        <% end %>
       </p>
     </div>
 

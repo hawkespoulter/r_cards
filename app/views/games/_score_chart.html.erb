@@ -1,0 +1,62 @@
+<%# locals: canasta %>
+<% history = canasta.round_history || [] %>
+<% if history.any? %>
+  <% team_scores  = [
+       history.map { |e| e["teams"]["0"]["new_total"] },
+       history.map { |e| e["teams"]["1"]["new_total"] }
+     ] %>
+
+  <% y_max = [(team_scores.flatten.max.to_f / 500).ceil * 500, 500].max %>
+
+  <% chart_w    = 560 %>
+  <% chart_h    = 220 %>
+  <% pad_left   = 50 %>
+  <% pad_right  = 16 %>
+  <% pad_top    = 16 %>
+  <% pad_bottom = 28 %>
+  <% plot_w = chart_w - pad_left - pad_right %>
+  <% plot_h = chart_h - pad_top - pad_bottom %>
+  <% n = history.length %>
+
+  <% x_for = ->(i) { n == 1 ? pad_left + plot_w / 2.0 : pad_left + (plot_w * i / (n - 1).to_f) } %>
+  <% y_for = ->(score) { (pad_top + plot_h - (plot_h * score / y_max.to_f)).round(1) } %>
+
+  <% team_points = team_scores.map { |scores| scores.each_with_index.map { |s, i| [x_for.call(i), y_for.call(s)] } } %>
+
+  <div class="score-chart">
+    <h3 class="score-chart-title">Score Progression</h3>
+
+    <svg viewBox="0 0 <%= chart_w %> <%= chart_h %>" class="score-chart-svg" role="img" aria-label="Team score progression by round">
+      <% [0, 0.25, 0.5, 0.75, 1.0].each do |frac| %>
+        <% gy = (pad_top + plot_h * (1 - frac)).round(1) %>
+        <line x1="<%= pad_left %>" y1="<%= gy %>" x2="<%= chart_w - pad_right %>" y2="<%= gy %>" class="score-chart-grid" />
+        <text x="<%= pad_left - 8 %>" y="<%= gy + 4 %>" class="score-chart-axis-label" text-anchor="end"><%= (y_max * frac).round %></text>
+      <% end %>
+
+      <% (0...n).each do |i| %>
+        <text x="<%= x_for.call(i) %>" y="<%= chart_h - 6 %>" class="score-chart-axis-label" text-anchor="middle">R<%= history[i]["round_number"] %></text>
+      <% end %>
+
+      <% [0, 1].each do |team| %>
+        <% points = team_points[team] %>
+        <% if points.length > 1 %>
+          <polyline points="<%= points.map { |x, y| "#{x},#{y}" }.join(' ') %>" class="score-chart-line score-chart-line-<%= team + 1 %>" />
+        <% end %>
+        <% points.each_with_index do |(x, y), i| %>
+          <circle cx="<%= x %>" cy="<%= y %>" r="5" class="score-chart-dot score-chart-dot-<%= team + 1 %>">
+            <title>Team <%= team + 1 %> — Round <%= history[i]["round_number"] %>: <%= team_scores[team][i] %> pts</title>
+          </circle>
+        <% end %>
+      <% end %>
+    </svg>
+
+    <div class="score-chart-legend">
+      <% [0, 1].each do |team| %>
+        <span class="score-chart-legend-item">
+          <span class="score-chart-swatch score-chart-swatch-<%= team + 1 %>"></span>
+          <span class="team-name-label" data-team="<%= team + 1 %>">T<%= team + 1 %></span>
+        </span>
+      <% end %>
+    </div>
+  </div>
+<% end %>
