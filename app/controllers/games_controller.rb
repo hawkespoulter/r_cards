@@ -5,17 +5,12 @@ class GamesController < ApplicationController
   end
 
   def show
-    @game           = Game.find(params[:id])
-    @players        = @game.players.where.not(user_id: current_user.id)
-    @current_player = @game.players.find_by(user_id: current_user.id)
-    @game_started   = @game.turn_order.present?
-    @scum           = @game.scum if @game.scum?
-    @canasta        = @game.canasta if @game.canasta?
-
-    if @game_started
-      @current_turn_name = @game.players.find(@game.current_turn).user.name
+    @game = Game.find(params[:id])
+    load_game_view_state
+    respond_to do |format|
+      format.html
+      format.turbo_stream
     end
-    @is_host = @game.players.order(:created_at).first&.user_id == current_user.id
   end
 
   def new
@@ -61,10 +56,10 @@ class GamesController < ApplicationController
 
     result = @scum.start_new_round
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -81,10 +76,10 @@ class GamesController < ApplicationController
     result = @scum.give_cards(@current_player, cards)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -98,7 +93,7 @@ class GamesController < ApplicationController
     @game.players.create(user: current_user)
     ActionCable.server.broadcast "lobby", { message: "update" }
     ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
-    redirect_to @game
+    respond_with_game_update
   end
 
   def start
@@ -114,7 +109,7 @@ class GamesController < ApplicationController
     @game.start_game
     ActionCable.server.broadcast "game_#{@game.id}", { message: 'Game started!' }
     ActionCable.server.broadcast "lobby", { message: "update" }
-    redirect_to @game
+    respond_with_game_update
   end
 
   def set_team
@@ -129,14 +124,14 @@ class GamesController < ApplicationController
     player = @game.players.find(params[:player_id])
     player.update!(team: team)
     ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
-    redirect_to @game
+    respond_with_game_update
   end
 
   def take_turn
     @game = Game.find(params[:id])
     @game.take_turn
     ActionCable.server.broadcast "game_#{@game.id}", { message: 'Next turn!' }
-    redirect_to @game
+    respond_with_game_update
   end
 
   def play_cards
@@ -152,7 +147,7 @@ class GamesController < ApplicationController
     result = @scum.play_cards(@current_player, cards)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message:              'update',
@@ -160,7 +155,7 @@ class GamesController < ApplicationController
         aces_played_by:       result[:aces_played_by],
         aces_played_cards:    result[:aces_played_cards]
       }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -168,7 +163,7 @@ class GamesController < ApplicationController
     @game = Game.find(params[:id])
     @game.update!(settings_params)
     ActionCable.server.broadcast "game_#{@game.id}", { message: 'settings_updated' }
-    redirect_to @game
+    respond_with_game_update
   end
 
   def pass
@@ -179,10 +174,10 @@ class GamesController < ApplicationController
     result = @scum.pass_turn(@current_player)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -193,10 +188,10 @@ class GamesController < ApplicationController
 
     result = @canasta.draw(@current_player)
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -213,10 +208,10 @@ class GamesController < ApplicationController
     result = @canasta.play_red_three(@current_player, cards)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -228,10 +223,10 @@ class GamesController < ApplicationController
     result = @canasta.draw_red_three_replacement(@current_player)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -243,7 +238,7 @@ class GamesController < ApplicationController
     result = @canasta.pickup_discard(@current_player)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
@@ -251,7 +246,7 @@ class GamesController < ApplicationController
         pickup_cards: result[:pickup_cards], pickup_seq: result[:pickup_seq],
         acting_player_id: @current_player.id, acting_player_name: @current_player.user.name
       }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -269,13 +264,13 @@ class GamesController < ApplicationController
     result = @canasta.meld(@current_player, cards, target_rank: target_rank)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
         canasta_seq: result[:canasta_seq], acting_player_id: @current_player.id
       }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -287,10 +282,10 @@ class GamesController < ApplicationController
     result = @canasta.undo_meld(@current_player)
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -302,13 +297,13 @@ class GamesController < ApplicationController
     result = @canasta.discard(@current_player, params[:card])
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       # Going out ends the round and puts up the score-summary screen for
       # everyone; the "round over" / "game over" celebration toasts fire
       # later, from advance_round, once the host actually dismisses it.
       ActionCable.server.broadcast "game_#{@game.id}", { message: 'update', round_ended: result[:round_ended] }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
@@ -321,7 +316,7 @@ class GamesController < ApplicationController
     result = @canasta.advance_round
 
     if result[:error]
-      redirect_to @game, alert: result[:error]
+      respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message: 'update',
@@ -329,11 +324,52 @@ class GamesController < ApplicationController
         game_over: result[:game_over],
         winning_team: result[:game_over] && @canasta.winning_team
       }
-      redirect_to @game
+      respond_with_game_update
     end
   end
 
   private
+
+  # Populates everything `show.html.erb`/`show.turbo_stream.erb` need to
+  # render the current player's view of @game. Assumes @game is already set.
+  def load_game_view_state
+    @players        = @game.players.where.not(user_id: current_user.id)
+    @current_player = @game.players.find_by(user_id: current_user.id)
+    @game_started   = @game.turn_order.present?
+    @scum           = @game.scum if @game.scum?
+    @canasta        = @game.canasta if @game.canasta?
+
+    if @game_started
+      @current_turn_name = @game.players.find(@game.current_turn).user.name
+    end
+    @is_host = @game.players.order(:created_at).first&.user_id == current_user.id
+  end
+
+  # Success response for any action that changes game state: Turbo Stream
+  # clients (i.e. the acting player's own form submission) get an in-place
+  # re-render of the board via show.turbo_stream.erb; anything else falls
+  # back to the classic redirect.
+  def respond_with_game_update
+    load_game_view_state
+    respond_to do |format|
+      format.turbo_stream { render "games/show" }
+      format.html { redirect_to @game }
+    end
+  end
+
+  # Error response mirroring respond_with_game_update — Turbo Stream clients
+  # get the error popup patched in without a navigation; others fall back to
+  # the classic flash-based redirect.
+  def respond_with_game_error(message)
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "flash-error-container", partial: "layouts/flash_error", locals: { alert: message }
+        )
+      end
+      format.html { redirect_to @game, alert: message }
+    end
+  end
 
   def game_params
     params.require(:game).permit(:game_type, :pass_locks_out, :florida_rules)

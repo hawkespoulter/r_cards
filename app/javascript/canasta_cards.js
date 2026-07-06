@@ -1,5 +1,18 @@
 import { showCardModal } from "card_modal"
 
+// These three behaviors bind to `document` itself, which persists across
+// Turbo Stream renders (unlike the elements inside #game-container, which
+// get replaced wholesale). Re-running the whole turbo:load handler on every
+// stream render is otherwise safe (old per-element listeners just vanish
+// with their elements), but re-registering document-level listeners every
+// time would accumulate one extra copy per action for the life of the page.
+// So these get assigned fresh each load, but bound to `document` only once,
+// via a stable delegating wrapper.
+let handleOutsideClick = null;
+let handleMarqueeMouseDown = null;
+let handleSuppressedClick = null;
+let globalHandlersBound = false;
+
 // Builds an off-screen fanned stack of the given cards to use as a custom
 // drag image, so dragging a multi-card selection shows all of it instead of
 // just the single card the browser grabbed under the cursor.
@@ -24,6 +37,58 @@ function buildDragImage(cards) {
   document.body.appendChild(el);
   return el;
 }
+
+// ── Condense hand into single row by overlapping cards ───────────────────
+// Re-queries the DOM fresh on every call, so it's safe to invoke repeatedly
+// (once per turbo:load) and to bind its resize listener exactly once here
+// at module scope rather than re-adding a listener on every render.
+function condenseHand() {
+  const hand = document.getElementById("canasta-hand");
+  if (!hand) return;
+  const wraps = Array.from(hand.querySelectorAll(".hand-card-wrap"));
+  if (wraps.length === 0) return;
+
+  wraps.forEach(c => c.style.marginLeft = "");
+  const cardWidth = wraps[0].getBoundingClientRect().width;
+  const gap = 8;
+  const naturalWidth = wraps.length * cardWidth + (wraps.length - 1) * gap;
+  const available = hand.parentElement.getBoundingClientRect().width - 48;
+
+  if (naturalWidth <= available) {
+    wraps.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${gap}px`; });
+  } else {
+    const overlap = (naturalWidth - available) / (wraps.length - 1);
+    const marginLeft = gap - overlap;
+    wraps.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${marginLeft}px`; });
+  }
+}
+window.addEventListener("resize", condenseHand);
+
+// ── Size each meld's hover count overlay to fill as much of that meld's
+// box as it can without overflowing, shrinking from a generous starting
+// size until both dimensions fit. Box sizes don't change on hover itself,
+// so this only needs to run on load/resize, not per-hover. ────────────────
+function fitMeldCountOverlays() {
+  document.querySelectorAll(".meld-hoverable").forEach((container) => {
+    const textEl = container.querySelector(".meld-count-text");
+    if (!textEl) return;
+
+    const maxWidth = container.clientWidth - 12;
+    const maxHeight = container.clientHeight - 12;
+    if (maxWidth <= 0 || maxHeight <= 0) return;
+
+    let fontSize = Math.max(10, Math.min(maxWidth, maxHeight));
+    textEl.style.fontSize = `${fontSize}px`;
+
+    let guard = 0;
+    while ((textEl.scrollWidth > maxWidth || textEl.scrollHeight > maxHeight) && fontSize > 8 && guard < 200) {
+      fontSize -= 1;
+      textEl.style.fontSize = `${fontSize}px`;
+      guard++;
+    }
+  });
+}
+window.addEventListener("resize", fitMeldCountOverlays);
 
 document.addEventListener("turbo:load", function () {
   // ── Recolor the whole page background to match "my turn" state ───────────
@@ -90,6 +155,10 @@ document.addEventListener("turbo:load", function () {
   const flashError = document.querySelector("[data-flash-error]");
   if (flashError) {
     showCardModal({ title: flashError.dataset.flashError, duration: 2400 });
+    // Remove it immediately — turbo:load can now fire repeatedly (once per
+    // Turbo Stream render, not just full page loads), and without removing
+    // this the same stale error would re-pop on every subsequent action.
+    flashError.remove();
   }
 
   // ── Canasta completed popup (for the acting player who gets a redirect) ──
@@ -147,56 +216,8 @@ document.addEventListener("turbo:load", function () {
     });
   }
 
-  // ── Condense hand into single row by overlapping cards ───────────────────
-  function condenseHand() {
-    const hand = document.getElementById("canasta-hand");
-    if (!hand) return;
-    const wraps = Array.from(hand.querySelectorAll(".hand-card-wrap"));
-    if (wraps.length === 0) return;
-
-    wraps.forEach(c => c.style.marginLeft = "");
-    const cardWidth = wraps[0].getBoundingClientRect().width;
-    const gap = 8;
-    const naturalWidth = wraps.length * cardWidth + (wraps.length - 1) * gap;
-    const available = hand.parentElement.getBoundingClientRect().width - 48;
-
-    if (naturalWidth <= available) {
-      wraps.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${gap}px`; });
-    } else {
-      const overlap = (naturalWidth - available) / (wraps.length - 1);
-      const marginLeft = gap - overlap;
-      wraps.forEach((c, i) => { c.style.marginLeft = i === 0 ? "0" : `${marginLeft}px`; });
-    }
-  }
   condenseHand();
-  window.addEventListener("resize", condenseHand);
-
-  // ── Size each meld's hover count overlay to fill as much of that meld's
-  // box as it can without overflowing, shrinking from a generous starting
-  // size until both dimensions fit. Box sizes don't change on hover itself,
-  // so this only needs to run on load/resize, not per-hover. ────────────────
-  function fitMeldCountOverlays() {
-    document.querySelectorAll(".meld-hoverable").forEach((container) => {
-      const textEl = container.querySelector(".meld-count-text");
-      if (!textEl) return;
-
-      const maxWidth = container.clientWidth - 12;
-      const maxHeight = container.clientHeight - 12;
-      if (maxWidth <= 0 || maxHeight <= 0) return;
-
-      let fontSize = Math.max(10, Math.min(maxWidth, maxHeight));
-      textEl.style.fontSize = `${fontSize}px`;
-
-      let guard = 0;
-      while ((textEl.scrollWidth > maxWidth || textEl.scrollHeight > maxHeight) && fontSize > 8 && guard < 200) {
-        fontSize -= 1;
-        textEl.style.fontSize = `${fontSize}px`;
-        guard++;
-      }
-    });
-  }
   fitMeldCountOverlays();
-  window.addEventListener("resize", fitMeldCountOverlays);
 
   const hand = document.getElementById("canasta-hand");
   if (!hand) return;
@@ -241,13 +262,13 @@ document.addEventListener("turbo:load", function () {
   });
 
   // ── Clicking anywhere outside the hand deselects all selected cards ──────
-  document.addEventListener("click", function (e) {
+  handleOutsideClick = function (e) {
     if (e.target.closest(".hand-card-wrap")) return;
     if (selected.size === 0) return;
     selected.clear();
     hand.querySelectorAll(".hand-card-wrap.selected").forEach((el) => el.classList.remove("selected"));
     refreshTotal();
-  });
+  };
 
   // ── Marquee (rubber-band) selection — click-drag anywhere on the page
   // (not starting on a card or another interactive control, so single-card
@@ -319,7 +340,7 @@ document.addEventListener("turbo:load", function () {
     marqueeActive = false;
   }
 
-  document.addEventListener("mousedown", function (e) {
+  handleMarqueeMouseDown = function (e) {
     if (e.button !== 0) return;
     if (e.target.closest(".hand-card-wrap, button, a, input, textarea, select, label, .round-history-modal, .settings-panel, .profile-dropdown, .color-picker-dropdown, .meld-group, .canasta-single, #discard-pile-drop, #red-three-drop, #new-meld-drop")) return;
     e.preventDefault();
@@ -327,17 +348,24 @@ document.addEventListener("turbo:load", function () {
     marqueeStartY = e.clientY;
     document.addEventListener("mousemove", onMarqueeMove);
     document.addEventListener("mouseup", onMarqueeUp, { once: true });
-  });
+  };
 
   // A completed drag-select still ends in a native "click" on whatever the
   // pointer lands on — swallow it so it doesn't also toggle that card or
   // trigger the "click outside" deselect handler above.
-  document.addEventListener("click", function (e) {
+  handleSuppressedClick = function (e) {
     if (!suppressNextClick) return;
     suppressNextClick = false;
     e.stopPropagation();
     e.preventDefault();
-  }, true);
+  };
+
+  if (!globalHandlersBound) {
+    globalHandlersBound = true;
+    document.addEventListener("click", (e) => handleOutsideClick?.(e));
+    document.addEventListener("mousedown", (e) => handleMarqueeMouseDown?.(e));
+    document.addEventListener("click", (e) => handleSuppressedClick?.(e), true);
+  }
 
   // ── Drag cards from hand — always enabled, since playing a red three isn't
   // gated by whose turn it is (unlike melding/discarding/pickup below). ──────

@@ -3,7 +3,7 @@
 <% all_players    = (@players + [@current_player]).compact.sort_by(&:id) %>
 
 <% my_turn = @game_started && !@scum&.game_over? && @game.current_turn == @current_player&.id && !is_me_finished %>
-<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>">
+<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>">
 
   <header class="game-header">
     <div class="game-title">♠ <%= @game.game_type.capitalize %></div>

@@ -1,0 +1,26 @@
+<%# locals: game, canasta, current_player, game_started, is_host, my_turn %>
+<div class="nav-game-info" id="nav-game-info">
+  <div class="players-list">
+    <% game.players.order(:created_at).each do |player| %>
+      <% is_active = game.current_turn && player.id == game.current_turn %>
+      <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == current_player&.id %>" data-team="<%= player.team.to_i + 1 %>">
+        <span class="player-name"><%= player.user.name %></span>
+        <% if game_started %>
+          <span class="card-count">· <%= (player.hand || []).length %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <% if my_turn && (canasta&.turn_meld_log || []).any? %>
+    <%= button_to "↺", undo_meld_game_path(game), method: :post, class: "btn-undo", title: "Undo last meld" %>
+  <% end %>
+  <% if is_host && !game_started %>
+    <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
+  <% end %>
+  <% if is_host %>
+    <%= button_to 'End', game_path(game), method: :delete, class: 'btn-quit',
+          form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
+  <% else %>
+    <%= button_to 'Leave', leave_game_path(game), method: :post, class: 'btn-quit' %>
+  <% end %>
+</div>

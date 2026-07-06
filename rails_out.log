@@ -17344,3 +17344,871 @@ Started GET "/cable" [WebSocket] for 192.168.1.31 at 2026-07-06 17:36:25 -0400
 Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
 GameChannel is transmitting the subscription confirmation
 GameChannel is streaming from game_33
+Finished "/cable" [WebSocket] for 192.168.1.31 at 2026-07-06 17:38:41 -0400
+GameChannel stopped streaming from game_33
+Started GET "/cable" for 192.168.1.31 at 2026-07-06 17:40:49 -0400
+Cannot render console from 192.168.1.31! Allowed networks: 127.0.0.0/127.255.255.255, ::1
+Started GET "/cable" [WebSocket] for 192.168.1.31 at 2026-07-06 17:40:49 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+Started GET "/games/33" for 192.168.1.31 at 2026-07-06 17:40:53 -0400
+Cannot render console from 192.168.1.31! Allowed networks: 127.0.0.0/127.255.255.255, ::1
+Processing by GamesController#show as HTML
+  Parameters: {"id" => "33"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 2], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 33], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 33], ["user_id", 2], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:10:in 'GamesController#show'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 33], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:13:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 33], ["id", 109], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:16:in 'GamesController#show'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 4], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:16:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 33], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:18:in 'GamesController#show'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 33], ["team", 1], ["id", 108], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_87256'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 33], ["id", 108]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_87256'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 33]]
+  ↳ app/views/games/_canasta_game.html.erb:25:in 'block in _app_views_games__canasta_game_html_erb___338983203_87256'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 1], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:28:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_87256'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 2], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:28:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_87256'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 4], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:28:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_87256'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 53], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:28:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_87256'
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.4ms | Allocations: 180)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 28)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 24)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 27)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 29)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 27)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 23)
+  Rendered games/_canasta_area.html.erb (Duration: 23.3ms | Allocations: 14374)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.4ms | Allocations: 111)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 31)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 24)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 36)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 36)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 24)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 23)
+  Rendered games/_meld_count_overlay.html.erb (Duration: 0.0ms | Allocations: 31)
+  Rendered games/_canasta_area.html.erb (Duration: 19.5ms | Allocations: 16248)
+  Rendered games/_canasta_game.html.erb (Duration: 60.8ms | Allocations: 41631)
+  Rendered games/show.html.erb within layouts/application (Duration: 62.0ms | Allocations: 41891)
+  Rendered layouts/_navbar.html.erb (Duration: 9.3ms | Allocations: 7852)
+  Rendered layout layouts/application.html.erb (Duration: 120.2ms | Allocations: 106696)
+Completed 200 OK in 162ms (Views: 123.6ms | ActiveRecord: 8.5ms | Allocations: 133319)
+
+
+Finished "/cable" [WebSocket] for 192.168.1.31 at 2026-07-06 17:40:53 -0400
+GameChannel stopped streaming from game_33
+Started GET "/cable" for 192.168.1.31 at 2026-07-06 17:40:53 -0400
+Cannot render console from 192.168.1.31! Allowed networks: 127.0.0.0/127.255.255.255, ::1
+Started GET "/cable" [WebSocket] for 192.168.1.31 at 2026-07-06 17:40:53 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+Started GET "/cable" for 127.0.0.1 at 2026-07-06 17:40:57 -0400
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-07-06 17:40:57 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+Finished "/cable" [WebSocket] for 192.168.1.31 at 2026-07-06 17:41:25 -0400
+GameChannel stopped streaming from game_33
+Started GET "/cable" for 127.0.0.1 at 2026-07-06 17:41:46 -0400
+Started GET "/cable" for 127.0.0.1 at 2026-07-06 17:41:46 -0400
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-07-06 17:41:47 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-07-06 17:41:47 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+Started GET "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:44:16 -0400
+Processing by Devise::SessionsController#new as */*
+  Rendering layout layouts/application.html.erb
+  Rendering devise/sessions/new.html.erb within layouts/application
+  Rendered devise/shared/_links.html.erb (Duration: 0.8ms | Allocations: 433)
+  Rendered devise/sessions/new.html.erb within layouts/application (Duration: 4.9ms | Allocations: 1539)
+  Rendered layouts/_navbar.html.erb (Duration: 1.7ms | Allocations: 1192)
+  Rendered layout layouts/application.html.erb (Duration: 122.4ms | Allocations: 73211)
+Completed 200 OK in 193ms (Views: 130.1ms | ActiveRecord: 2.6ms | Allocations: 80861)
+
+
+Started GET "/cable" for 127.0.0.1 at 2026-07-06 18:44:25 -0400
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-07-06 18:44:25 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+Started GET "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:44:29 -0400
+Processing by Devise::SessionsController#new as */*
+  Rendering layout layouts/application.html.erb
+  Rendering devise/sessions/new.html.erb within layouts/application
+  Rendered devise/shared/_links.html.erb (Duration: 0.1ms | Allocations: 105)
+  Rendered devise/sessions/new.html.erb within layouts/application (Duration: 1.1ms | Allocations: 798)
+  Rendered layouts/_navbar.html.erb (Duration: 0.8ms | Allocations: 396)
+  Rendered layout layouts/application.html.erb (Duration: 52.8ms | Allocations: 30522)
+Completed 200 OK in 56ms (Views: 53.3ms | ActiveRecord: 0.0ms | Allocations: 30973)
+
+
+Started POST "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:44:29 -0400
+Processing by Devise::SessionsController#create as */*
+  Parameters: {"user" => {"email" => "dog@dog.com", "password" => "[FILTERED]"}}
+  [1m[36mUser Load (0.5ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["email", "dog@dog.com"], ["LIMIT", 1]]
+Redirected to http://127.0.0.1:3000/
+Completed 303 See Other in 154ms (ActiveRecord: 0.6ms | Allocations: 3033)
+
+
+Started GET "/games/new" for 127.0.0.1 at 2026-07-06 18:44:41 -0400
+Processing by GamesController#new as */*
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 4], ["LIMIT", 1]]
+  Rendering layout layouts/application.html.erb
+  Rendering games/new.html.erb within layouts/application
+  Rendered games/new.html.erb within layouts/application (Duration: 1.8ms | Allocations: 893)
+  Rendered layouts/_navbar.html.erb (Duration: 10.5ms | Allocations: 7500)
+  Rendered layouts/_flash_error.html.erb (Duration: 0.4ms | Allocations: 138)
+  Rendered layout layouts/application.html.erb (Duration: 59.6ms | Allocations: 38076)
+Completed 200 OK in 77ms (Views: 63.3ms | ActiveRecord: 0.2ms | Allocations: 45121)
+
+
+Started POST "/games" for 127.0.0.1 at 2026-07-06 18:44:41 -0400
+Processing by GamesController#create as */*
+  Parameters: {"game" => {"game_type" => "scum"}}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 4], ["LIMIT", 1]]
+  [1m[36mTRANSACTION (0.5ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/controllers/games_controller.rb:22:in 'GamesController#create'
+  [1m[36mGame Create (1.7ms)[0m  [1m[32mINSERT INTO "games" ("created_at", "updated_at", "turn_order", "current_turn", "game_type", "settings") VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id"[0m  [["created_at", "2026-07-06 22:44:42.021452"], ["updated_at", "2026-07-06 22:44:42.021452"], ["turn_order", "{}"], ["current_turn", nil], ["game_type", 0], ["settings", "{}"]]
+  ↳ app/controllers/games_controller.rb:22:in 'GamesController#create'
+  [1m[36mTRANSACTION (0.3ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/controllers/games_controller.rb:22:in 'GamesController#create'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/player.rb:18:in 'Player#assign_default_team'
+  [1m[36mPlayer Count (1.0ms)[0m  [1m[34mSELECT COUNT(*) FROM "players" WHERE "players"."game_id" = $1[0m  [["game_id", 51]]
+  ↳ app/models/player.rb:18:in 'Player#assign_default_team'
+  [1m[36mPlayer Create (0.5ms)[0m  [1m[32mINSERT INTO "players" ("user_id", "game_id", "created_at", "updated_at", "is_turn", "hand", "team") VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id"[0m  [["user_id", 4], ["game_id", 51], ["created_at", "2026-07-06 22:44:42.030981"], ["updated_at", "2026-07-06 22:44:42.030981"], ["is_turn", nil], ["hand", "[]"], ["team", 0]]
+  ↳ app/controllers/games_controller.rb:23:in 'GamesController#create'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/controllers/games_controller.rb:23:in 'GamesController#create'
+[ActionCable] Broadcasting to lobby: {message: "update"}
+Redirected to http://127.0.0.1:3000/games/51
+Completed 302 Found in 18ms (ActiveRecord: 4.4ms | Allocations: 11304)
+
+
+Started GET "/cable" for 127.0.0.1 at 2026-07-06 18:44:46 -0400
+Started GET "/cable" for 127.0.0.1 at 2026-07-06 18:44:46 -0400
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-07-06 18:44:47 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+Started GET "/cable" [WebSocket] for 127.0.0.1 at 2026-07-06 18:44:47 -0400
+Successfully upgraded to WebSocket (REQUEST_METHOD: GET, HTTP_CONNECTION: Upgrade, HTTP_UPGRADE: websocket)
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+GameChannel is transmitting the subscription confirmation
+GameChannel is streaming from game_33
+Started GET "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:09 -0400
+Processing by Devise::SessionsController#new as */*
+  Rendering layout layouts/application.html.erb
+  Rendering devise/sessions/new.html.erb within layouts/application
+  Rendered devise/shared/_links.html.erb (Duration: 0.1ms | Allocations: 107)
+  Rendered devise/sessions/new.html.erb within layouts/application (Duration: 1.1ms | Allocations: 801)
+  Rendered layouts/_navbar.html.erb (Duration: 0.5ms | Allocations: 397)
+  Rendered layout layouts/application.html.erb (Duration: 47.7ms | Allocations: 30434)
+Completed 200 OK in 51ms (Views: 48.2ms | ActiveRecord: 0.0ms | Allocations: 30886)
+
+
+Started POST "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:09 -0400
+Processing by Devise::SessionsController#create as */*
+  Parameters: {"user" => {"email" => "canasta_smoke1@example.com", "password" => "[FILTERED]"}}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["email", "canasta_smoke1@example.com"], ["LIMIT", 1]]
+Redirected to http://127.0.0.1:3000/
+Completed 303 See Other in 142ms (ActiveRecord: 0.2ms | Allocations: 2348)
+
+
+Started GET "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:09 -0400
+Processing by Devise::SessionsController#new as */*
+  Rendering layout layouts/application.html.erb
+  Rendering devise/sessions/new.html.erb within layouts/application
+  Rendered devise/shared/_links.html.erb (Duration: 0.1ms | Allocations: 105)
+  Rendered devise/sessions/new.html.erb within layouts/application (Duration: 0.9ms | Allocations: 798)
+  Rendered layouts/_navbar.html.erb (Duration: 0.5ms | Allocations: 396)
+  Rendered layout layouts/application.html.erb (Duration: 49.0ms | Allocations: 30432)
+Completed 200 OK in 52ms (Views: 49.5ms | ActiveRecord: 0.0ms | Allocations: 30882)
+
+
+Started POST "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:09 -0400
+Processing by Devise::SessionsController#create as */*
+  Parameters: {"user" => {"email" => "canasta_smoke2@example.com", "password" => "[FILTERED]"}}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["email", "canasta_smoke2@example.com"], ["LIMIT", 1]]
+Redirected to http://127.0.0.1:3000/
+Completed 303 See Other in 146ms (ActiveRecord: 0.2ms | Allocations: 2342)
+
+
+Started GET "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:10 -0400
+Processing by Devise::SessionsController#new as */*
+  Rendering layout layouts/application.html.erb
+  Rendering devise/sessions/new.html.erb within layouts/application
+  Rendered devise/shared/_links.html.erb (Duration: 0.1ms | Allocations: 105)
+  Rendered devise/sessions/new.html.erb within layouts/application (Duration: 0.9ms | Allocations: 798)
+  Rendered layouts/_navbar.html.erb (Duration: 0.5ms | Allocations: 396)
+  Rendered layout layouts/application.html.erb (Duration: 47.6ms | Allocations: 30596)
+Completed 200 OK in 51ms (Views: 48.2ms | ActiveRecord: 0.0ms | Allocations: 31046)
+
+
+Started POST "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:10 -0400
+Processing by Devise::SessionsController#create as */*
+  Parameters: {"user" => {"email" => "canasta_smoke3@example.com", "password" => "[FILTERED]"}}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["email", "canasta_smoke3@example.com"], ["LIMIT", 1]]
+Redirected to http://127.0.0.1:3000/
+Completed 303 See Other in 145ms (ActiveRecord: 0.2ms | Allocations: 2344)
+
+
+Started GET "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:10 -0400
+Processing by Devise::SessionsController#new as */*
+  Rendering layout layouts/application.html.erb
+  Rendering devise/sessions/new.html.erb within layouts/application
+  Rendered devise/shared/_links.html.erb (Duration: 0.1ms | Allocations: 105)
+  Rendered devise/sessions/new.html.erb within layouts/application (Duration: 1.0ms | Allocations: 798)
+  Rendered layouts/_navbar.html.erb (Duration: 0.4ms | Allocations: 396)
+  Rendered layout layouts/application.html.erb (Duration: 50.6ms | Allocations: 30430)
+Completed 200 OK in 54ms (Views: 51.2ms | ActiveRecord: 0.0ms | Allocations: 30880)
+
+
+Started POST "/users/sign_in" for 127.0.0.1 at 2026-07-06 18:45:10 -0400
+Processing by Devise::SessionsController#create as */*
+  Parameters: {"user" => {"email" => "canasta_smoke4@example.com", "password" => "[FILTERED]"}}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."email" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["email", "canasta_smoke4@example.com"], ["LIMIT", 1]]
+Redirected to http://127.0.0.1:3000/
+Completed 303 See Other in 144ms (ActiveRecord: 0.2ms | Allocations: 2341)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:45:27 -0400
+Processing by GamesController#show as */*
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.3ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 0], ["id", 164], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 164]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.4ms | Allocations: 201)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 5.1ms | Allocations: 4320)
+  [1m[36mPlayer Count (0.2ms)[0m  [1m[34mSELECT COUNT(*) FROM "players" WHERE "players"."game_id" = $1[0m  [["game_id", 52]]
+  ↳ app/views/games/_canasta_game.html.erb:96:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52], ["team", 0]]
+  ↳ app/views/games/_canasta_game.html.erb:103:in 'block in _app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:105:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:105:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52], ["team", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:103:in 'block in _app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:105:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:105:in 'block (2 levels) in _app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mCACHE Player Count (0.0ms)[0m  [1m[34mSELECT COUNT(*) FROM "players" WHERE "players"."game_id" = $1[0m  [["game_id", 52]]
+  ↳ app/views/games/_canasta_game.html.erb:120:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_canasta_game.html.erb (Duration: 19.5ms | Allocations: 13949)
+  Rendered games/show.html.erb within layouts/application (Duration: 20.6ms | Allocations: 14203)
+  Rendered layouts/_navbar.html.erb (Duration: 11.2ms | Allocations: 7102)
+  Rendered layouts/_flash_error.html.erb (Duration: 0.0ms | Allocations: 9)
+  Rendered layout layouts/application.html.erb (Duration: 78.6ms | Allocations: 50508)
+Completed 200 OK in 153ms (Views: 77.8ms | ActiveRecord: 2.2ms | Allocations: 63382)
+
+
+Started POST "/games/52/start" for 127.0.0.1 at 2026-07-06 18:45:27 -0400
+Processing by GamesController#start as */*
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:100:in 'GamesController#start'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:101:in 'GamesController#start'
+  [1m[36mPlayer Count (0.2ms)[0m  [1m[34mSELECT COUNT(*) FROM "players" WHERE "players"."game_id" = $1[0m  [["game_id", 52]]
+  ↳ app/controllers/games_controller.rb:105:in 'GamesController#start'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/models/game.rb:76:in 'Game#initialize_canasta_game_state'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/game.rb:77:in 'Game#initialize_canasta_game_state'
+  [1m[36mCanasta Create (1.1ms)[0m  [1m[32mINSERT INTO "canastas" ("game_id", "game_state", "created_at", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["game_id", 52], ["game_state", "{}"], ["created_at", "2026-07-06 22:45:27.548656"], ["updated_at", "2026-07-06 22:45:27.548656"]]
+  ↳ app/models/game.rb:77:in 'Game#initialize_canasta_game_state'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/game.rb:77:in 'Game#initialize_canasta_game_state'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:47:in 'Canasta#initialize_round'
+  [1m[36mDeck Create (1.1ms)[0m  [1m[32mINSERT INTO "decks" ("game_id", "cards", "created_at", "updated_at") VALUES ($1, $2, $3, $4) RETURNING "id"[0m  [["game_id", 52], ["cards", "[\"d10\",\"d6\",\"h5\",\"dq\",\"h6\",\"hk\",\"hq\",\"h4\",\"s8\",\"d5\",\"s4\",\"c7\",\"d9\",\"dj\",\"h3\",\"s2\",\"h9\",\"d8\",\"h7\",\"ck\",\"sk\",\"sq\",\"s7\",\"c10\",\"dk\",\"da\",\"c4\",\"h2\",\"c5\",\"s9\",\"s6\",\"h10\",\"c3\",\"hj\",\"d7\",\"s3\",\"s10\",\"d4\",\"c9\",\"cq\",\"ha\",\"sj\",\"d3\",\"c2\",\"sa\",\"cj\",\"h8\",\"ca\",\"d2\",\"s5\",\"c8\",\"c6\"]"], ["created_at", "2026-07-06 22:45:27.557455"], ["updated_at", "2026-07-06 22:45:27.557455"]]
+  ↳ app/models/canasta.rb:47:in 'Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:47:in 'Canasta#initialize_round'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/models/canasta.rb:51:in 'Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mPlayer Update (1.0ms)[0m  [1m[33mUPDATE "players" SET "updated_at" = $1, "hand" = $2 WHERE "players"."id" = $3[0m  [["updated_at", "2026-07-06 22:45:27.561570"], ["hand", "[\"jo\",\"hk\",\"ha\",\"c8\",\"c6\",\"s4\",\"s6\",\"d4\",\"s8\",\"d7\",\"s8\",\"hj\",\"hj\"]"], ["id", 164]]
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mPlayer Update (0.8ms)[0m  [1m[33mUPDATE "players" SET "updated_at" = $1, "hand" = $2 WHERE "players"."id" = $3[0m  [["updated_at", "2026-07-06 22:45:27.564221"], ["hand", "[\"d3\",\"sk\",\"hq\",\"h4\",\"h5\",\"c7\",\"da\",\"c7\",\"s9\",\"dk\",\"s2\",\"jo\",\"h9\"]"], ["id", 165]]
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mPlayer Update (0.8ms)[0m  [1m[33mUPDATE "players" SET "updated_at" = $1, "hand" = $2 WHERE "players"."id" = $3[0m  [["updated_at", "2026-07-06 22:45:27.566521"], ["hand", "[\"h3\",\"d5\",\"d9\",\"h5\",\"s5\",\"s5\",\"d5\",\"c4\",\"h6\",\"c5\",\"ca\",\"h7\",\"d9\"]"], ["id", 166]]
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mPlayer Update (0.8ms)[0m  [1m[33mUPDATE "players" SET "updated_at" = $1, "hand" = $2 WHERE "players"."id" = $3[0m  [["updated_at", "2026-07-06 22:45:27.568772"], ["hand", "[\"sq\",\"d2\",\"d8\",\"dk\",\"s8\",\"h7\",\"dk\",\"c9\",\"h8\",\"ck\",\"c2\",\"s5\",\"s4\"]"], ["id", 167]]
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:60:in 'block in Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:407:in 'Canasta#write_game_state!'
+  [1m[36mCanasta Update (0.8ms)[0m  [1m[33mUPDATE "canastas" SET "game_state" = $1, "updated_at" = $2 WHERE "canastas"."id" = $3[0m  [["game_state", "{\"draw_pile\":[\"sj\",\"sj\",\"ca\",\"dq\",\"cj\",\"hk\",\"c2\",\"h9\",\"cj\",\"c9\",\"s4\",\"c7\",\"c10\",\"c4\",\"s3\",\"s3\",\"h2\",\"d8\",\"c3\",\"c5\",\"ha\",\"h10\",\"d6\",\"ha\",\"c4\",\"d5\",\"dj\",\"s7\",\"jo\",\"hj\",\"d7\",\"dq\",\"s9\",\"d10\",\"c8\",\"h8\",\"sa\",\"d4\",\"sq\",\"d3\",\"c6\",\"dq\",\"cq\",\"h6\",\"h3\",\"h2\",\"sj\",\"cq\",\"c10\",\"cq\",\"ck\",\"hq\",\"h4\",\"d4\",\"d3\",\"hk\",\"c6\",\"c10\",\"s6\",\"da\",\"sa\",\"s7\",\"c5\",\"h9\",\"sk\"],\"discard_pile\":[\"dj\"],\"frozen\":true,\"melds\":{\"0\":{},\"1\":{}},\"turn_phase\":\"draw\",\"round_number\":1,\"team_scores\":{\"0\":0,\"1\":0},\"round_scores\":{\"0\":0,\"1\":0},\"red_threes\":{\"0\":[],\"1\":[]},\"peak_hands\":{\"164\":[\"c2\",\"sq\",\"s10\",\"s3\",\"d8\",\"c3\",\"cj\",\"s2\",\"ck\",\"c9\",\"d2\"],\"165\":[\"d2\",\"h3\",\"s2\",\"d10\",\"h5\",\"d7\",\"d6\",\"jo\",\"h6\",\"s9\",\"d6\"],\"166\":[\"d10\",\"jo\",\"h4\",\"c8\",\"c3\",\"sk\",\"d9\",\"sa\",\"h2\",\"h10\",\"s10\"],\"167\":[\"s6\",\"s7\",\"s10\",\"dj\",\"h7\",\"jo\",\"da\",\"ca\",\"h8\",\"hq\",\"h10\"]}}"], ["updated_at", "2026-07-06 22:45:27.571469"], ["id", 25]]
+  ↳ app/models/canasta.rb:407:in 'Canasta#write_game_state!'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:407:in 'Canasta#write_game_state!'
+  [1m[36mPlayer Update All (0.2ms)[0m  [1m[33mUPDATE "players" SET "is_turn" = $1 WHERE "players"."game_id" = $2[0m  [["is_turn", false], ["game_id", 52]]
+  ↳ app/models/canasta.rb:87:in 'Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:89:in 'Canasta#initialize_round'
+  [1m[36mGame Update (0.8ms)[0m  [1m[33mUPDATE "games" SET "updated_at" = $1, "turn_order" = $2, "current_turn" = $3 WHERE "games"."id" = $4[0m  [["updated_at", "2026-07-06 22:45:27.574771"], ["turn_order", "{164,165,166,167}"], ["current_turn", 164], ["id", 52]]
+  ↳ app/models/canasta.rb:89:in 'Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:89:in 'Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:90:in 'Canasta#initialize_round'
+  [1m[36mPlayer Update (0.8ms)[0m  [1m[33mUPDATE "players" SET "updated_at" = $1, "is_turn" = $2 WHERE "players"."id" = $3[0m  [["updated_at", "2026-07-06 22:45:27.577121"], ["is_turn", true], ["id", 164]]
+  ↳ app/models/canasta.rb:90:in 'Canasta#initialize_round'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:90:in 'Canasta#initialize_round'
+[ActionCable] Broadcasting to game_52: {message: "Game started!"}
+[ActionCable] Broadcasting to lobby: {message: "update"}
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering games/show.turbo_stream.erb
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 0], ["id", 164], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 164]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 34)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.9ms | Allocations: 2932)
+  Rendered games/_canasta_area.html.erb (Duration: 0.9ms | Allocations: 854)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.4ms | Allocations: 111)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.8ms | Allocations: 849)
+  Rendered games/_canasta_game.html.erb (Duration: 25.2ms | Allocations: 17090)
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 32)
+  [1m[36mCACHE Player Load (0.0ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.4ms | Allocations: 2279)
+  Rendered games/show.turbo_stream.erb (Duration: 33.8ms | Allocations: 20544)
+Completed 200 OK in 84ms (Views: 38.1ms | ActiveRecord: 15.2ms | Allocations: 49201)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:45:48 -0400
+Processing by GamesController#show as TURBO_STREAM
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering games/show.turbo_stream.erb
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 0], ["id", 164], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 164]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.7ms | Allocations: 2927)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 22.5ms | Allocations: 15290)
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 32)
+  [1m[36mCACHE Player Load (0.0ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.7ms | Allocations: 2279)
+  Rendered games/show.turbo_stream.erb (Duration: 27.3ms | Allocations: 17910)
+Completed 200 OK in 38ms (Views: 27.2ms | ActiveRecord: 1.5ms | Allocations: 23087)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:45:49 -0400
+Processing by GamesController#show as TURBO_STREAM
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.2ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 57], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.2ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering games/show.turbo_stream.erb
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 1], ["id", 165], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 165]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 4.0ms | Allocations: 2909)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 21.3ms | Allocations: 15306)
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 32)
+  [1m[36mCACHE Player Load (0.0ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.6ms | Allocations: 2257)
+  Rendered games/show.turbo_stream.erb (Duration: 25.8ms | Allocations: 17904)
+Completed 200 OK in 37ms (Views: 25.8ms | ActiveRecord: 1.5ms | Allocations: 23071)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:45:49 -0400
+Processing by GamesController#show as TURBO_STREAM
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 58], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering games/show.turbo_stream.erb
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 0], ["id", 166], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 166]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 4.6ms | Allocations: 2907)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 22.6ms | Allocations: 14926)
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 32)
+  [1m[36mCACHE Player Load (0.0ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.7ms | Allocations: 2257)
+  Rendered games/show.turbo_stream.erb (Duration: 27.6ms | Allocations: 17524)
+Completed 200 OK in 38ms (Views: 27.4ms | ActiveRecord: 1.4ms | Allocations: 22702)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:45:49 -0400
+Processing by GamesController#show as TURBO_STREAM
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  [1m[36mGame Load (0.2ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 59], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.2ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering games/show.turbo_stream.erb
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 1], ["id", 167], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 167]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.5ms | Allocations: 2907)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 20.2ms | Allocations: 15296)
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 32)
+  [1m[36mCACHE Player Load (0.0ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 2.9ms | Allocations: 2257)
+  Rendered games/show.turbo_stream.erb (Duration: 23.9ms | Allocations: 17894)
+Completed 200 OK in 35ms (Views: 23.8ms | ActiveRecord: 1.4ms | Allocations: 23073)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:45:50 -0400
+Processing by GamesController#show as */*
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 57], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 1], ["id", 165], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 165]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.5ms | Allocations: 2905)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 20.0ms | Allocations: 15297)
+  Rendered games/show.html.erb within layouts/application (Duration: 20.3ms | Allocations: 15357)
+  Rendered layouts/_navbar.html.erb (Duration: 9.1ms | Allocations: 7093)
+  Rendered layouts/_flash_error.html.erb (Duration: 0.0ms | Allocations: 9)
+  Rendered layout layouts/application.html.erb (Duration: 64.5ms | Allocations: 48942)
+Completed 200 OK in 75ms (Views: 64.5ms | ActiveRecord: 1.1ms | Allocations: 54065)
+
+
+Started POST "/games/52/start" for 127.0.0.1 at 2026-07-06 18:45:50 -0400
+Processing by GamesController#start as HTML
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:100:in 'GamesController#start'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:101:in 'GamesController#start'
+Redirected to http://127.0.0.1:3000/games/52
+Completed 302 Found in 6ms (ActiveRecord: 0.3ms | Allocations: 2636)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:46:11 -0400
+Processing by GamesController#show as */*
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 0], ["id", 164], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 164]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.8ms | Allocations: 2927)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 19.3ms | Allocations: 15288)
+  Rendered games/show.html.erb within layouts/application (Duration: 19.5ms | Allocations: 15348)
+  Rendered layouts/_navbar.html.erb (Duration: 8.9ms | Allocations: 7100)
+  Rendered layouts/_flash_error.html.erb (Duration: 0.0ms | Allocations: 9)
+  Rendered layout layouts/application.html.erb (Duration: 66.7ms | Allocations: 49070)
+Completed 200 OK in 76ms (Views: 66.7ms | ActiveRecord: 1.1ms | Allocations: 54186)
+
+
+Started POST "/games/52/draw" for 127.0.0.1 at 2026-07-06 18:46:11 -0400
+Processing by GamesController#draw as */*
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:185:in 'GamesController#draw'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:186:in 'GamesController#draw'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:187:in 'GamesController#draw'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:116:in 'Canasta#draw'
+  [1m[36mPlayer Update (0.8ms)[0m  [1m[33mUPDATE "players" SET "updated_at" = $1, "hand" = $2 WHERE "players"."id" = $3[0m  [["updated_at", "2026-07-06 22:46:11.394370"], ["hand", "[\"jo\",\"hk\",\"ha\",\"c8\",\"c6\",\"s4\",\"s6\",\"d4\",\"s8\",\"d7\",\"s8\",\"hj\",\"hj\",\"sk\",\"h9\"]"], ["id", 164]]
+  ↳ app/models/canasta.rb:116:in 'Canasta#draw'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:116:in 'Canasta#draw'
+  [1m[36mTRANSACTION (0.1ms)[0m  [1m[35mBEGIN[0m
+  ↳ app/models/canasta.rb:407:in 'Canasta#write_game_state!'
+  [1m[36mCanasta Update (0.7ms)[0m  [1m[33mUPDATE "canastas" SET "game_state" = $1, "updated_at" = $2 WHERE "canastas"."id" = $3[0m  [["game_state", "{\"melds\":{\"0\":{},\"1\":{}},\"frozen\":true,\"draw_pile\":[\"sj\",\"sj\",\"ca\",\"dq\",\"cj\",\"hk\",\"c2\",\"h9\",\"cj\",\"c9\",\"s4\",\"c7\",\"c10\",\"c4\",\"s3\",\"s3\",\"h2\",\"d8\",\"c3\",\"c5\",\"ha\",\"h10\",\"d6\",\"ha\",\"c4\",\"d5\",\"dj\",\"s7\",\"jo\",\"hj\",\"d7\",\"dq\",\"s9\",\"d10\",\"c8\",\"h8\",\"sa\",\"d4\",\"sq\",\"d3\",\"c6\",\"dq\",\"cq\",\"h6\",\"h3\",\"h2\",\"sj\",\"cq\",\"c10\",\"cq\",\"ck\",\"hq\",\"h4\",\"d4\",\"d3\",\"hk\",\"c6\",\"c10\",\"s6\",\"da\",\"sa\",\"s7\",\"c5\"],\"peak_hands\":{\"164\":[\"c2\",\"sq\",\"s10\",\"s3\",\"d8\",\"c3\",\"cj\",\"s2\",\"ck\",\"c9\",\"d2\"],\"165\":[\"d2\",\"h3\",\"s2\",\"d10\",\"h5\",\"d7\",\"d6\",\"jo\",\"h6\",\"s9\",\"d6\"],\"166\":[\"d10\",\"jo\",\"h4\",\"c8\",\"c3\",\"sk\",\"d9\",\"sa\",\"h2\",\"h10\",\"s10\"],\"167\":[\"s6\",\"s7\",\"s10\",\"dj\",\"h7\",\"jo\",\"da\",\"ca\",\"h8\",\"hq\",\"h10\"]},\"red_threes\":{\"0\":[],\"1\":[]},\"turn_phase\":\"discard\",\"team_scores\":{\"0\":0,\"1\":0},\"discard_pile\":[\"dj\"],\"round_number\":1,\"round_scores\":{\"0\":0,\"1\":0},\"turn_meld_log\":[],\"last_draw\":{\"player_id\":164,\"cards\":[\"sk\",\"h9\"],\"seq\":1}}"], ["updated_at", "2026-07-06 22:46:11.396743"], ["id", 25]]
+  ↳ app/models/canasta.rb:407:in 'Canasta#write_game_state!'
+  [1m[36mTRANSACTION (0.2ms)[0m  [1m[35mCOMMIT[0m
+  ↳ app/models/canasta.rb:407:in 'Canasta#write_game_state!'
+[ActionCable] Broadcasting to game_52: {message: "update"}
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering games/show.turbo_stream.erb
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 0], ["id", 164], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 164]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 4.8ms | Allocations: 2927)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 25.2ms | Allocations: 17947)
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 32)
+  [1m[36mCACHE Player Load (0.0ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 4.1ms | Allocations: 2280)
+  Rendered games/show.turbo_stream.erb (Duration: 30.8ms | Allocations: 20568)
+Completed 200 OK in 46ms (Views: 30.8ms | ActiveRecord: 3.3ms | Allocations: 30391)
+
+
+Started GET "/games/52" for 127.0.0.1 at 2026-07-06 18:46:11 -0400
+Processing by GamesController#show as */*
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:8:in 'GamesController#show'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 57], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:337:in 'GamesController#load_game_view_state'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:340:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" = $2 LIMIT $3[0m  [["game_id", 52], ["id", 164], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:343:in 'GamesController#load_game_view_state'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:345:in 'GamesController#load_game_view_state'
+  Rendering layout layouts/application.html.erb
+  Rendering games/show.html.erb within layouts/application
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."team" = $2 AND "players"."id" != $3 ORDER BY "players"."id" ASC LIMIT $4[0m  [["game_id", 52], ["team", 1], ["id", 165], ["LIMIT", 1]]
+  ↳ app/views/games/_canasta_game.html.erb:2:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."id" != $2 ORDER BY "players"."id" ASC[0m  [["game_id", 52], ["id", 165]]
+  ↳ app/views/games/_canasta_game.html.erb:7:in '_app_views_games__canasta_game_html_erb___338983203_93360'
+  Rendered games/_nav_team_scores.html.erb (Duration: 0.0ms | Allocations: 33)
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 ORDER BY "players"."created_at" ASC[0m  [["game_id", 52]]
+  ↳ app/views/games/_nav_game_info.html.erb:4:in '_app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mCACHE User Load (0.0ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 56], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 58], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 LIMIT $2[0m  [["id", 59], ["LIMIT", 1]]
+  ↳ app/views/games/_nav_game_info.html.erb:7:in 'block in _app_views_games__nav_game_info_html_erb__323642386_93376'
+  Rendered games/_nav_game_info.html.erb (Duration: 3.4ms | Allocations: 2907)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 22)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_pile_count_overlay.html.erb (Duration: 0.0ms | Allocations: 11)
+  Rendered games/_canasta_area.html.erb (Duration: 0.0ms | Allocations: 20)
+  Rendered games/_canasta_game.html.erb (Duration: 20.2ms | Allocations: 15304)
+  Rendered games/show.html.erb within layouts/application (Duration: 20.4ms | Allocations: 15364)
+  Rendered layouts/_navbar.html.erb (Duration: 8.3ms | Allocations: 7021)
+  Rendered layouts/_flash_error.html.erb (Duration: 0.0ms | Allocations: 10)
+  Rendered layout layouts/application.html.erb (Duration: 63.6ms | Allocations: 48830)
+Completed 200 OK in 74ms (Views: 63.6ms | ActiveRecord: 1.1ms | Allocations: 53954)
+
+
+Started POST "/games/52/draw" for 127.0.0.1 at 2026-07-06 18:46:11 -0400
+Processing by GamesController#draw as */*
+  Parameters: {"id" => "52"}
+  [1m[36mUser Load (0.1ms)[0m  [1m[34mSELECT "users".* FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" ASC LIMIT $2[0m  [["id", 57], ["LIMIT", 1]]
+  [1m[36mGame Load (0.1ms)[0m  [1m[34mSELECT "games".* FROM "games" WHERE "games"."id" = $1 LIMIT $2[0m  [["id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:185:in 'GamesController#draw'
+  [1m[36mCanasta Load (0.1ms)[0m  [1m[34mSELECT "canastas".* FROM "canastas" WHERE "canastas"."game_id" = $1 LIMIT $2[0m  [["game_id", 52], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:186:in 'GamesController#draw'
+  [1m[36mPlayer Load (0.1ms)[0m  [1m[34mSELECT "players".* FROM "players" WHERE "players"."game_id" = $1 AND "players"."user_id" = $2 LIMIT $3[0m  [["game_id", 52], ["user_id", 57], ["LIMIT", 1]]
+  ↳ app/controllers/games_controller.rb:187:in 'GamesController#draw'
+  Rendered layouts/_flash_error.html.erb (Duration: 0.0ms | Allocations: 11)
+Completed 200 OK in 9ms (Views: 0.1ms | ActiveRecord: 0.4ms | Allocations: 3310)
+
+

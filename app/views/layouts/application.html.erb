@@ -17,12 +17,10 @@
     <% if notice %>
       <div class="flash flash-notice"><%= notice %></div>
     <% end %>
-    <% if alert %>
-      <% if params[:controller] == "games" && request.path.include?("/games/") %>
-        <div data-flash-error="<%= alert %>" style="display:none;"></div>
-      <% else %>
-        <div class="flash flash-alert"><%= alert %></div>
-      <% end %>
+    <% if params[:controller] == "games" && request.path.include?("/games/") %>
+      <%= render "layouts/flash_error", alert: alert %>
+    <% elsif alert %>
+      <div class="flash flash-alert"><%= alert %></div>
     <% end %>
     <%= yield %>
   </body>

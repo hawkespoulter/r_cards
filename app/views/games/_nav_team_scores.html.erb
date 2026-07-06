@@ -1,0 +1,8 @@
+<%# locals: canasta, my_team %>
+<div class="nav-team-scores" id="nav-team-scores">
+  <% [0, 1].each do |team| %>
+    <div class="team-score-chip round-history-trigger <%= 'my-team' if team == my_team %>" data-team="<%= team + 1 %>" title="See round-by-round scores">
+      <span class="team-name-label">T<%= team + 1 %></span>: <%= ((canasta&.team_scores || {})[team.to_s] || 0) %>
+    </div>
+  <% end %>
+</div>

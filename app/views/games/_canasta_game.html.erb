@@ -10,44 +10,14 @@
 <% peak_right = other_players[2] %>
 
 <% content_for :nav_left do %>
-  <div class="nav-team-scores">
-    <% [0, 1].each do |team| %>
-      <div class="team-score-chip round-history-trigger <%= 'my-team' if team == my_team %>" data-team="<%= team + 1 %>" title="See round-by-round scores">
-        <span class="team-name-label">T<%= team + 1 %></span>: <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %>
-      </div>
-    <% end %>
-  </div>
+  <%= render "nav_team_scores", canasta: @canasta, my_team: my_team %>
 <% end %>
 
 <% content_for :nav_center do %>
-  <div class="nav-game-info">
-    <div class="players-list">
-      <% @game.players.order(:created_at).each do |player| %>
-        <% is_active = @game.current_turn && player.id == @game.current_turn %>
-        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == @current_player&.id %>" data-team="<%= player.team.to_i + 1 %>">
-          <span class="player-name"><%= player.user.name %></span>
-          <% if @game_started %>
-            <span class="card-count">· <%= (player.hand || []).length %></span>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-    <% if my_turn && (@canasta&.turn_meld_log || []).any? %>
-      <%= button_to "↺", undo_meld_game_path(@game), method: :post, class: "btn-undo", title: "Undo last meld" %>
-    <% end %>
-    <% if @is_host && !@game_started %>
-      <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
-    <% end %>
-    <% if @is_host %>
-      <%= button_to 'End', game_path(@game), method: :delete, class: 'btn-quit',
-            form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
-    <% else %>
-      <%= button_to 'Leave', leave_game_path(@game), method: :post, class: 'btn-quit' %>
-    <% end %>
-  </div>
+  <%= render "nav_game_info", game: @game, canasta: @canasta, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn %>
 <% end %>
 
-<div class="game-container <%= 'my-turn' if my_turn %>" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-card-back="<%= asset_path("cards/backs/#{@game.card_back_key}.jpg") %>">
+<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-card-back="<%= asset_path("cards/backs/#{@game.card_back_key}.jpg") %>">
 
   <% if @canasta %>
     <div class="round-history-overlay" id="round-history-popup">

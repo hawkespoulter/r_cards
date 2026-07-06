@@ -1,0 +1,6 @@
+<%# locals: alert %>
+<div id="flash-error-container">
+  <% if alert.present? %>
+    <div data-flash-error="<%= alert %>" style="display:none;"></div>
+  <% end %>
+</div>

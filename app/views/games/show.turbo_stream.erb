@@ -1,0 +1,13 @@
+<%= turbo_stream.replace "game-container" do %>
+  <%= render @game.canasta? ? "canasta_game" : "scum_game" %>
+<% end %>
+
+<% if @game.canasta? %>
+  <% my_turn = @game_started && @canasta && !@canasta.game_over? && @game.current_turn == @current_player&.id %>
+  <%= turbo_stream.replace "nav-team-scores" do %>
+    <%= render "nav_team_scores", canasta: @canasta, my_team: @current_player&.team %>
+  <% end %>
+  <%= turbo_stream.replace "nav-game-info" do %>
+    <%= render "nav_game_info", game: @game, canasta: @canasta, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn %>
+  <% end %>
+<% end %>

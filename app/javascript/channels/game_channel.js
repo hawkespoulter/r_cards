@@ -5,6 +5,16 @@ import { showCardModal } from "card_modal"
 let currentSubscription = null;
 let currentGameId = null;
 
+// Patches the board in place instead of a full page reload — fetches this
+// player's own personalized turbo_stream render (hand/team perspective is
+// computed server-side from their session, same as a full reload would,
+// just without the navigation) and lets Turbo apply it.
+function syncBoard(gameId) {
+  fetch(`/games/${gameId}`, { headers: { Accept: "text/vnd.turbo-stream.html" } })
+    .then((r) => r.text())
+    .then((html) => Turbo.renderStreamMessage(html));
+}
+
 document.addEventListener("turbo:load", function () {
   const container = document.querySelector("[data-game-id]");
   const gameId    = container?.dataset.gameId;
@@ -50,11 +60,10 @@ document.addEventListener("turbo:load", function () {
           const isActingPlayer = myPlayerId != null && String(data.acting_player_id) === myPlayerId;
 
           if (!isActingPlayer) {
-            // The acting player is about to be navigated to a fresh page by
-            // their own meld POST's redirect — showing the modal here, on
-            // the page they're already leaving, just gets it wiped out
-            // early by that navigation. Their own canasta_cards.js check
-            // (once the fresh page loads) shows it uninterrupted instead.
+            // The acting player's own turbo_stream response already synced
+            // their board and shows this via canasta_cards.js's own
+            // [data-last-canasta] check, keyed off the same sessionStorage
+            // key — so this branch only needs to cover everyone else.
             const key = data.canasta_seq != null ? `r_cards_canasta_made_${gameId}_${data.canasta_seq}` : null;
             const alreadyShown = key && sessionStorage.getItem(key) === "1";
             if (!alreadyShown) {
@@ -66,12 +75,12 @@ document.addEventListener("turbo:load", function () {
                 confetti: true,
                 confettiCard: rankCard
               });
-              setTimeout(() => location.reload(), 1600);
             }
           }
+          syncBoard(gameId);
         } else if (data.pickup_cards) {
           // Same acting-player exclusion as canasta_completed above — the
-          // acting player already sees this via their own fresh page load
+          // acting player already sees this via their own synced board
           // (canasta_cards.js's [data-last-pickup] check), which shares the
           // same sessionStorage key so neither path double-shows it.
           const myPlayerId = document.querySelector("[data-game-id]")?.dataset.playerId;
@@ -87,26 +96,26 @@ document.addEventListener("turbo:load", function () {
                 cards: data.pickup_cards,
                 duration: 3000
               });
-              setTimeout(() => location.reload(), 3000);
             }
           }
+          syncBoard(gameId);
         } else if (data.game_over) {
           showCardModal({
             title: `🏆 Team ${parseInt(data.winning_team, 10) + 1} wins the game!`,
             confetti: true
           });
-          setTimeout(() => location.reload(), 1600);
+          syncBoard(gameId);
         } else if (data.round_ended) {
-          // Reveals the round-summary screen — actual scoring toast/reload
+          // Reveals the round-summary screen — actual scoring toast/sync
           // for starting the next round comes later, from `next_round`,
           // once the host reviews the summary and continues.
-          location.reload();
+          syncBoard(gameId);
         } else if (data.next_round) {
           showCardModal({
             title: `New round — hands dealt!`,
             confetti: true
           });
-          setTimeout(() => location.reload(), 1600);
+          syncBoard(gameId);
         } else if (data.aces_played_by) {
           showCardModal({
             title: `🔥 ${data.aces_played_by} threw down Aces!`,
@@ -114,15 +123,15 @@ document.addEventListener("turbo:load", function () {
             cards: data.aces_played_cards || [],
             confetti: true
           });
-          setTimeout(() => location.reload(), 1600);
+          syncBoard(gameId);
         } else if (data.finished_player_name) {
           showCardModal({
             title: `🎉 ${data.finished_player_name} is out!`,
             confetti: true
           });
-          setTimeout(() => location.reload(), 1600);
+          syncBoard(gameId);
         } else {
-          location.reload();
+          syncBoard(gameId);
         }
       }
     }
