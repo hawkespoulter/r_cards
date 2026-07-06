@@ -1,0 +1,10 @@
+<%# locals: cards (array of card codes), rank (the meld's rank, e.g. "q") %>
+<% wild_count = meld_wild_count(cards) %>
+<div class="meld-count-overlay">
+  <span class="meld-count-text">
+    <span class="meld-count-item"><%= meld_rank_display(rank) %></span>
+    <% if wild_count > 0 %>
+      <span class="meld-count-item"> - W<%= wild_count %></span>
+    <% end %>
+  </span>
+</div>

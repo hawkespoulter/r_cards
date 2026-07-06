@@ -117,6 +117,21 @@ class GamesController < ApplicationController
     redirect_to @game
   end
 
+  def set_team
+    @game = Game.find(params[:id])
+    is_host = @game.players.order(:created_at).first&.user_id == current_user.id
+    return redirect_to @game, alert: "Only the host can assign teams." unless is_host
+    return redirect_to @game if @game.turn_order.present?
+
+    team = params[:team].to_i
+    return redirect_to @game, alert: "Invalid team" unless [0, 1].include?(team)
+
+    player = @game.players.find(params[:player_id])
+    player.update!(team: team)
+    ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
+    redirect_to @game
+  end
+
   def take_turn
     @game = Game.find(params[:id])
     @game.take_turn
@@ -190,7 +205,12 @@ class GamesController < ApplicationController
     @canasta        = @game.canasta
     @current_player = @game.players.find_by(user_id: current_user.id)
 
-    result = @canasta.play_red_three(@current_player, params[:card])
+    cards = begin
+      params[:cards].present? ? JSON.parse(params[:cards]) : Array(params[:card])
+    rescue JSON::ParserError
+      Array(params[:card])
+    end
+    result = @canasta.play_red_three(@current_player, cards)
 
     if result[:error]
       redirect_to @game, alert: result[:error]

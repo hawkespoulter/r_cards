@@ -80,6 +80,17 @@ nav ul li {
   background: rgba(255,255,255,0.15);
 }
 
+.profile-trigger.avatar-only {
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.profile-trigger.avatar-only:hover {
+  background: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+}
+
 .profile-avatar {
   width: 28px;
   height: 28px;

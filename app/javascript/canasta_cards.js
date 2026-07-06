@@ -171,6 +171,33 @@ document.addEventListener("turbo:load", function () {
   condenseHand();
   window.addEventListener("resize", condenseHand);
 
+  // ── Size each meld's hover count overlay to fill as much of that meld's
+  // box as it can without overflowing, shrinking from a generous starting
+  // size until both dimensions fit. Box sizes don't change on hover itself,
+  // so this only needs to run on load/resize, not per-hover. ────────────────
+  function fitMeldCountOverlays() {
+    document.querySelectorAll(".meld-hoverable").forEach((container) => {
+      const textEl = container.querySelector(".meld-count-text");
+      if (!textEl) return;
+
+      const maxWidth = container.clientWidth - 12;
+      const maxHeight = container.clientHeight - 12;
+      if (maxWidth <= 0 || maxHeight <= 0) return;
+
+      let fontSize = Math.max(10, Math.min(maxWidth, maxHeight));
+      textEl.style.fontSize = `${fontSize}px`;
+
+      let guard = 0;
+      while ((textEl.scrollWidth > maxWidth || textEl.scrollHeight > maxHeight) && fontSize > 8 && guard < 200) {
+        fontSize -= 1;
+        textEl.style.fontSize = `${fontSize}px`;
+        guard++;
+      }
+    });
+  }
+  fitMeldCountOverlays();
+  window.addEventListener("resize", fitMeldCountOverlays);
+
   const hand = document.getElementById("canasta-hand");
   if (!hand) return;
 
@@ -222,6 +249,96 @@ document.addEventListener("turbo:load", function () {
     refreshTotal();
   });
 
+  // ── Marquee (rubber-band) selection — click-drag anywhere on the page
+  // (not starting on a card or another interactive control, so single-card
+  // drag-to-play and buttons/links/inputs still work normally) to select
+  // every hand card the box passes over, same effect as clicking each one. ──
+  let marqueeBox = null;
+  let marqueeActive = false;
+  let marqueeStartX = 0;
+  let marqueeStartY = 0;
+  let marqueeBaseKeys = new Set();
+  let suppressNextClick = false;
+
+  function rectsIntersect(a, b) {
+    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  }
+
+  function onMarqueeMove(e) {
+    const dx = e.clientX - marqueeStartX;
+    const dy = e.clientY - marqueeStartY;
+
+    if (!marqueeActive) {
+      if (Math.hypot(dx, dy) < 4) return;
+      marqueeActive = true;
+      marqueeBaseKeys = new Set(selected.keys());
+      marqueeBox = document.createElement("div");
+      marqueeBox.className = "marquee-select-box";
+      document.body.appendChild(marqueeBox);
+    }
+
+    const left = Math.min(e.clientX, marqueeStartX);
+    const top = Math.min(e.clientY, marqueeStartY);
+    const width = Math.abs(dx);
+    const height = Math.abs(dy);
+    marqueeBox.style.left = `${left}px`;
+    marqueeBox.style.top = `${top}px`;
+    marqueeBox.style.width = `${width}px`;
+    marqueeBox.style.height = `${height}px`;
+
+    const boxRect = { left, top, right: left + width, bottom: top + height };
+    const wraps = hand.querySelectorAll(".hand-card-wrap");
+
+    // Cards the box currently covers flip from their pre-drag state — so
+    // dragging over unselected cards selects them, and dragging over
+    // already-selected cards deselects them (both in the same sweep).
+    // Un-hovering a card before mouseup reverts it to its original state.
+    wraps.forEach((wrap, idx) => {
+      const wasSelected = marqueeBaseKeys.has(idx);
+      const hit = rectsIntersect(wrap.getBoundingClientRect(), boxRect);
+      const shouldBeSelected = hit ? !wasSelected : wasSelected;
+      const isSelected = selected.has(idx);
+      if (shouldBeSelected && !isSelected) {
+        selected.set(idx, wrap.dataset.card);
+        wrap.classList.add("selected");
+      } else if (!shouldBeSelected && isSelected) {
+        selected.delete(idx);
+        wrap.classList.remove("selected");
+      }
+    });
+    refreshTotal();
+  }
+
+  function onMarqueeUp() {
+    document.removeEventListener("mousemove", onMarqueeMove);
+    if (marqueeBox) {
+      marqueeBox.remove();
+      marqueeBox = null;
+    }
+    if (marqueeActive) suppressNextClick = true;
+    marqueeActive = false;
+  }
+
+  document.addEventListener("mousedown", function (e) {
+    if (e.button !== 0) return;
+    if (e.target.closest(".hand-card-wrap, button, a, input, textarea, select, label, .round-history-modal, .settings-panel, .profile-dropdown, .color-picker-dropdown, .meld-group, .canasta-single, #discard-pile-drop, #red-three-drop, #new-meld-drop")) return;
+    e.preventDefault();
+    marqueeStartX = e.clientX;
+    marqueeStartY = e.clientY;
+    document.addEventListener("mousemove", onMarqueeMove);
+    document.addEventListener("mouseup", onMarqueeUp, { once: true });
+  });
+
+  // A completed drag-select still ends in a native "click" on whatever the
+  // pointer lands on — swallow it so it doesn't also toggle that card or
+  // trigger the "click outside" deselect handler above.
+  document.addEventListener("click", function (e) {
+    if (!suppressNextClick) return;
+    suppressNextClick = false;
+    e.stopPropagation();
+    e.preventDefault();
+  }, true);
+
   // ── Drag cards from hand — always enabled, since playing a red three isn't
   // gated by whose turn it is (unlike melding/discarding/pickup below). ──────
   let dragCards = [];
@@ -260,13 +377,19 @@ document.addEventListener("turbo:load", function () {
     });
   }
 
-  // ── Drag a red three from hand onto your red-three area, any time ────────
+  // ── Drag one or more red threes from hand onto your red-three area, any
+  // time — every dragged card must be a red three, so a mixed selection is
+  // rejected rather than silently dropping the non-red-three cards. ────────
+  function isRedThree(card) {
+    return typeof card === "string" && card.slice(1).toLowerCase() === "3" && (card[0] === "h" || card[0] === "d");
+  }
+
   const redThreeForm = document.getElementById("red-three-form");
-  const redThreeInput = document.getElementById("red-three-card-input");
+  const redThreeInput = document.getElementById("red-three-cards-input");
   const redThreeDrop = document.getElementById("red-three-drop");
   if (redThreeForm && redThreeInput && redThreeDrop) {
     redThreeDrop.addEventListener("dragover", function (e) {
-      if (dragCards.length !== 1) return;
+      if (dragCards.length === 0 || !dragCards.every(isRedThree)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       this.classList.add("drag-over");
@@ -281,8 +404,17 @@ document.addEventListener("turbo:load", function () {
     redThreeDrop.addEventListener("drop", function (e) {
       e.preventDefault();
       this.classList.remove("drag-over");
-      if (dragCards.length !== 1) return;
-      redThreeInput.value = dragCards[0];
+      if (dragCards.length === 0 || !dragCards.every(isRedThree)) return;
+      redThreeInput.value = JSON.stringify(dragCards);
+      redThreeForm.requestSubmit();
+    });
+
+    // ── Tap-to-play fallback — drag-and-drop doesn't work in mobile Safari,
+    // so select card(s) in your hand first, then tap here to play them. ────
+    redThreeDrop.addEventListener("click", function () {
+      const cards = selectedCards();
+      if (cards.length === 0 || !cards.every(isRedThree)) return;
+      redThreeInput.value = JSON.stringify(cards);
       redThreeForm.requestSubmit();
     });
   }
@@ -316,6 +448,15 @@ document.addEventListener("turbo:load", function () {
         if (meldTargetRankInput) meldTargetRankInput.value = this.dataset.meldRank;
         meldForm.requestSubmit();
       });
+
+      // Tap-to-play fallback (see red-three tap handler above for why).
+      group.addEventListener("click", function () {
+        const cards = selectedCards();
+        if (cards.length === 0) return;
+        meldInput.value = JSON.stringify(cards);
+        if (meldTargetRankInput) meldTargetRankInput.value = this.dataset.meldRank;
+        meldForm.requestSubmit();
+      });
     });
 
     // ── Drag cards onto an empty spot to start a brand-new meld ──────────────
@@ -339,6 +480,15 @@ document.addEventListener("turbo:load", function () {
         e.preventDefault();
         this.classList.remove("drag-over");
         meldInput.value = JSON.stringify(dragCards);
+        if (meldTargetRankInput) meldTargetRankInput.value = "";
+        meldForm.requestSubmit();
+      });
+
+      // Tap-to-play fallback (see red-three tap handler above for why).
+      newMeldDrop.addEventListener("click", function () {
+        const cards = selectedCards();
+        if (cards.length === 0) return;
+        meldInput.value = JSON.stringify(cards);
         if (meldTargetRankInput) meldTargetRankInput.value = "";
         meldForm.requestSubmit();
       });
@@ -366,6 +516,14 @@ document.addEventListener("turbo:load", function () {
       this.classList.remove("drag-over");
       if (dragCards.length !== 1) return;
       discardInput.value = dragCards[0];
+      discardForm.requestSubmit();
+    });
+
+    // Tap-to-play fallback (see red-three tap handler above for why).
+    discardPileEl.addEventListener("click", function () {
+      const cards = selectedCards();
+      if (cards.length !== 1) return;
+      discardInput.value = cards[0];
       discardForm.requestSubmit();
     });
   }

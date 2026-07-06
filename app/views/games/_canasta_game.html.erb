@@ -9,22 +9,23 @@
 <% peak_top   = other_players[1] %>
 <% peak_right = other_players[2] %>
 
+<% content_for :nav_left do %>
+  <div class="nav-team-scores">
+    <% [0, 1].each do |team| %>
+      <div class="team-score-chip round-history-trigger <%= 'my-team' if team == my_team %>" data-team="<%= team + 1 %>" title="See round-by-round scores">
+        <span class="team-name-label">T<%= team + 1 %></span>: <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
 <% content_for :nav_center do %>
   <div class="nav-game-info">
-    <span class="nav-game-title">♣ Canasta<%= " (FL)" if @game.florida_rules? %></span>
     <div class="players-list">
-      <% [0, 1].each do |team| %>
-        <div class="team-score-chip round-history-trigger <%= 'my-team' if team == my_team %>" data-team="<%= team + 1 %>" title="See round-by-round scores">
-          <span class="team-name-label">T<%= team + 1 %></span>: <%= ((@canasta&.team_scores || {})[team.to_s] || 0) %> pts
-        </div>
-      <% end %>
       <% @game.players.order(:created_at).each do |player| %>
         <% is_active = @game.current_turn && player.id == @game.current_turn %>
         <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == @current_player&.id %>" data-team="<%= player.team.to_i + 1 %>">
-          <span class="player-name">
-            <%= player.user.name %>
-            <span class="player-title-badge">· T<%= player.team.to_i + 1 %></span>
-          </span>
+          <span class="player-name"><%= player.user.name %></span>
           <% if @game_started %>
             <span class="card-count">· <%= (player.hand || []).length %></span>
           <% end %>
@@ -80,13 +81,13 @@
                       <div class="round-history-detail-grid">
                         <div>
                           <p class="round-history-detail-label">Team 1</p>
-                          <div class="round-summary-line"><span>Base score</span><span><%= t0["base_score"] %></span></div>
-                          <div class="round-summary-line"><span>Card count</span><span><%= t0["card_count"] %></span></div>
+                          <div class="round-summary-line"><span>Base score: </span><span><%= t0["base_score"] %></span></div>
+                          <div class="round-summary-line"><span>Card count: </span><span><%= t0["card_count"] %></span></div>
                         </div>
                         <div>
                           <p class="round-history-detail-label">Team 2</p>
-                          <div class="round-summary-line"><span>Base score</span><span><%= t1["base_score"] %></span></div>
-                          <div class="round-summary-line"><span>Card count</span><span><%= t1["card_count"] %></span></div>
+                          <div class="round-summary-line"><span>Base score: </span><span><%= t1["base_score"] %></span></div>
+                          <div class="round-summary-line"><span>Card count: </span><span><%= t1["card_count"] %></span></div>
                         </div>
                       </div>
                     </details>
@@ -123,7 +124,26 @@
 
     <div class="pregame">
       <p>Waiting for players to join… (<%= @game.players.count %>/4)</p>
-      <p>Canasta needs exactly 4 players, seated into 2 fixed teams (alternating join order).</p>
+      <p>Canasta needs exactly 4 players, seated into 2 fixed teams.</p>
+
+      <div class="team-setup">
+        <% [0, 1].each do |team| %>
+          <div class="team-setup-column">
+            <h4>Team <%= team + 1 %></h4>
+            <% @game.players.where(team: team).order(:created_at).each do |player| %>
+              <div class="team-setup-player">
+                <span><%= player.user.name %><%= " (you)" if player.user_id == current_user.id %></span>
+                <% if @is_host %>
+                  <%= button_to "Move to T#{2 - team}",
+                        set_team_game_path(@game, player_id: player.id, team: 1 - team),
+                        method: :post, class: "btn-swap-team" %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
       <% if @is_host %>
         <%= button_to 'Start Game', start_game_path(@game), method: :post,
               class: 'btn-start',
@@ -221,23 +241,23 @@
             <% if pending_red_three_draws > 0 %>
               <%# Red three replacement takes priority — the stock pile is only
                   active for this one card, regardless of whose turn it is. %>
-              <%= button_to draw_red_three_replacement_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
+              <%= button_to draw_red_three_replacement_game_path(@game), method: :post, class: "pile-card-btn meld-hoverable", form: { id: "stock-draw-form" } do %>
                 <%= image_tag "cards/blank_card.svg", class: "pile-card pile-card-red-three-pending", title: "Draw your red three replacement" %>
-                <span class="stock-count-tooltip">Draw replacement</span>
+                <%= render "pile_count_overlay", text: "Draw replacement" %>
               <% end %>
             <% elsif my_turn && turn_phase == "draw" %>
-              <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn", form: { id: "stock-draw-form" } do %>
+              <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn meld-hoverable", form: { id: "stock-draw-form" } do %>
                 <%= image_tag "cards/blank_card.svg", class: "pile-card", title: "#{(@canasta.draw_pile || []).length} cards" %>
-                <span class="stock-count-tooltip"><%= (@canasta.draw_pile || []).length %></span>
+                <%= render "pile_count_overlay", text: (@canasta.draw_pile || []).length %>
               <% end %>
             <% else %>
-              <div class="stock-pile-wrapper">
+              <div class="stock-pile-wrapper meld-hoverable">
                 <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
-                <span class="stock-count-tooltip"><%= (@canasta.draw_pile || []).length %></span>
+                <%= render "pile_count_overlay", text: (@canasta.draw_pile || []).length %>
               </div>
             <% end %>
           </div>
-          <div class="discard-pile-block" id="discard-pile-drop">
+          <div class="discard-pile-block meld-hoverable" id="discard-pile-drop">
             <% discard_top = @canasta.discard_pile&.last %>
             <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
             <% if (@canasta.discard_pile || []).any? %>
@@ -245,6 +265,7 @@
             <% else %>
               <div class="pile-card pile-card-empty">∅</div>
             <% end %>
+            <%= render "pile_count_overlay", text: (@canasta.discard_pile || []).length %>
           </div>
         </div>
           <% if right_peaks.any? %>
@@ -288,7 +309,7 @@
     <%# Playing a red three isn't gated by whose turn it is, so this form is
         always available regardless of my_turn/turn_phase. %>
     <%= form_with url: play_red_three_game_path(@game), method: :post, html: { id: "red-three-form", style: "display:none;" } do |f| %>
-      <%= f.hidden_field :card, id: "red-three-card-input", value: "" %>
+      <%= f.hidden_field :cards, id: "red-three-cards-input", value: "" %>
     <% end %>
 
     <% if my_turn && turn_phase == "draw" %>

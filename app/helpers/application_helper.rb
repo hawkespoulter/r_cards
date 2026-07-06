@@ -31,4 +31,16 @@ module ApplicationHelper
   def sort_melds(melds)
     melds.sort_by { |rank, _| CANASTA_SORT_VALUES[rank.downcase] || 0 }.to_h
   end
+
+  RANK_DISPLAY = { "a" => "A", "j" => "J", "q" => "Q", "k" => "K" }.freeze
+
+  # Display label for a meld's rank in the hover overlay, e.g. "Q" or "8".
+  def meld_rank_display(rank)
+    RANK_DISPLAY[rank.to_s.downcase] || rank.to_s.upcase
+  end
+
+  # How many wild cards (2s and jokers) are in a meld, for the hover overlay.
+  def meld_wild_count(cards)
+    cards.count { |c| c == "jo" || c[1..-1]&.downcase == "2" }
+  end
 end

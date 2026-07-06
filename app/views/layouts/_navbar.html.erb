@@ -1,8 +1,10 @@
 <nav>
   <ul>
-    <li>
-      <%= link_to '♠ RCards', games_path %>
-    </li>
+    <% if content_for?(:nav_left) %>
+      <li class="nav-left">
+        <%= yield :nav_left %>
+      </li>
+    <% end %>
     <% if content_for?(:nav_center) %>
       <li class="nav-center">
         <%= yield :nav_center %>
@@ -56,25 +58,8 @@
               <input type="text" class="team-name-input" data-team="1" placeholder="Team 1" maxlength="14">
             </div>
             <div class="color-team-row">
-              <span class="color-team-label">Team 1 Color</span>
-              <div class="color-swatches" data-team="1">
-                <% %w[#ef4444 #f97316 #eab308 #22c55e #3b82f6 #8b5cf6 #ec4899 #ffffff].each do |color| %>
-                  <button class="color-swatch" data-color="<%= color %>" style="background:<%= color %>;" title="<%= color %>"></button>
-                <% end %>
-              </div>
-            </div>
-            <div class="dropdown-divider"></div>
-            <div class="color-team-row">
               <span class="color-team-label">Team 2 Name</span>
               <input type="text" class="team-name-input" data-team="2" placeholder="Team 2" maxlength="14">
-            </div>
-            <div class="color-team-row">
-              <span class="color-team-label">Team 2 Color</span>
-              <div class="color-swatches" data-team="2">
-                <% %w[#ef4444 #f97316 #eab308 #22c55e #3b82f6 #8b5cf6 #ec4899 #ffffff].each do |color| %>
-                  <button class="color-swatch" data-color="<%= color %>" style="background:<%= color %>;" title="<%= color %>"></button>
-                <% end %>
-              </div>
             </div>
           </div>
         </div>
@@ -82,10 +67,8 @@
         <button class="bug-report-trigger" id="bug-report-trigger" title="Report a bug">🐛</button>
 
         <div class="profile-menu">
-          <button class="profile-trigger" id="profile-trigger" aria-expanded="false">
+          <button class="profile-trigger avatar-only" id="profile-trigger" aria-expanded="false">
             <span class="profile-avatar"><%= current_user.name&.first&.upcase || "?" %></span>
-            <span class="profile-name"><%= current_user.name || current_user.email %></span>
-            <span class="profile-caret">▾</span>
           </button>
           <div class="profile-dropdown" id="profile-dropdown">
             <div class="dropdown-header">
@@ -180,32 +163,10 @@
       });
     }
 
-    // Team settings (colors + names)
+    // Team settings (names)
     function applyTeamSettings() {
-      const c1 = localStorage.getItem("r_cards_team1_color") || "#3b82f6";
-      const c2 = localStorage.getItem("r_cards_team2_color") || "#ef4444";
       const n1 = localStorage.getItem("r_cards_team1_name") || "";
       const n2 = localStorage.getItem("r_cards_team2_name") || "";
-
-      // Color player chips by team
-      document.querySelectorAll(".player-chip[data-team='1']").forEach(el => {
-        el.style.borderLeft = "3px solid " + c1;
-        el.style.paddingLeft = "9px";
-      });
-      document.querySelectorAll(".player-chip[data-team='2']").forEach(el => {
-        el.style.borderLeft = "3px solid " + c2;
-        el.style.paddingLeft = "9px";
-      });
-
-      // Color team score chips
-      document.querySelectorAll(".team-score-chip[data-team='1']").forEach(el => {
-        el.style.borderLeft = "3px solid " + c1;
-        el.style.paddingLeft = "9px";
-      });
-      document.querySelectorAll(".team-score-chip[data-team='2']").forEach(el => {
-        el.style.borderLeft = "3px solid " + c2;
-        el.style.paddingLeft = "9px";
-      });
 
       // Apply team names
       document.querySelectorAll(".team-name-label[data-team]").forEach(el => {
@@ -218,10 +179,6 @@
         const name = team === "1" ? n1 : n2;
         el.textContent = name || "T" + team;
       });
-
-      // Sync swatch active states
-      document.querySelectorAll(".color-swatches[data-team='1'] .color-swatch").forEach(s => s.classList.toggle("active", s.dataset.color === c1));
-      document.querySelectorAll(".color-swatches[data-team='2'] .color-swatch").forEach(s => s.classList.toggle("active", s.dataset.color === c2));
 
       // Sync name inputs
       document.querySelectorAll(".team-name-input[data-team='1']").forEach(i => { if (document.activeElement !== i) i.value = n1; });
@@ -262,14 +219,6 @@
         colorDropdown.classList.toggle("open");
       });
       document.addEventListener("click", function () { colorDropdown.classList.remove("open"); });
-      document.querySelectorAll(".color-swatches").forEach(function (group) {
-        group.addEventListener("click", function (e) {
-          const swatch = e.target.closest(".color-swatch");
-          if (!swatch) return;
-          localStorage.setItem("r_cards_team" + group.dataset.team + "_color", swatch.dataset.color);
-          applyTeamSettings();
-        });
-      });
       document.querySelectorAll(".team-name-input").forEach(function (input) {
         input.addEventListener("input", function () {
           localStorage.setItem("r_cards_team" + input.dataset.team + "_name", input.value.trim());

@@ -48,7 +48,9 @@ class Game < ApplicationRecord
       self.update(current_turn: self.turn_order.first)
       self.players.find(self.current_turn).update(is_turn: true)
     elsif canasta?
-      assign_canasta_teams
+      # Teams are assigned as players join (Player#assign_default_team) and
+      # can be rearranged by the host from the lobby (see
+      # GamesController#set_team) — nothing to reassign here.
       initialize_canasta_game_state
     end
   end
@@ -68,11 +70,6 @@ class Game < ApplicationRecord
 
   def initialize_scum_game_state
     Scum.create(game: self)
-  end
-
-  def assign_canasta_teams
-    seated = players.order(:created_at).to_a
-    seated.each_with_index { |player, i| player.update!(team: i % 2) }
   end
 
   def initialize_canasta_game_state

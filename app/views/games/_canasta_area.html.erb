@@ -12,10 +12,12 @@
       <% if in_progress.any? %>
         <div class="canasta-melds-row">
           <% in_progress.each do |rank, cards| %>
-            <div class="meld-group <%= 'almost-canasta' if cards.length >= 5 %>">
-              <% cards.each do |card| %>
-                <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
+            <div class="meld-group meld-hoverable <%= 'almost-canasta' if cards.length >= 5 %>">
+              <% cards.each_with_index do |card, idx| %>
+                <%= image_tag "cards/#{canasta_card_asset(card)}.svg",
+                      class: "game-card meld-card #{'meld-card-sideways' if cards.length == 6 && idx == cards.length - 1}" %>
               <% end %>
+              <%= render "meld_count_overlay", cards: cards, rank: rank %>
             </div>
           <% end %>
         </div>
@@ -74,10 +76,12 @@
 
     <div class="canasta-melds-row">
       <% in_progress.each do |rank, cards| %>
-        <div class="meld-group <%= 'almost-canasta' if cards.length >= 5 %>" data-meld-rank="<%= rank %>">
-          <% cards.each do |card| %>
-            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card meld-card" %>
+        <div class="meld-group meld-hoverable <%= 'almost-canasta' if cards.length >= 5 %>" data-meld-rank="<%= rank %>">
+          <% cards.each_with_index do |card, idx| %>
+            <%= image_tag "cards/#{canasta_card_asset(card)}.svg",
+                  class: "game-card meld-card #{'meld-card-sideways' if cards.length == 6 && idx == cards.length - 1}" %>
           <% end %>
+          <%= render "meld_count_overlay", cards: cards, rank: rank %>
         </div>
       <% end %>
       <div class="meld-group meld-group-new" id="new-meld-drop"></div>

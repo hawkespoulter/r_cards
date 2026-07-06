@@ -123,11 +123,34 @@ body.my-turn-bg {
 
 // ── Nav game info (injected into main navbar when in a game) ─────────────────
 
+li.nav-left {
+  display: flex;
+  justify-content: flex-start;
+  flex-shrink: 0;
+}
+
 li.nav-center {
   flex: 1;
   display: flex;
   justify-content: center;
   min-width: 0;
+}
+
+.nav-team-scores {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.team-score-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  font-size: 0.85rem;
 }
 
 .nav-game-info {
@@ -168,10 +191,9 @@ li.nav-center {
   transition: all 0.2s ease;
 
   &.active-turn {
-    background: #d97706;
+    background: #3099cd;
     color: #fff;
     font-weight: 700;
-    box-shadow: 0 0 14px rgba(217, 119, 6, 0.7);
   }
 
   &.player-finished {
@@ -395,28 +417,6 @@ li.nav-center {
 
 .stock-pile-wrapper { cursor: default; }
 
-.stock-count-tooltip {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,0.8);
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.pile-card-btn:hover .stock-count-tooltip,
-.stock-pile-wrapper:hover .stock-count-tooltip {
-  opacity: 1;
-}
-
 .pile-card-frozen {
   box-shadow: 0 0 0 2px #60a5fa, 0 6px 18px rgba(0,0,0,0.5);
 }
@@ -459,7 +459,7 @@ li.nav-center {
   justify-content: flex-end;
   padding-top: 12px;
   padding-bottom: 28px;
-  border-top: 1px solid rgba(255,255,255,0.12);
+  border-top: 1px solid rgba(255,255,255,0.5);
   flex: 0 0 auto;
 }
 
@@ -556,6 +556,16 @@ li.nav-center {
   }
 }
 
+// Rubber-band drag-select box over the hand
+.marquee-select-box {
+  position: fixed;
+  z-index: 999;
+  pointer-events: none;
+  border: 1px solid #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+  border-radius: 4px;
+}
+
 // Team melds: cards overlap so only the rank/suit corner of each card peeks
 // out, like a real fanned-out canasta, instead of taking up a full card width.
 .meld-group {
@@ -578,6 +588,14 @@ li.nav-center {
     &:first-child {
       margin-left: 0;
     }
+
+    // Classic table convention: turn the 6th card sideways as a reminder
+    // that just one more matching card completes the canasta.
+    &.meld-card-sideways {
+      transform: rotate(90deg);
+      z-index: 1;
+      margin-left: -8px;
+    }
   }
 
   &.canasta-complete {
@@ -586,7 +604,7 @@ li.nav-center {
 
   // 5-6 cards — one or two away from a canasta.
   &.almost-canasta {
-    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.45);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
   }
 
   &.drag-over {
@@ -594,6 +612,54 @@ li.nav-center {
     box-shadow: 0 0 0 2px #6366f1;
     transition: background 0.1s, box-shadow 0.1s;
   }
+}
+
+// Hover a fanned in-progress meld or a collapsed completed-canasta card to
+// grey it out and see a rank breakdown (natural count + wild count).
+.meld-hoverable {
+  position: relative;
+
+  &:hover .meld-count-overlay {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.meld-count-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 20, 24, 0.82);
+  border-radius: 8px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 500;
+}
+
+.meld-count-text {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
+  padding: 4px 8px;
+  line-height: 1;
+  // Fallback for the instant before JS measures and sizes this per meld —
+  // canasta_cards.js overrides this inline to fill the available box.
+  font-size: 1.4rem;
+}
+
+.meld-count-item {
+  display: inline-flex;
+  align-items: center;
+  font-size: inherit;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
 // Drop zone for starting a brand-new meld — invisible until it's your turn
@@ -1041,6 +1107,61 @@ li.nav-center {
     background: #047857;
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+  }
+}
+
+.team-setup {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.team-setup-column {
+  flex: 1;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-height: 60px;
+
+  h4 {
+    margin: 0 0 8px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.55;
+    text-align: center;
+  }
+}
+
+.team-setup-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 0.9rem;
+
+  & + & {
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+}
+
+.btn-swap-team {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.75);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(255,255,255,0.1);
+    color: white;
   }
 }
 
@@ -1659,25 +1780,6 @@ li.nav-center {
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.color-swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.color-swatch {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: transform 0.1s, border-color 0.1s;
-
-  &:hover { transform: scale(1.2); }
-  &.active { border-color: white; transform: scale(1.15); }
 }
 
 .bug-report-trigger {

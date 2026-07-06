@@ -133,19 +133,26 @@ class Canasta < ApplicationRecord
   # draw) and you should still be able to play it any time. It queues up a
   # replacement draw rather than drawing immediately — the player has to
   # click the stock pile themselves to claim it (see draw_red_three_replacement).
-  def play_red_three(player, card)
+  def play_red_three(player, cards)
     return { error: "Game is over" } if game_over?
 
-    hand = player.hand.dup
-    return { error: "Card not in hand" } unless hand.include?(card)
-    return { error: "Not a red three" } unless red_three?(card)
+    cards = Array(cards)
+    return { error: "No cards selected" } if cards.empty?
 
-    hand.delete_at(hand.index(card))
-    player.update!(hand: hand)
-    log_red_three!(player.team, card)
+    remaining = player.hand.dup
+    cards.each do |card|
+      return { error: "Not a red three" } unless red_three?(card)
+      idx = remaining.index(card)
+      return { error: "Card not in hand" } unless idx
+
+      remaining.delete_at(idx)
+    end
+
+    player.update!(hand: remaining)
+    cards.each { |card| log_red_three!(player.team, card) }
 
     pending = (pending_red_three_draws || {}).dup
-    pending[player.id.to_s] = pending[player.id.to_s].to_i + 1
+    pending[player.id.to_s] = pending[player.id.to_s].to_i + cards.length
     write_game_state!("pending_red_three_draws" => pending)
 
     { success: true }

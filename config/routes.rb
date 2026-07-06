@@ -10,6 +10,7 @@ Rails.application.routes.draw do
     member do
       post 'join'
       post 'start'
+      post 'set_team'
       post 'take_turn'
       post 'play_cards'
       post 'pass'
