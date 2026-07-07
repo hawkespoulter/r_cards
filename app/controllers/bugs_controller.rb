@@ -11,7 +11,7 @@ class BugsController < ApplicationController
   def create
     @bug = Bug.new(description: params[:bug][:description])
     if @bug.save
-      redirect_back fallback_location: bugs_path, notice: "Bug reported — thanks!"
+      redirect_back fallback_location: bugs_path
     else
       redirect_back fallback_location: bugs_path, alert: "Description can't be blank."
     end

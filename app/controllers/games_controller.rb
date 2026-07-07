@@ -190,7 +190,10 @@ class GamesController < ApplicationController
     if result[:error]
       respond_with_game_error(result[:error])
     else
-      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
+      # A draw can now end the round itself (stalemate: both piles ran dry),
+      # same as discard going out — broadcast round_ended so everyone else's
+      # board reveals the summary screen too.
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update', round_ended: result[:round_ended] }
       respond_with_game_update
     end
   end
@@ -225,7 +228,9 @@ class GamesController < ApplicationController
     if result[:error]
       respond_with_game_error(result[:error])
     else
-      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update' }
+      # Same stalemate possibility as #draw — broadcast round_ended so
+      # everyone else's board reveals the summary screen too.
+      ActionCable.server.broadcast "game_#{@game.id}", { message: 'update', round_ended: result[:round_ended] }
       respond_with_game_update
     end
   end
@@ -268,7 +273,7 @@ class GamesController < ApplicationController
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
-        canasta_seq: result[:canasta_seq], acting_player_id: @current_player.id
+        canasta_seq: result[:canasta_seq], canasta_cards: result[:canasta_cards], acting_player_id: @current_player.id
       }
       respond_with_game_update
     end
@@ -377,6 +382,7 @@ class GamesController < ApplicationController
 
   def settings_params
     { pass_locks_out: params[:pass_locks_out], leader_can_continue: params[:leader_can_continue],
-      florida_rules: params[:florida_rules], card_back: params[:card_back] }
+      florida_rules: params[:florida_rules], card_back: params[:card_back],
+      team1_name: params[:team1_name], team2_name: params[:team2_name] }.compact
   end
 end

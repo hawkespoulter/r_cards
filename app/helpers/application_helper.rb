@@ -5,11 +5,18 @@ module ApplicationHelper
     card == "jo" ? "joker_black" : card
   end
 
+  # Tie-broken by each card's original position in `hand` (not just rank), so
+  # a freshly-drawn card sharing a rank with a card already in hand always
+  # sorts after it, never before or between existing same-rank cards. That
+  # keeps existing cards' left-to-right order stable across a draw — which
+  # canasta_cards.js's persisted-selection restore depends on (it identifies
+  # a selected card by "<code>#<nth occurrence of that code>", so if drawing
+  # reshuffled the occurrence order, the wrong card could end up reselected).
   def canasta_sort(hand)
-    (hand || []).sort_by do |card|
+    (hand || []).each_with_index.sort_by do |card, idx|
       rank = card == "jo" ? "jo" : card[1..-1].downcase
-      CANASTA_SORT_VALUES[rank] || 0
-    end
+      [CANASTA_SORT_VALUES[rank] || 0, idx]
+    end.map(&:first)
   end
 
   # Single representative card for a completed canasta display.

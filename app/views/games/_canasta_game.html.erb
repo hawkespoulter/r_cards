@@ -32,8 +32,8 @@
             <thead>
               <tr>
                 <th></th>
-                <th>Team 1</th>
-                <th>Team 2</th>
+                <th><%= @game.team_name(0) %></th>
+                <th><%= @game.team_name(1) %></th>
               </tr>
             </thead>
             <tbody>
@@ -50,12 +50,12 @@
                       <summary>Base &amp; card count</summary>
                       <div class="round-history-detail-grid">
                         <div>
-                          <p class="round-history-detail-label">Team 1</p>
+                          <p class="round-history-detail-label"><%= @game.team_name(0) %></p>
                           <div class="round-summary-line"><span>Base score: </span><span><%= t0["base_score"] %></span></div>
                           <div class="round-summary-line"><span>Card count: </span><span><%= t0["card_count"] %></span></div>
                         </div>
                         <div>
-                          <p class="round-history-detail-label">Team 2</p>
+                          <p class="round-history-detail-label"><%= @game.team_name(1) %></p>
                           <div class="round-summary-line"><span>Base score: </span><span><%= t1["base_score"] %></span></div>
                           <div class="round-summary-line"><span>Card count: </span><span><%= t1["card_count"] %></span></div>
                         </div>
@@ -99,7 +99,7 @@
       <div class="team-setup">
         <% [0, 1].each do |team| %>
           <div class="team-setup-column">
-            <h4>Team <%= team + 1 %></h4>
+            <h4><%= @game.team_name(team) %></h4>
             <% @game.players.where(team: team).order(:created_at).each do |player| %>
               <div class="team-setup-player">
                 <span><%= player.user.name %><%= " (you)" if player.user_id == current_user.id %></span>
@@ -135,12 +135,12 @@
         <% ranked_teams = [0, 1].sort_by { |team| -((@canasta.team_scores || {})[team.to_s] || 0) } %>
         <% ranked_teams.each do |team| %>
           <li class="<%= 'my-team' if team == my_team %>">
-            <span class="ranking-title team-name-label" data-team="<%= team + 1 %>">T<%= team + 1 %></span>
+            <span class="ranking-title team-name-label"><%= @game.team_name(team) %></span>
             <span><%= (@canasta.team_scores || {})[team.to_s] || 0 %> pts</span>
           </li>
         <% end %>
       </ol>
-      <p><strong><span class="team-name-label" data-team="<%= @canasta.winning_team.to_i + 1 %>">T<%= @canasta.winning_team.to_i + 1 %></span> wins!</strong></p>
+      <p><strong><span class="team-name-label"><%= @game.team_name(@canasta.winning_team) %></span> wins!</strong></p>
 
       <%= render "score_chart", canasta: @canasta %>
 
@@ -157,6 +157,7 @@
       <div data-last-canasta="true"
            data-canasta-rank="<%= lc["rank"] %>"
            data-canasta-seq="<%= lc["seq"] %>"
+           data-canasta-cards="<%= (lc["cards"] || []).to_json %>"
            style="display:none;"></div>
     <% end %>
 
@@ -213,16 +214,23 @@
                   active for this one card, regardless of whose turn it is. %>
               <%= button_to draw_red_three_replacement_game_path(@game), method: :post, class: "pile-card-btn meld-hoverable", form: { id: "stock-draw-form" } do %>
                 <%= image_tag "cards/blank_card.svg", class: "pile-card pile-card-red-three-pending", title: "Draw your red three replacement" %>
-                <%= render "pile_count_overlay", text: "Draw replacement" %>
               <% end %>
             <% elsif my_turn && turn_phase == "draw" %>
               <%= button_to draw_game_path(@game), method: :post, class: "pile-card-btn meld-hoverable", form: { id: "stock-draw-form" } do %>
-                <%= image_tag "cards/blank_card.svg", class: "pile-card", title: "#{(@canasta.draw_pile || []).length} cards" %>
+                <% if (@canasta.draw_pile || []).any? %>
+                  <%= image_tag "cards/blank_card.svg", class: "pile-card", title: "#{@canasta.draw_pile.length} cards" %>
+                <% else %>
+                  <div class="pile-card pile-card-empty">∅</div>
+                <% end %>
                 <%= render "pile_count_overlay", text: (@canasta.draw_pile || []).length %>
               <% end %>
             <% else %>
               <div class="stock-pile-wrapper meld-hoverable">
-                <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+                <% if (@canasta.draw_pile || []).any? %>
+                  <%= image_tag "cards/blank_card.svg", class: "pile-card" %>
+                <% else %>
+                  <div class="pile-card pile-card-empty">∅</div>
+                <% end %>
                 <%= render "pile_count_overlay", text: (@canasta.draw_pile || []).length %>
               </div>
             <% end %>
@@ -231,7 +239,10 @@
             <% discard_top = @canasta.discard_pile&.last %>
             <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
             <% if (@canasta.discard_pile || []).any? %>
-              <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card #{'pile-card-frozen' if frozen_by_wild}", title: frozen_by_wild ? "Frozen ❄" : nil %>
+              <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card #{'pile-card-frozen' if frozen_by_wild}", title: frozen_by_wild ? "Frozen — can't be picked up" : nil %>
+              <% if frozen_by_wild %>
+                <div class="pile-frozen-overlay">✕</div>
+              <% end %>
             <% else %>
               <div class="pile-card pile-card-empty">∅</div>
             <% end %>
@@ -260,8 +271,10 @@
     </div>
 
 
+    <% current_turn_team = @game.players.find_by(id: @game.current_turn)&.team %>
+    <% turn_melded_points = current_turn_team == my_team ? @canasta.turn_melded_points : 0 %>
     <div class="hand-container">
-      <div class="canasta-hand-row" id="canasta-hand">
+      <div class="canasta-hand-row" id="canasta-hand" data-turn-melded-points="<%= turn_melded_points %>">
         <% canasta_sort(@current_player.hand).each do |card| %>
           <div class="hand-card-wrap" data-card="<%= card %>">
             <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card", draggable: "false" %>
@@ -269,8 +282,8 @@
         <% end %>
       </div>
       <p class="pile-info" id="meld-selection-info">
-        Selected total: <span id="meld-running-total">0</span> pts
-        <% unless @canasta.team_melded?(my_team) %>
+        Selected total: <span id="meld-running-total"><%= turn_melded_points %></span> pts
+        <% unless @canasta.team_has_gone_down?(my_team) %>
           — your team's first meld needs at least <strong><%= @canasta.meld_threshold(my_team) %></strong> pts
         <% end %>
       </p>
@@ -286,7 +299,12 @@
       <%= form_with url: pickup_discard_game_path(@game), method: :post, html: { id: "pickup-form", style: "display:none;" } %>
     <% end %>
 
-    <% if my_turn && turn_phase != "draw" %>
+    <%# Rendered for the whole turn, not just the discard phase, so that
+        melding/discarding before drawing actually submits and surfaces the
+        model's "draw or pick up first" error as a popup, instead of the
+        drag/drop just silently doing nothing because these forms didn't
+        exist yet. %>
+    <% if my_turn %>
       <%= form_with url: meld_game_path(@game), method: :post, html: { id: "meld-form", style: "display:none;" } do |f| %>
         <%= f.hidden_field :cards, id: "meld-cards-input", value: "" %>
         <%= f.hidden_field :target_rank, id: "meld-target-rank-input", value: "" %>

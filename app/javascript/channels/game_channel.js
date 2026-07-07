@@ -69,11 +69,13 @@ document.addEventListener("turbo:load", function () {
             if (!alreadyShown) {
               if (key) sessionStorage.setItem(key, "1");
               const rankCard = data.canasta_rank === "jo" ? "jo" : "h" + data.canasta_rank;
+              const canastaCards = data.canasta_cards && data.canasta_cards.length ? data.canasta_cards : [rankCard];
               showCardModal({
                 title: "Canasta!",
-                cards: [rankCard],
+                cards: canastaCards,
                 confetti: true,
-                confettiCard: rankCard
+                confettiCard: rankCard,
+                duration: 2800
               });
             }
           }

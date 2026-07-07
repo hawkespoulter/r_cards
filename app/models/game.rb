@@ -7,7 +7,7 @@ class Game < ApplicationRecord
 
   enum game_type: { scum: 0, canasta: 1, lucky_seven: 2 }
 
-  store_accessor :settings, :pass_locks_out, :leader_can_continue, :florida_rules, :card_back
+  store_accessor :settings, :pass_locks_out, :leader_can_continue, :florida_rules, :card_back, :team1_name, :team2_name
 
   CARD_BACKS = {
     "hawkes_sam_blue"  => "Hawkes + Sam Blue",
@@ -24,6 +24,15 @@ class Game < ApplicationRecord
 
   def card_back_key
     card_back.presence || "hawkes_sam_blue"
+  end
+
+  # team is the integer team index (0 or 1), matching how it's used
+  # everywhere else (melds["0"/"1"], team_scores, the [0, 1].each view
+  # loops) — falls back to "T1"/"T2" so an unset name still displays
+  # something reasonable instead of a blank label.
+  def team_name(team)
+    name = team.to_i.zero? ? team1_name : team2_name
+    name.presence || "T#{team.to_i + 1}"
   end
 
   def pass_locks_out?

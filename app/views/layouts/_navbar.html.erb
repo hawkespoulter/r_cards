@@ -52,15 +52,25 @@
                 <% end %>
               </div>
             </div>
-            <div class="dropdown-divider"></div>
-            <div class="color-team-row">
-              <span class="color-team-label">Team 1 Name</span>
-              <input type="text" class="team-name-input" data-team="1" placeholder="Team 1" maxlength="14">
-            </div>
-            <div class="color-team-row">
-              <span class="color-team-label">Team 2 Name</span>
-              <input type="text" class="team-name-input" data-team="2" placeholder="Team 2" maxlength="14">
-            </div>
+            <% if @game %>
+              <div class="dropdown-divider"></div>
+              <%# Team names are per-game and shared by everyone at the
+                  table (unlike card back above, which is a personal,
+                  local-only preference) — this form persists them to the
+                  game itself via the same update_settings endpoint the
+                  pregame settings panel uses, so every player's view stays
+                  in sync instead of only the browser that set them. %>
+              <%= form_with url: update_settings_game_path(@game), method: :patch, html: { id: "team-names-form" } do %>
+                <div class="color-team-row">
+                  <span class="color-team-label">Team 1 Name</span>
+                  <input type="text" class="team-name-input" name="team1_name" value="<%= @game.team1_name %>" placeholder="Team 1" maxlength="14">
+                </div>
+                <div class="color-team-row">
+                  <span class="color-team-label">Team 2 Name</span>
+                  <input type="text" class="team-name-input" name="team2_name" value="<%= @game.team2_name %>" placeholder="Team 2" maxlength="14">
+                </div>
+              <% end %>
+            <% end %>
           </div>
         </div>
 
@@ -163,26 +173,24 @@
       });
     }
 
-    // Team settings (names)
-    function applyTeamSettings() {
-      const n1 = localStorage.getItem("r_cards_team1_name") || "";
-      const n2 = localStorage.getItem("r_cards_team2_name") || "";
-
-      // Apply team names
-      document.querySelectorAll(".team-name-label[data-team]").forEach(el => {
-        const name = el.dataset.team === "1" ? n1 : n2;
-        el.textContent = name || "T" + el.dataset.team;
+    // Team names — rendered server-side now (Game#team_name), shared by
+    // everyone at the table, so there's nothing to sync client-side here
+    // beyond submitting changes: debounced while typing, and immediately on
+    // blur so a quick type-then-click-away doesn't wait out the debounce.
+    const teamNamesForm = document.getElementById("team-names-form");
+    if (teamNamesForm) {
+      let teamNameDebounce = null;
+      teamNamesForm.querySelectorAll(".team-name-input").forEach(function (input) {
+        input.addEventListener("click", function (e) { e.stopPropagation(); });
+        input.addEventListener("input", function () {
+          clearTimeout(teamNameDebounce);
+          teamNameDebounce = setTimeout(() => teamNamesForm.requestSubmit(), 600);
+        });
+        input.addEventListener("blur", function () {
+          clearTimeout(teamNameDebounce);
+          teamNamesForm.requestSubmit();
+        });
       });
-      // Score chip name labels (no data-team on the span, use parent chip)
-      document.querySelectorAll(".team-score-chip[data-team] .team-name-label").forEach(el => {
-        const team = el.closest("[data-team]").dataset.team;
-        const name = team === "1" ? n1 : n2;
-        el.textContent = name || "T" + team;
-      });
-
-      // Sync name inputs
-      document.querySelectorAll(".team-name-input[data-team='1']").forEach(i => { if (document.activeElement !== i) i.value = n1; });
-      document.querySelectorAll(".team-name-input[data-team='2']").forEach(i => { if (document.activeElement !== i) i.value = n2; });
     }
 
     // Card back picker
@@ -213,19 +221,11 @@
     const colorDropdown = document.getElementById("color-picker-dropdown");
     if (colorTrigger) {
       applyCardBack();
-      applyTeamSettings();
       colorTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
         colorDropdown.classList.toggle("open");
       });
       document.addEventListener("click", function () { colorDropdown.classList.remove("open"); });
-      document.querySelectorAll(".team-name-input").forEach(function (input) {
-        input.addEventListener("input", function () {
-          localStorage.setItem("r_cards_team" + input.dataset.team + "_name", input.value.trim());
-          applyTeamSettings();
-        });
-        input.addEventListener("click", function (e) { e.stopPropagation(); });
-      });
     }
   });
 </script>

@@ -98,25 +98,32 @@ class Canasta < ApplicationRecord
     return { error: "You must discard before drawing again" } unless turn_phase == "draw"
 
     pile = draw_pile.dup
-    reshuffle_stock!(pile) if pile.empty?
-    pile = draw_pile.dup
-
-    hand = player.hand.dup
+    discard = discard_pile.dup
     drawn_cards = []
+
     2.times do
-      if pile.empty?
-        reshuffle_stock!(pile)
-        pile = draw_pile.dup
-      end
-      return { error: "No cards left to draw" } if pile.empty?
+      pile, discard = flip_discard_to_stock(pile, discard) if pile.empty?
+      break if pile.empty?
       drawn_cards << pile.pop
     end
 
-    hand.concat(drawn_cards)
+    hand = player.hand.dup.concat(drawn_cards)
     player.update!(hand: hand)
+
+    if pile.empty? && drawn_cards.length < 2
+      # Truly nothing left in either pile — the round can't continue. The
+      # player keeps whatever partial draw they just got; the round ends
+      # now with no going-out bonus for either team, scored exactly like a
+      # normal round end otherwise.
+      write_game_state!("draw_pile" => pile, "discard_pile" => discard)
+      result = end_round!(going_out_team: nil)
+      return { success: true, round_ended: true, stalemate: true }.merge(result)
+    end
+
     next_seq = (last_draw || {})["seq"].to_i + 1
     write_game_state!(
       "draw_pile" => pile,
+      "discard_pile" => discard,
       "turn_phase" => "discard",
       "turn_meld_log" => [],
       "last_draw" => {
@@ -158,8 +165,12 @@ class Canasta < ApplicationRecord
     { success: true }
   end
 
-  # Claims one replacement card owed for a previously played red three. Like
-  # play_red_three, this is not gated by whose turn it is.
+  # Claims all replacement cards owed for previously played red threes in one
+  # go — playing several red threes at once (e.g. dragging a multi-card
+  # selection onto the red-three area) queues up one draw per card, and it'd
+  # be tedious to make the player click the stock pile that many separate
+  # times to collect them. Like play_red_three, this is not gated by whose
+  # turn it is.
   def draw_red_three_replacement(player)
     return { error: "Game is over" } if game_over?
 
@@ -167,28 +178,38 @@ class Canasta < ApplicationRecord
     return { error: "No red three replacement owed" } if owed <= 0
 
     pile = draw_pile.dup
-    reshuffle_stock!(pile) if pile.empty?
-    pile = draw_pile.dup
-    return { error: "No cards left to draw" } if pile.empty?
+    discard = discard_pile.dup
+    drawn_cards = []
 
-    card = pile.pop
-    hand = player.hand.dup << card
+    owed.times do
+      pile, discard = flip_discard_to_stock(pile, discard) if pile.empty?
+      break if pile.empty?
+      drawn_cards << pile.pop
+    end
+
+    hand = player.hand.dup.concat(drawn_cards)
     player.update!(hand: hand)
 
     pending = (pending_red_three_draws || {}).dup
-    if owed - 1 <= 0
-      pending.delete(player.id.to_s)
-    else
-      pending[player.id.to_s] = owed - 1
+    pending.delete(player.id.to_s)
+
+    if pile.empty? && drawn_cards.length < owed
+      # Same stalemate handling as #draw — nothing left anywhere to satisfy
+      # the rest of what's owed, so the round ends now rather than leaving
+      # the player stuck. They keep whatever replacements they did get.
+      write_game_state!("draw_pile" => pile, "discard_pile" => discard, "pending_red_three_draws" => pending)
+      result = end_round!(going_out_team: nil)
+      return { success: true, round_ended: true, stalemate: true }.merge(result)
     end
 
     next_seq = (last_draw || {})["seq"].to_i + 1
     write_game_state!(
       "draw_pile" => pile,
+      "discard_pile" => discard,
       "pending_red_three_draws" => pending,
-      "last_draw" => { "player_id" => player.id, "cards" => [card], "seq" => next_seq }
+      "last_draw" => { "player_id" => player.id, "cards" => drawn_cards, "seq" => next_seq }
     )
-    { success: true, drawn_card: card }
+    { success: true, drawn_cards: drawn_cards }
   end
 
   def pickup_discard(player)
@@ -198,7 +219,7 @@ class Canasta < ApplicationRecord
 
     pile = discard_pile.dup
     return { error: "Discard pile is empty" } if pile.empty?
-    return { error: "Your team must make its first meld before picking up the pile" } unless team_melded?(player.team)
+    return { error: "Your team must make its first meld before picking up the pile" } unless team_has_gone_down?(player.team)
 
     top = pile.last
     return { error: "Black threes cannot be picked up" } if black_three?(top)
@@ -236,7 +257,6 @@ class Canasta < ApplicationRecord
     return { error: "Threes cannot be melded" } if naturals_all.any? { |c| rank_of(c) == "3" }
 
     team_melds = (melds[player.team.to_s] || {}).dup
-    team_has_melded = team_melds.values.any?(&:present?)
 
     if naturals_all.empty?
       # Pure-wild selection — only valid as an addition to an existing meld,
@@ -269,21 +289,19 @@ class Canasta < ApplicationRecord
     end
 
     # Validate each group
+    # Note: no minimum-3-cards or initial-meld-point-threshold check here —
+    # those are enforced at discard time instead (see #discard), so a player
+    # can build up several new melds across separate drops within the same
+    # turn (e.g. dropping 4 tens, then separately dropping 2 kings + 2
+    # wilds) without needing to cram every rank into one call just to hit
+    # the threshold in a single shot. The wild-cannot-exceed-natural rule
+    # still applies immediately, though — that's never legal, at any size.
     groups.each do |rank, g|
       existing      = team_melds[rank] || []
-      group_cards   = g[:naturals] + g[:wilds]
       total_wild    = existing.count { |c| wild?(c) } + g[:wilds].length
       total_natural = existing.count { |c| !wild?(c) } + g[:naturals].length
 
-      return { error: "Need at least 3 cards to start a new meld for #{rank}s" } if existing.empty? && group_cards.length < 3
       return { error: "A meld cannot contain more wild cards than natural cards (#{rank}s)" } if total_wild > total_natural
-    end
-
-    unless team_has_melded
-      total_points = cards.sum { |c| card_points(c) }
-      threshold    = meld_threshold(player.team)
-      return { error: "Initial meld must total at least #{threshold} points (selected: #{total_points})" } \
-        if total_points < threshold
     end
 
     remaining_hand = hand.dup
@@ -333,6 +351,29 @@ class Canasta < ApplicationRecord
     return { error: "Not your turn" } unless game.current_turn == player.id
     return { error: "Game is over" } if game_over?
     return { error: "Draw or pick up a card before discarding" } unless turn_phase == "discard"
+
+    # meld() no longer enforces the 3-card minimum or the initial-meld point
+    # threshold on each individual call, so a turn can end with a rank this
+    # player just started (or added to) still short of a valid meld — catch
+    # that here instead, scoped to only what changed this turn (turn_meld_log
+    # resets every turn), so a stale under-3 pile from an earlier turn that
+    # nobody's touched since doesn't block someone else's unrelated discard.
+    log = turn_meld_log || []
+    if log.any?
+      team_melds_now = melds[player.team.to_s] || {}
+      incomplete_rank = log.map { |e| e["rank"] }.uniq.find { |r| (team_melds_now[r] || []).length < 3 }
+      if incomplete_rank
+        return { error: "Your #{incomplete_rank}s meld needs at least 3 cards — add more or undo it before discarding" }
+      end
+
+      unless team_has_gone_down?(player.team)
+        threshold   = meld_threshold(player.team)
+        turn_points = turn_melded_points
+        if turn_points < threshold
+          return { error: "Your first meld must total at least #{threshold} points (so far: #{turn_points}) — add more or undo before discarding" }
+        end
+      end
+    end
 
     hand = player.hand.dup
     return { error: "Card not in hand" } unless hand.include?(card)
@@ -394,8 +435,25 @@ class Canasta < ApplicationRecord
     MELD_THRESHOLDS.find { |max, _threshold| score < max }.last
   end
 
-  def team_melded?(team)
-    ((melds || {})[team.to_s] || {}).values.any?(&:present?)
+  # Points melded so far during the current turn (turn_meld_log resets at the
+  # start of each turn) — used both to gate discarding/pickup and to show the
+  # acting player their live progress toward the initial-meld threshold.
+  def turn_melded_points
+    (turn_meld_log || []).sum { |e| e["cards"].sum { |c| card_points(c) } }
+  end
+
+  # Whether this team has already banked a valid meld from a *previous*,
+  # already-completed turn — as opposed to merely having cards sitting in a
+  # still-in-progress meld this turn that hasn't cleared the initial-meld
+  # point threshold yet (that's only checked/finalized at discard time, see
+  # #discard). Only subtracts this turn's contribution when the team being
+  # checked is the one whose turn it currently is — turn_meld_log always
+  # belongs to whichever team is currently acting.
+  def team_has_gone_down?(team)
+    total = ((melds || {})[team.to_s] || {}).values.sum { |cards| cards.sum { |c| card_points(c) } }
+    current_turn_team = game.players.find_by(id: game.current_turn)&.team
+    total -= turn_melded_points if current_turn_team == team.to_i
+    total > 0
   end
 
   # --- Private ---
@@ -407,12 +465,27 @@ class Canasta < ApplicationRecord
     update!(game_state: merged)
   end
 
-  def reshuffle_stock!(pile)
-    return unless pile.empty?
-    keep_top = discard_pile.last
-    rest     = discard_pile[0..-2] || []
-    return if rest.empty?
-    write_game_state!("draw_pile" => rest.shuffle, "discard_pile" => [keep_top].compact)
+  # When the draw pile runs dry, the discard pile (minus its top card, which
+  # stays put as the new discard) gets turned over to become the new draw
+  # pile — flipped, not shuffled, so the card that's been sitting at the
+  # bottom of the discard pile longest is the first one drawn. `rest` runs
+  # bottom-to-top of the discard stack (oldest to newest); reversing it and
+  # relying on Array#pop (which takes from the end) to draw means the
+  # oldest — physically now on top after the flip — comes off first.
+  #
+  # Takes/returns local pile & discard arrays rather than touching
+  # game_state directly. #draw and #draw_red_three_replacement each loop
+  # multiple single-card draws and only persist the result once at the end,
+  # so a version of this that read/wrote the database mid-loop couldn't see
+  # a card popped from the *local* pile earlier in the same loop — a second
+  # flip would re-fetch the stale, pre-loop draw_pile from the database and
+  # hand out the card that had already been drawn a second time.
+  def flip_discard_to_stock(pile, discard)
+    return [pile, discard] unless pile.empty?
+    return [pile, discard] if discard.length <= 1
+    keep_top = discard.last
+    rest = discard[0..-2]
+    [rest.reverse, [keep_top]]
   end
 
   def log_red_three!(team, card)
@@ -432,10 +505,11 @@ class Canasta < ApplicationRecord
     completed_canasta = team_melds[rank].length >= CANASTA_SIZE && (team_melds[rank].length - cards.length) < CANASTA_SIZE
     if completed_canasta
       next_seq = (last_canasta || {})["seq"].to_i + 1
-      write_game_state!("last_canasta" => { "rank" => rank, "seq" => next_seq })
+      write_game_state!("last_canasta" => { "rank" => rank, "seq" => next_seq, "cards" => team_melds[rank] })
     end
     { canasta_completed: completed_canasta, canasta_rank: completed_canasta ? rank : nil,
-      canasta_seq: completed_canasta ? next_seq : nil }
+      canasta_seq: completed_canasta ? next_seq : nil,
+      canasta_cards: completed_canasta ? team_melds[rank] : nil }
   end
 
   def can_go_out?(team)
@@ -448,7 +522,12 @@ class Canasta < ApplicationRecord
   # stores it as `round_summary` instead of immediately dealing the next
   # round. The table stays frozen on a summary screen — see #advance_round —
   # until the host reviews it and explicitly continues.
+  # going_out_team is nil for a stalemate round end (both piles exhausted,
+  # nobody actually went out) — kept as nil rather than forced to a string,
+  # so downstream code (and the round summary view) can tell "nobody went
+  # out" apart from "team 0 went out" instead of both looking like "0".
   def end_round!(going_out_team:)
+    going_out_team_key = going_out_team&.to_s
     new_team_scores  = (team_scores || { "0" => 0, "1" => 0 }).dup
     new_round_scores = {}
     teams_summary    = {}
@@ -473,11 +552,18 @@ class Canasta < ApplicationRecord
       canasta_bonus     = meld_breakdown.sum { |m| m["canasta"] ? (m["clean"] ? 500 : 300) : 0 }
       red_three_cards   = red_threes[team] || []
       red_three_bonus   = red_three_cards.length * 100
-      going_out_bonus   = team == going_out_team.to_s ? 200 : 0
+      going_out_bonus   = team == going_out_team_key ? 200 : 0
       base_score        = canasta_bonus + red_three_bonus + going_out_bonus
 
+      # If the other team goes out before this player ever picked up their
+      # peak hand (team hasn't completed a canasta yet, or completed one but
+      # hasn't discarded since), those cards are still sitting in
+      # `peak_hands`, invisible to their actual hand — but they're still the
+      # player's cards, so they count against them same as anything left in
+      # hand.
       hand_breakdown = game.players.where(team: team.to_i).map do |p|
-        { "player_id" => p.id, "name" => p.user.name, "cards" => p.hand, "points" => p.hand.sum { |c| card_points(c) } }
+        cards = p.hand + ((peak_hands || {})[p.id.to_s] || [])
+        { "player_id" => p.id, "name" => p.user.name, "cards" => cards, "points" => cards.sum { |c| card_points(c) } }
       end
       hand_penalty = hand_breakdown.sum { |h| h["points"] }
 
@@ -502,7 +588,7 @@ class Canasta < ApplicationRecord
 
     history_entry = {
       "round_number"   => round_number,
-      "going_out_team" => going_out_team.to_s,
+      "going_out_team" => going_out_team_key,
       "teams" => teams_summary.transform_values { |t|
         {
           "round_score" => t["round_score"],
@@ -516,7 +602,7 @@ class Canasta < ApplicationRecord
     write_game_state!(
       "team_scores"   => new_team_scores,
       "round_scores"  => new_round_scores,
-      "round_summary" => { "going_out_team" => going_out_team.to_s, "teams" => teams_summary },
+      "round_summary" => { "going_out_team" => going_out_team_key, "teams" => teams_summary },
       "round_history" => (round_history || []) + [history_entry]
     )
 

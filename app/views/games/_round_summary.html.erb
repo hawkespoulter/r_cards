@@ -1,20 +1,25 @@
 <%# locals: canasta, game, is_host, my_team %>
 <% summary = canasta.round_summary %>
 <% teams = summary["teams"] %>
-<% going_out_team = summary["going_out_team"].to_i %>
+<% going_out_team = summary["going_out_team"]&.to_i %>
 
 <div class="round-summary-overlay">
   <div class="round-summary-modal">
     <h2 class="round-summary-title">Round Complete!</h2>
-    <p class="round-summary-subtitle">Team <%= going_out_team + 1 %> went out</p>
+    <p class="round-summary-subtitle">
+      <% if going_out_team %>
+        <%= game.team_name(going_out_team) %> went out
+      <% else %>
+        Draw and discard piles both ran out — round ends here
+      <% end %>
+    </p>
 
     <div class="round-summary-teams">
       <% [0, 1].each do |team| %>
         <% t = teams[team.to_s] %>
         <div class="round-summary-team <%= 'my-team' if team == my_team %>">
           <h3 class="round-summary-team-title">
-            Team <%= team + 1 %>
-            <%= "— went out" if team == going_out_team %>
+            <%= game.team_name(team) %>
           </h3>
 
           <div class="round-summary-line round-summary-subtotal">

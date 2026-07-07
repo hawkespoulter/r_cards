@@ -44,7 +44,7 @@
         <% end %>
         <% points.each_with_index do |(x, y), i| %>
           <circle cx="<%= x %>" cy="<%= y %>" r="5" class="score-chart-dot score-chart-dot-<%= team + 1 %>">
-            <title>Team <%= team + 1 %> — Round <%= history[i]["round_number"] %>: <%= team_scores[team][i] %> pts</title>
+            <title><%= @game.team_name(team) %> — Round <%= history[i]["round_number"] %>: <%= team_scores[team][i] %> pts</title>
           </circle>
         <% end %>
       <% end %>
@@ -54,7 +54,7 @@
       <% [0, 1].each do |team| %>
         <span class="score-chart-legend-item">
           <span class="score-chart-swatch score-chart-swatch-<%= team + 1 %>"></span>
-          <span class="team-name-label" data-team="<%= team + 1 %>">T<%= team + 1 %></span>
+          <span class="team-name-label"><%= @game.team_name(team) %></span>
         </span>
       <% end %>
     </div>

@@ -13,6 +13,17 @@ let handleMarqueeMouseDown = null;
 let handleSuppressedClick = null;
 let globalHandlersBound = false;
 
+// Elements that count as "still interacting with the board", not "clicked
+// away from it" — shared by handleOutsideClick (don't clear a selection just
+// because the draw pile, a settings button, etc. was clicked) and
+// handleMarqueeMouseDown (don't start a rubber-band drag from on top of
+// them). Buttons in particular matter here: the draw pile, pickup pile, and
+// undo-meld are all plain <button>s outside #canasta-hand, so without this
+// exclusion, clicking any of them looked like "click outside the hand" and
+// wiped out a selection you were still building for later.
+const BOARD_INTERACTIVE_SELECTOR =
+  ".hand-card-wrap, button, a, input, textarea, select, label, .round-history-modal, .settings-panel, .profile-dropdown, .color-picker-dropdown, .meld-group, .canasta-single, .draw-pile-block, #discard-pile-drop, #red-three-drop, #new-meld-drop";
+
 // Builds an off-screen fanned stack of the given cards to use as a custom
 // drag image, so dragging a multi-card selection shows all of it instead of
 // just the single card the browser grabbed under the cursor.
@@ -64,6 +75,70 @@ function condenseHand() {
 }
 window.addEventListener("resize", condenseHand);
 
+// Extra buffer (in px) subtracted from the measured available width before
+// deciding whether the completed-canasta row needs to compress. Tune this
+// by hand: raise it if cards can still reach the piles column before
+// overlap kicks in, lower it if they're compressing sooner than they need
+// to. This exists because the "available" measurement below is a best
+// effort at the melds column's real width — if it's ever slightly off, this
+// margin is the knob to compensate without having to re-derive the CSS math.
+const CANASTA_ROW_SAFETY_MARGIN = 130;
+
+// ── Shrink the overlap between completed-canasta cards instead of wrapping
+// to a second row when the row is too narrow. Unlike condenseHand, adjacent
+// cards here don't all overlap by the same amount (canasta-canasta pairs,
+// red-three-red-three pairs, and the junction between the two groups each
+// have their own CSS-defined spacing), so instead of assuming one uniform
+// gap, this reads each card's own natural margin-left off the CSS first and
+// then subtracts the same extra amount from all of them to close the gap.
+// A completed canasta alternates "horizontal"/"vertical" orientation
+// (.canasta-horizontal rotates the inner .canasta-rep-card 90deg) — CSS
+// transforms don't affect layout, so a rotated card's *own* bounding rect
+// correctly reflects its swapped, painted width/height, but the outer
+// .canasta-single wrapper's rect does not (a child's transform never
+// enlarges its parent's layout box). Falls back to the wrapper's own rect
+// for cards with no such child (red threes, or if markup ever changes).
+function canastaCardVisualWidth(card) {
+  const rep = card.querySelector(".canasta-rep-card");
+  return (rep || card).getBoundingClientRect().width;
+}
+
+function condenseCanastaRows() {
+  document.querySelectorAll(".canasta-completed-row").forEach((row) => {
+    const cards = Array.from(row.children);
+    if (cards.length < 2) return;
+
+    cards.forEach((c) => c.style.marginLeft = "");
+    const naturalMargins = cards.map((c) => parseFloat(getComputedStyle(c).marginLeft) || 0);
+    const naturalWidth = cards.reduce(
+      (sum, c, i) => sum + canastaCardVisualWidth(c) + (i === 0 ? 0 : naturalMargins[i]),
+      0
+    );
+    // Measured against the melds column, not the row itself: .my-melds-col/
+    // .opp-melds-col use align-items: flex-start/flex-end rather than
+    // stretch, so the row (and its .canasta-area parent) are free to size
+    // to their own natural content width rather than being capped at the
+    // column's real flex: 1; min-width: 0 width — meaning the row's own
+    // rect can already reflect an overflowed, too-wide size by the time
+    // it's measured, letting cards spill into the piles column before
+    // compression ever kicks in. The column itself is the one width in
+    // this chain that's actually guaranteed to stay put.
+    const col = row.closest(".my-melds-col, .opp-melds-col");
+    // CANASTA_ROW_SAFETY_MARGIN (top of file) is subtracted here as extra
+    // buffer — bump it up if cards still reach the piles column before
+    // compressing, or down if they're compressing sooner than necessary.
+    const available = (col || row).getBoundingClientRect().width - CANASTA_ROW_SAFETY_MARGIN;
+    if (naturalWidth <= available) return;
+
+    const extraOverlap = (naturalWidth - available) / (cards.length - 1);
+    cards.forEach((c, i) => {
+      if (i === 0) return;
+      c.style.marginLeft = `${naturalMargins[i] - extraOverlap}px`;
+    });
+  });
+}
+window.addEventListener("resize", condenseCanastaRows);
+
 // ── Size each meld's hover count overlay to fill as much of that meld's
 // box as it can without overflowing, shrinking from a generous starting
 // size until both dimensions fit. Box sizes don't change on hover itself,
@@ -90,10 +165,157 @@ function fitMeldCountOverlays() {
 }
 window.addEventListener("resize", fitMeldCountOverlays);
 
+// ── Long-press to reveal meld/pile counts on touch devices ─────────────────
+// Real :hover (see game.scss) only fires the overlay for a genuine mouse —
+// touch instead needs a deliberate sustained press, so an ordinary tap or
+// drag doesn't flash it. Called once per render on the (then-fresh)
+// .meld-hoverable elements, same as the other per-element bindings below.
+const LONG_PRESS_MS = 400;
+// Once revealed, stays up for a beat after the finger lifts instead of
+// vanishing the instant touch ends, so there's time to actually read it
+// (and so it visibly fades out via .meld-count-overlay's opacity transition
+// instead of just disappearing).
+const RELEASE_DELAY_MS = 1000;
+
+function setupLongPress() {
+  document.querySelectorAll(".meld-hoverable").forEach((el) => {
+    let pressTimer = null;
+    let releaseTimer = null;
+
+    const cancelPress = () => {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+    };
+    const cancelRelease = () => {
+      if (releaseTimer) {
+        clearTimeout(releaseTimer);
+        releaseTimer = null;
+      }
+    };
+
+    el.addEventListener("touchstart", () => {
+      cancelPress();
+      cancelRelease();
+      pressTimer = setTimeout(() => {
+        pressTimer = null;
+        el.classList.add("long-press-active");
+      }, LONG_PRESS_MS);
+    }, { passive: true });
+
+    const onRelease = () => {
+      cancelPress();
+      if (!el.classList.contains("long-press-active")) return;
+      cancelRelease();
+      releaseTimer = setTimeout(() => {
+        el.classList.remove("long-press-active");
+        releaseTimer = null;
+      }, RELEASE_DELAY_MS);
+    };
+    el.addEventListener("touchend", onRelease);
+    el.addEventListener("touchcancel", onRelease);
+
+    // Moving before the hold has activated cancels it (not a deliberate
+    // press); moving after it's already showing doesn't hide it early —
+    // only lifting the finger starts the release countdown.
+    el.addEventListener("touchmove", () => {
+      if (!el.classList.contains("long-press-active")) cancelPress();
+    });
+
+    // Without this, a sustained press on the card image opens the browser's
+    // own long-press context menu (Android's "open/save image", etc.) at the
+    // same time as our long-press — the CSS touch-callout/user-select rules
+    // in game.scss cover Safari, but Android's menu needs this too.
+    el.addEventListener("contextmenu", (e) => e.preventDefault());
+  });
+}
+
+// Identity of the last #canasta-hand node this handler bound listeners to.
+// An error-only Turbo Stream response (e.g. "Not your turn") replaces only
+// the flash-error partial, leaving #game-container — and everything in it —
+// completely untouched. turbo:load still re-fires for that render (see
+// application.js's redispatch hook), so without this guard every per-element
+// listener below would get bound a second time to the exact same DOM nodes,
+// and the next click would submit the action twice. A real board update
+// always produces a brand-new #canasta-hand node, so comparing by identity
+// reliably tells the two cases apart.
+let lastBoundHand = null;
+
+// Selected hand cards, keyed by a card-identity string ("<code>#<occurrence>",
+// e.g. the second "d10" in hand is "d10#1") rather than DOM position, so a
+// selection survives the hand being torn down and re-rendered from under it
+// — which now happens on every board sync, not just your own actions. This
+// is what makes selecting cards while waiting for your turn stick around
+// instead of vanishing the moment anyone else acts. Only an explicit
+// deselect (click away, or actually playing the selected cards) clears it.
+let persistedSelectionKeys = new Set();
+
+function cardSelectionKey(card, occurrence) {
+  return `${card}#${occurrence}`;
+}
+
 document.addEventListener("turbo:load", function () {
   // ── Recolor the whole page background to match "my turn" state ───────────
   const gameContainerEl = document.querySelector(".game-container");
   document.body.classList.toggle("my-turn-bg", !!gameContainerEl?.classList.contains("my-turn"));
+
+  // ── Play errors as centred popup ──────────────────────────────────────────
+  // Lives outside #game-container (in the layout's flash-error-container),
+  // so it must be checked on every render, including the error-only ones the
+  // guard below skips past.
+  const flashError = document.querySelector("[data-flash-error]");
+  if (flashError) {
+    showCardModal({ title: flashError.dataset.flashError, duration: 2400 });
+    // Remove it immediately — turbo:load can now fire repeatedly (once per
+    // Turbo Stream render, not just full page loads), and without removing
+    // this the same stale error would re-pop on every subsequent action.
+    flashError.remove();
+  }
+
+  // ── Round-by-round score popup (click a team score chip to open) ─────────
+  // Needs to work in every canasta phase (pregame, active play, round
+  // summary, game over), not just while a hand exists, so this can't live
+  // behind the #canasta-hand guard below. Each element tracks its own
+  // "already bound" flag directly (rather than comparing a container's
+  // identity across renders) so a freshly-replaced element always gets
+  // bound exactly once, regardless of how many other regions did or didn't
+  // change in the same render.
+  document.querySelectorAll(".round-history-trigger").forEach((trigger) => {
+    if (trigger.dataset.historyBound) return;
+    trigger.dataset.historyBound = "1";
+    trigger.addEventListener("click", () => {
+      document.getElementById("round-history-popup")?.classList.add("open");
+    });
+  });
+
+  const roundHistoryClose = document.getElementById("round-history-close");
+  if (roundHistoryClose && !roundHistoryClose.dataset.historyBound) {
+    roundHistoryClose.dataset.historyBound = "1";
+    roundHistoryClose.addEventListener("click", () => {
+      document.getElementById("round-history-popup")?.classList.remove("open");
+    });
+  }
+
+  const roundHistoryPopup = document.getElementById("round-history-popup");
+  if (roundHistoryPopup && !roundHistoryPopup.dataset.historyBound) {
+    roundHistoryPopup.dataset.historyBound = "1";
+    roundHistoryPopup.addEventListener("click", (e) => {
+      if (e.target === roundHistoryPopup) roundHistoryPopup.classList.remove("open");
+    });
+  }
+
+  const hand = document.getElementById("canasta-hand");
+  if (hand === lastBoundHand) return;
+  lastBoundHand = hand;
+  if (!hand) {
+    // Scum page, or a canasta phase with no hand (pregame/round-summary/
+    // game-over). Drop any persisted selection here rather than carrying it
+    // into next round's freshly-dealt hand, where matching "<code>#<n>" keys
+    // could coincidentally pre-select an unrelated card.
+    persistedSelectionKeys.clear();
+    return;
+  }
 
   // ── "You drew these cards" popup (once per draw) ───────────────────────────
   const drawInfo = document.querySelector("[data-last-draw]");
@@ -151,17 +373,7 @@ document.addEventListener("turbo:load", function () {
     });
   }
 
-  // ── Play errors as centred popup ──────────────────────────────────────────
-  const flashError = document.querySelector("[data-flash-error]");
-  if (flashError) {
-    showCardModal({ title: flashError.dataset.flashError, duration: 2400 });
-    // Remove it immediately — turbo:load can now fire repeatedly (once per
-    // Turbo Stream render, not just full page loads), and without removing
-    // this the same stale error would re-pop on every subsequent action.
-    flashError.remove();
-  }
-
-  // ── Canasta completed popup (for the acting player who gets a redirect) ──
+  // ── Canasta completed popup (for the acting player) ───────────────────────
   const canastaInfo = document.querySelector("[data-last-canasta]");
   if (canastaInfo) {
     const container0 = document.querySelector("[data-game-id]");
@@ -173,7 +385,14 @@ document.addEventListener("turbo:load", function () {
       if (sessionStorage.getItem(key0) !== "1") {
         sessionStorage.setItem(key0, "1");
         const rankCard0 = rank0 === "jo" ? "jo" : "h" + rank0;
-        showCardModal({ title: "Canasta!", cards: [rankCard0], confetti: true, confettiCard: rankCard0 });
+        const canastaCards0 = JSON.parse(canastaInfo.dataset.canastaCards || "[]");
+        showCardModal({
+          title: "Canasta!",
+          cards: canastaCards0.length ? canastaCards0 : [rankCard0],
+          confetti: true,
+          confettiCard: rankCard0,
+          duration: 2800
+        });
       }
     }
   }
@@ -202,30 +421,25 @@ document.addEventListener("turbo:load", function () {
     });
   });
 
-  // ── Round-by-round score popup (click a team score chip to open) ─────────
-  const roundHistoryPopup = document.getElementById("round-history-popup");
-  if (roundHistoryPopup) {
-    document.querySelectorAll(".round-history-trigger").forEach((trigger) => {
-      trigger.addEventListener("click", () => roundHistoryPopup.classList.add("open"));
-    });
-
-    const closeRoundHistory = () => roundHistoryPopup.classList.remove("open");
-    document.getElementById("round-history-close")?.addEventListener("click", closeRoundHistory);
-    roundHistoryPopup.addEventListener("click", (e) => {
-      if (e.target === roundHistoryPopup) closeRoundHistory();
-    });
-  }
-
   condenseHand();
+  condenseCanastaRows();
   fitMeldCountOverlays();
-
-  const hand = document.getElementById("canasta-hand");
-  if (!hand) return;
+  setupLongPress();
 
   const totalEl = document.getElementById("meld-running-total");
-  // Map<cardIndex, cardCode> — index is unique per DOM position so duplicate
-  // ranks (e.g. two "dt" from different decks) are tracked independently.
+  // Points already committed to melds earlier this turn (server-computed,
+  // scoped to whichever team is currently acting) — the displayed total
+  // should track cumulative progress toward the initial-meld threshold, not
+  // just whatever's presently selected in hand.
+  const turnMeldedPoints = parseInt(hand?.dataset.turnMeldedPoints || "0", 10);
+  // Map<cardIndex, cardCode> for this render's DOM — index is unique per DOM
+  // position so duplicate ranks (e.g. two "dt" from different decks) are
+  // tracked independently. Seeded below from persistedSelectionKeys so a
+  // selection made before this render survives into it.
   const selected = new Map();
+  // idx -> that card's persistedSelectionKeys key, so toggling by DOM
+  // position (clicks, marquee) can keep the persisted set in sync.
+  const keyForIndex = [];
 
   function cardPoints(card) {
     if (card === "jo") return 50;
@@ -238,7 +452,7 @@ document.addEventListener("turbo:load", function () {
 
   function refreshTotal() {
     if (!totalEl) return;
-    let total = 0;
+    let total = turnMeldedPoints;
     selected.forEach((card) => { total += cardPoints(card); });
     totalEl.textContent = total;
   }
@@ -247,27 +461,68 @@ document.addEventListener("turbo:load", function () {
     return Array.from(selected.values());
   }
 
+  // Clears the selection outright — used when clicking away, and when the
+  // selected cards have actually been played (meld/discard/red-three), so a
+  // spent selection doesn't linger and risk matching a different card of the
+  // same rank drawn later.
+  function clearSelection() {
+    if (selected.size === 0) return;
+    selected.forEach((_card, idx) => persistedSelectionKeys.delete(keyForIndex[idx]));
+    selected.clear();
+    hand.querySelectorAll(".hand-card-wrap.selected").forEach((el) => el.classList.remove("selected"));
+    refreshTotal();
+  }
+
+  const occurrenceCounts = {};
   hand.querySelectorAll(".hand-card-wrap").forEach((wrap, idx) => {
+    const card = wrap.dataset.card;
+    const occurrence = occurrenceCounts[card] || 0;
+    occurrenceCounts[card] = occurrence + 1;
+    const key = cardSelectionKey(card, occurrence);
+    keyForIndex[idx] = key;
+
+    if (persistedSelectionKeys.has(key)) {
+      selected.set(idx, card);
+      // Restoring a persisted selection onto a freshly-rendered card, not a
+      // user toggling it just now — apply the raised .selected position and
+      // its yellow outline instantly instead of letting them animate in.
+      // Both .hand-card-wrap (the raise) and its inner .game-card (the
+      // box-shadow outline) have their own separate transitions, so both
+      // need suppressing — otherwise the outline still visibly fades in
+      // even once the position jump itself is fixed. Force a reflow between
+      // removing and restoring so the instant jump is actually committed
+      // before transitions are re-enabled.
+      const img = wrap.querySelector(".game-card");
+      wrap.style.transition = "none";
+      if (img) img.style.transition = "none";
+      wrap.classList.add("selected");
+      void wrap.offsetHeight;
+      wrap.style.transition = "";
+      if (img) img.style.transition = "";
+    }
+
     wrap.addEventListener("click", function () {
-      const card = this.dataset.card;
       if (selected.has(idx)) {
         selected.delete(idx);
+        persistedSelectionKeys.delete(key);
         this.classList.remove("selected");
       } else {
         selected.set(idx, card);
+        persistedSelectionKeys.add(key);
         this.classList.add("selected");
       }
       refreshTotal();
     });
   });
+  refreshTotal(); // reflect any selection just restored above
 
-  // ── Clicking anywhere outside the hand deselects all selected cards ──────
+  // ── Clicking anywhere outside the hand/board controls deselects all
+  // selected cards. Excludes BOARD_INTERACTIVE_SELECTOR so drawing, opening
+  // settings, undoing a meld, etc. don't read as "clicked away" — only
+  // actual dead space (or a hand card, handled separately below) does. ────
   handleOutsideClick = function (e) {
-    if (e.target.closest(".hand-card-wrap")) return;
-    if (selected.size === 0) return;
-    selected.clear();
-    hand.querySelectorAll(".hand-card-wrap.selected").forEach((el) => el.classList.remove("selected"));
-    refreshTotal();
+    if (e.target.closest(BOARD_INTERACTIVE_SELECTOR)) return;
+    clearSelection();
   };
 
   // ── Marquee (rubber-band) selection — click-drag anywhere on the page
@@ -279,6 +534,14 @@ document.addEventListener("turbo:load", function () {
   let marqueeStartX = 0;
   let marqueeStartY = 0;
   let marqueeBaseKeys = new Set();
+  // Indices the box has covered at any point during the current drag. Once a
+  // card is hit it stays flipped for the rest of the gesture even if the box
+  // later shrinks away from it (e.g. the cursor's path isn't a perfectly
+  // monotonic line to the release point) — otherwise a card briefly swept
+  // over mid-drag but no longer under the box at mouseup silently reverts to
+  // unselected, which is what caused a couple of cards in a "drag across the
+  // whole hand" gesture to end up not selected.
+  let marqueeHitKeys = new Set();
   let suppressNextClick = false;
 
   function rectsIntersect(a, b) {
@@ -293,6 +556,7 @@ document.addEventListener("turbo:load", function () {
       if (Math.hypot(dx, dy) < 4) return;
       marqueeActive = true;
       marqueeBaseKeys = new Set(selected.keys());
+      marqueeHitKeys = new Set();
       marqueeBox = document.createElement("div");
       marqueeBox.className = "marquee-select-box";
       document.body.appendChild(marqueeBox);
@@ -310,20 +574,24 @@ document.addEventListener("turbo:load", function () {
     const boxRect = { left, top, right: left + width, bottom: top + height };
     const wraps = hand.querySelectorAll(".hand-card-wrap");
 
-    // Cards the box currently covers flip from their pre-drag state — so
-    // dragging over unselected cards selects them, and dragging over
-    // already-selected cards deselects them (both in the same sweep).
-    // Un-hovering a card before mouseup reverts it to its original state.
+    // Cards ever covered by the box this drag flip from their pre-drag
+    // state — so dragging over unselected cards selects them, and dragging
+    // over already-selected cards deselects them (both in the same sweep).
     wraps.forEach((wrap, idx) => {
+      if (rectsIntersect(wrap.getBoundingClientRect(), boxRect)) {
+        marqueeHitKeys.add(idx);
+      }
       const wasSelected = marqueeBaseKeys.has(idx);
-      const hit = rectsIntersect(wrap.getBoundingClientRect(), boxRect);
-      const shouldBeSelected = hit ? !wasSelected : wasSelected;
+      const everHit = marqueeHitKeys.has(idx);
+      const shouldBeSelected = everHit ? !wasSelected : wasSelected;
       const isSelected = selected.has(idx);
       if (shouldBeSelected && !isSelected) {
         selected.set(idx, wrap.dataset.card);
+        persistedSelectionKeys.add(keyForIndex[idx]);
         wrap.classList.add("selected");
       } else if (!shouldBeSelected && isSelected) {
         selected.delete(idx);
+        persistedSelectionKeys.delete(keyForIndex[idx]);
         wrap.classList.remove("selected");
       }
     });
@@ -342,7 +610,7 @@ document.addEventListener("turbo:load", function () {
 
   handleMarqueeMouseDown = function (e) {
     if (e.button !== 0) return;
-    if (e.target.closest(".hand-card-wrap, button, a, input, textarea, select, label, .round-history-modal, .settings-panel, .profile-dropdown, .color-picker-dropdown, .meld-group, .canasta-single, #discard-pile-drop, #red-three-drop, #new-meld-drop")) return;
+    if (e.target.closest(BOARD_INTERACTIVE_SELECTOR)) return;
     e.preventDefault();
     marqueeStartX = e.clientX;
     marqueeStartY = e.clientY;
@@ -370,13 +638,19 @@ document.addEventListener("turbo:load", function () {
   // ── Drag cards from hand — always enabled, since playing a red three isn't
   // gated by whose turn it is (unlike melding/discarding/pickup below). ──────
   let dragCards = [];
+  // Whether the current drag is the selection itself (vs. an ad-hoc single
+  // unselected card) — only clear the selection on a successful drop if it
+  // was actually what got played, so playing an unrelated card doesn't wipe
+  // out a selection you're still building for later.
+  let dragFromSelection = false;
 
   hand.querySelectorAll(".hand-card-wrap").forEach((wrap, idx) => {
     wrap.setAttribute("draggable", "true");
 
     wrap.addEventListener("dragstart", function (e) {
       const card = this.dataset.card;
-      dragCards = selected.has(idx) ? selectedCards() : [card];
+      dragFromSelection = selected.has(idx);
+      dragCards = dragFromSelection ? selectedCards() : [card];
       e.dataTransfer.clearData();
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", JSON.stringify(dragCards));
@@ -434,6 +708,7 @@ document.addEventListener("turbo:load", function () {
       this.classList.remove("drag-over");
       if (dragCards.length === 0 || !dragCards.every(isRedThree)) return;
       redThreeInput.value = JSON.stringify(dragCards);
+      if (dragFromSelection) clearSelection();
       redThreeForm.requestSubmit();
     });
 
@@ -443,6 +718,7 @@ document.addEventListener("turbo:load", function () {
       const cards = selectedCards();
       if (cards.length === 0 || !cards.every(isRedThree)) return;
       redThreeInput.value = JSON.stringify(cards);
+      clearSelection();
       redThreeForm.requestSubmit();
     });
   }
@@ -474,6 +750,7 @@ document.addEventListener("turbo:load", function () {
         this.classList.remove("drag-over");
         meldInput.value = JSON.stringify(dragCards);
         if (meldTargetRankInput) meldTargetRankInput.value = this.dataset.meldRank;
+        if (dragFromSelection) clearSelection();
         meldForm.requestSubmit();
       });
 
@@ -483,6 +760,7 @@ document.addEventListener("turbo:load", function () {
         if (cards.length === 0) return;
         meldInput.value = JSON.stringify(cards);
         if (meldTargetRankInput) meldTargetRankInput.value = this.dataset.meldRank;
+        clearSelection();
         meldForm.requestSubmit();
       });
     });
@@ -509,6 +787,7 @@ document.addEventListener("turbo:load", function () {
         this.classList.remove("drag-over");
         meldInput.value = JSON.stringify(dragCards);
         if (meldTargetRankInput) meldTargetRankInput.value = "";
+        if (dragFromSelection) clearSelection();
         meldForm.requestSubmit();
       });
 
@@ -518,6 +797,7 @@ document.addEventListener("turbo:load", function () {
         if (cards.length === 0) return;
         meldInput.value = JSON.stringify(cards);
         if (meldTargetRankInput) meldTargetRankInput.value = "";
+        clearSelection();
         meldForm.requestSubmit();
       });
     }
@@ -544,14 +824,21 @@ document.addEventListener("turbo:load", function () {
       this.classList.remove("drag-over");
       if (dragCards.length !== 1) return;
       discardInput.value = dragCards[0];
+      if (dragFromSelection) clearSelection();
       discardForm.requestSubmit();
     });
 
-    // Tap-to-play fallback (see red-three tap handler above for why).
+    // Tap-to-play fallback (see red-three tap handler above for why). Skipped
+    // during the draw phase — the discard-pile-drop element doubles as the
+    // pickup button there (see pickupForm above), and a click on it should
+    // always mean "pick up the pile", never "discard", regardless of hand
+    // selection.
     discardPileEl.addEventListener("click", function () {
+      if (pickupForm) return;
       const cards = selectedCards();
       if (cards.length !== 1) return;
       discardInput.value = cards[0];
+      clearSelection();
       discardForm.requestSubmit();
     });
   }

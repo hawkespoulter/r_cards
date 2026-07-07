@@ -23,8 +23,12 @@
   border-radius: 16px;
   text-align: center;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  width: calc(100% - 48px);
-  max-width: 620px;
+  // Hugs its content (title/cards row, whichever is wider) instead of
+  // stretching to a fixed wide box — a 1-2 card draw shouldn't render a huge
+  // mostly-empty modal. max-width still caps it so a long title or a big
+  // multi-card draw wraps instead of overflowing the viewport.
+  width: fit-content;
+  max-width: calc(100% - 48px);
   transform: scale(0.85);
   opacity: 0;
   transition: transform 0.25s ease, opacity 0.25s ease;
@@ -391,6 +395,7 @@ li.nav-center {
 }
 
 .pile-card {
+  display: block;
   width: 85px;
   min-width: 85px;
   border-radius: 6px;
@@ -404,21 +409,42 @@ li.nav-center {
   cursor: pointer;
   display: block;
   position: relative;
+  transition: transform 0.15s;
 
-  &:hover .pile-card {
-    box-shadow: 0 0 0 3px #6366f1, 0 6px 18px rgba(0,0,0,0.5);
-    transform: translateY(-2px);
+  // The raise has to move this whole element, not just the .pile-card image
+  // inside it — .meld-count-overlay is a sibling of .pile-card, absolutely
+  // positioned to cover this same box, so raising only the image left the
+  // overlay behind and the two visibly split apart. Gated to real pointing
+  // devices only — touch browsers stick a tapped element's :hover with no
+  // way to clear it via a second tap, which would leave the pile stuck raised.
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+    }
   }
 
   .pile-card {
-    transition: box-shadow 0.15s, transform 0.15s;
+    transition: box-shadow 0.15s;
   }
 }
 
 .stock-pile-wrapper { cursor: default; }
 
-.pile-card-frozen {
-  box-shadow: 0 0 0 2px #60a5fa, 0 6px 18px rgba(0,0,0,0.5);
+// "Can't be picked up" stamp over a frozen discard pile — a translucent
+// white wash over the card (matching the pile's own rounded corners) with
+// the X on top, instead of desaturating the card image itself.
+.pile-frozen-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.55);
+  font-size: 3.4rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.25);
+  pointer-events: none;
 }
 
 .pile-card-red-three-pending {
@@ -463,6 +489,15 @@ li.nav-center {
   flex: 0 0 auto;
 }
 
+// Canasta's hand also has the "Selected total" text below the cards
+// (.canasta-hand-row's own padding-bottom: 20px is what separates them). To
+// make the gap above the cards match, this container's padding-top plus the
+// row's own top padding need to add up to that same 20px — simplest to put
+// the full 20px here and let the row's top padding go to 0 (see below).
+.hand-container:has(.canasta-hand-row) {
+  padding-top: 20px;
+}
+
 .hand-label {
   font-size: 0.72rem;
   text-transform: uppercase;
@@ -496,8 +531,16 @@ li.nav-center {
     cursor: grabbing;
   }
 
-  &:hover {
-    transform: translateY(-10px);
+  // Real :hover only on devices with an actual hovering pointer (a mouse).
+  // Touch browsers apply :hover on tap and it sticks there — with no
+  // corresponding "unhover" gesture, a second tap on the same card never
+  // clears it, so the card stays raised. Selecting via tap already gets its
+  // own raise from .selected below, which toggles on/off correctly since
+  // that's driven by an explicit class, not a pseudo-class.
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-10px);
+    }
   }
 
   &.selected {
@@ -517,7 +560,7 @@ li.nav-center {
   display: flex;
   flex-wrap: nowrap;
   gap: 0;
-  padding: 8px 24px 20px;
+  padding: 0 24px 20px;
   justify-content: center;
   overflow: visible;
 
@@ -529,9 +572,14 @@ li.nav-center {
 
     &:active { cursor: grabbing; }
 
-    &:hover {
-      transform: translateY(-10px);
-      z-index: 10;
+    // Same reasoning as .rank above — real :hover gated to actual pointing
+    // devices so a tap on iPad/touch doesn't leave the card stuck raised
+    // with no way to lower it back via a second tap.
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        transform: translateY(-10px);
+        z-index: 10;
+      }
     }
 
     &.selected {
@@ -572,7 +620,7 @@ li.nav-center {
   display: inline-flex;
   align-items: center;
   background: rgba(255,255,255,0.04);
-  border-radius: 8px;
+  border-radius: 5px;
   padding: 8px 16px 8px 8px;
   margin: 0 8px 8px 0;
 
@@ -616,10 +664,45 @@ li.nav-center {
 
 // Hover a fanned in-progress meld or a collapsed completed-canasta card to
 // grey it out and see a rank breakdown (natural count + wild count).
+//
+// Real hover only applies on devices that actually have a hovering pointer
+// (a mouse) — on touch devices, browsers fake a :hover state on tap, which
+// would flash this overlay on every ordinary tap/drag. Touch instead gets
+// the overlay via .long-press-active, toggled by canasta_cards.js after a
+// sustained press, so seeing the count is a deliberate action there.
 .meld-hoverable {
   position: relative;
 
-  &:hover .meld-count-overlay {
+  // Without this, holding down on the card image is indistinguishable from a
+  // long-press on any other image to a touch browser: Safari pops its image
+  // callout (Save/Copy/Open), Android opens its "open image" context menu,
+  // and the hold can turn into a text/image selection drag instead of
+  // reaching our long-press timer at all.
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+
+  // -webkit-user-drag doesn't inherit from the container, so it has to be
+  // repeated on the actual <img> to stop Safari/macOS from letting it be
+  // dragged out as a native image drag.
+  img {
+    -webkit-user-drag: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover .meld-count-overlay {
+      opacity: 1;
+      visibility: visible;
+      // Waits a beat before revealing so just passing the mouse over a card
+      // doesn't flash it — the overlay's own `transition: opacity 0.15s ease`
+      // (no delay) still applies when the mouse leaves, so it disappears
+      // promptly rather than lingering for a second on the way out.
+      transition-delay: .5s;
+    }
+  }
+
+  &.long-press-active .meld-count-overlay {
     opacity: 1;
     visibility: visible;
   }
@@ -632,7 +715,7 @@ li.nav-center {
   align-items: center;
   justify-content: center;
   background: rgba(20, 20, 24, 0.82);
-  border-radius: 8px;
+  border-radius: 5px;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -715,7 +798,14 @@ li.nav-center {
 
 .canasta-completed-row {
   display: flex;
-  flex-wrap: wrap;
+  // Stays on one line — when it doesn't fit, canasta_cards.js's
+  // condenseCanastaRows() shrinks the overlap between cards (more negative
+  // margin-left) instead of letting them wrap to a second row. overflow:
+  // visible (not hidden) matches .canasta-hand-row's same trade-off: JS is
+  // trusted to keep everything within bounds, so hover effects on these
+  // cards aren't clipped.
+  flex-wrap: nowrap;
+  overflow: visible;
   align-items: center;
   gap: 12px;
   padding: 6px 0 8px;
@@ -989,19 +1079,23 @@ li.nav-center {
 
 .discard-pile-block.drag-over {
   box-shadow: 0 0 0 3px #6366f1;
-  border-radius: 8px;
+  border-radius: 6px;
   transition: box-shadow 0.1s;
 }
 
 .discard-pile-block.pile-clickable {
   cursor: pointer;
+  transition: transform 0.15s ease;
 
-  .pile-card {
-    transition: transform 0.15s ease;
-  }
-
-  &:hover .pile-card {
-    transform: translateY(-6px);
+  // Same fix as .pile-card-btn/.stock-pile-wrapper above — this element is
+  // also .meld-hoverable, so raising only the inner .pile-card left its
+  // sibling .meld-count-overlay behind, splitting the two apart on hover.
+  // Also gated to real pointing devices for the same sticky-touch-hover
+  // reason as the hand cards above.
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-6px);
+    }
   }
 }
 
