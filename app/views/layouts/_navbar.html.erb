@@ -52,7 +52,7 @@
                 <% end %>
               </div>
             </div>
-            <% if @game %>
+            <% if @game&.persisted? %>
               <div class="dropdown-divider"></div>
               <%# Team names are per-game and shared by everyone at the
                   table (unlike card back above, which is a personal,
