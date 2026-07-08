@@ -7,24 +7,7 @@ class Game < ApplicationRecord
 
   enum game_type: { scum: 0, canasta: 1, lucky_seven: 2 }
 
-  store_accessor :settings, :pass_locks_out, :leader_can_continue, :florida_rules, :card_back, :team1_name, :team2_name
-
-  CARD_BACKS = {
-    "hawkes_sam_blue"  => "Hawkes + Sam Blue",
-    "hawkes_sam_red"   => "Hawkes + Sam Red",
-    "gabbitas_blue"    => "Gabbitas Blue",
-    "gabbitas_green"   => "Gabbitas Green",
-    "gabbitas_red"     => "Gabbitas Red",
-    "fifes_purple"     => "Fifes Purple",
-    "fifes_yellow"     => "Fifes Yellow",
-    "dad"              => "Dad",
-    "mom"              => "Mom",
-    "sicily"           => "Sicily"
-  }.freeze
-
-  def card_back_key
-    card_back.presence || "hawkes_sam_blue"
-  end
+  store_accessor :settings, :pass_locks_out, :leader_can_continue, :florida_rules, :team1_name, :team2_name
 
   # team is the integer team index (0 or 1), matching how it's used
   # everywhere else (melds["0"/"1"], team_scores, the [0, 1].each view

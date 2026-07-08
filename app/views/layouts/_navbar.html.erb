@@ -34,32 +34,17 @@
       <% end %>
 
       <% if user_signed_in? %>
-        <div class="color-picker-menu" id="color-picker-menu">
-          <button class="bug-report-trigger" id="color-picker-trigger" title="Game settings">⚙</button>
-          <div class="color-picker-dropdown" id="color-picker-dropdown">
-            <div class="dropdown-header"><span class="dropdown-name">Game Settings</span></div>
-            <div class="dropdown-divider"></div>
-            <div class="color-team-row">
-              <span class="color-team-label">Card Back</span>
-              <div class="card-back-options card-back-options-inline" id="navbar-card-back-options">
-                <% Game::CARD_BACKS.each do |key, label| %>
-                  <button class="card-back-option-btn"
-                          data-back-key="<%= key %>"
-                          data-back-src="<%= asset_path("cards/backs/#{key}.jpg") %>"
-                          title="<%= label %>">
-                    <%= image_tag "cards/backs/#{key}.jpg", class: "card-back-thumb-sm" %>
-                  </button>
-                <% end %>
-              </div>
-            </div>
-            <% if @game&.persisted? %>
+        <% if @game&.persisted? %>
+          <div class="color-picker-menu" id="color-picker-menu">
+            <button class="bug-report-trigger" id="color-picker-trigger" title="Game settings">⚙</button>
+            <div class="color-picker-dropdown" id="color-picker-dropdown">
+              <div class="dropdown-header"><span class="dropdown-name">Game Settings</span></div>
               <div class="dropdown-divider"></div>
               <%# Team names are per-game and shared by everyone at the
-                  table (unlike card back above, which is a personal,
-                  local-only preference) — this form persists them to the
-                  game itself via the same update_settings endpoint the
-                  pregame settings panel uses, so every player's view stays
-                  in sync instead of only the browser that set them. %>
+                  table — this form persists them to the game itself via the
+                  same update_settings endpoint the pregame settings panel
+                  uses, so every player's view stays in sync instead of only
+                  the browser that set them. %>
               <%= form_with url: update_settings_game_path(@game), method: :patch, html: { id: "team-names-form" } do %>
                 <div class="color-team-row">
                   <span class="color-team-label">Team 1 Name</span>
@@ -70,9 +55,9 @@
                   <input type="text" class="team-name-input" name="team2_name" value="<%= @game.team2_name %>" placeholder="Team 2" maxlength="14">
                 </div>
               <% end %>
-            <% end %>
+            </div>
           </div>
-        </div>
+        <% end %>
 
         <button class="bug-report-trigger" id="bug-report-trigger" title="Report a bug">🐛</button>
 
@@ -84,6 +69,24 @@
             <div class="dropdown-header">
               <span class="dropdown-name"><%= current_user.name %></span>
               <span class="dropdown-email"><%= current_user.email %></span>
+            </div>
+            <div class="dropdown-divider"></div>
+            <div class="color-team-row">
+              <span class="color-team-label">Card Back</span>
+              <div class="card-back-options card-back-options-inline" id="navbar-card-back-options">
+                <% User::CARD_BACKS.each do |key, label| %>
+                  <button class="card-back-option-btn <%= 'active' if current_user.card_back_preference == key %>"
+                          data-back-key="<%= key %>"
+                          data-back-src="<%= key == "random" ? "" : asset_path("cards/backs/#{key}.jpg") %>"
+                          title="<%= label %>">
+                    <% if key == "random" %>
+                      <span class="card-back-thumb-sm card-back-thumb-random">🎲</span>
+                    <% else %>
+                      <%= image_tag "cards/backs/#{key}.jpg", class: "card-back-thumb-sm" %>
+                    <% end %>
+                  </button>
+                <% end %>
+              </div>
             </div>
             <div class="dropdown-divider"></div>
             <%= link_to 'Edit Profile', edit_user_registration_path, class: 'dropdown-item' %>
@@ -193,17 +196,19 @@
       });
     }
 
-    // Card back picker
-    function applyCardBack() {
-      const saved = localStorage.getItem("r_cards_card_back");
+    // Card back picker — tied to the signed-in user's profile (persisted
+    // server-side via fetch below), so it carries across games and logins.
+    // The active swatch is already rendered correctly server-side on load;
+    // this just applies the swap instantly on click and saves it.
+    function setActiveCardBack(key) {
       document.querySelectorAll("#navbar-card-back-options .card-back-option-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.backSrc === saved);
+        btn.classList.toggle("active", btn.dataset.backKey === key);
       });
-      if (saved) {
-        document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
-          if (img.src.includes("blank_card")) img.src = saved;
-        });
-      }
+    }
+    function swapFaceDownImages(backSrc) {
+      document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
+        if (img.src.includes("blank_card") || img.src.includes("/cards/backs/")) img.src = backSrc;
+      });
     }
 
     const cardBackOptions = document.getElementById("navbar-card-back-options");
@@ -212,15 +217,37 @@
         e.stopPropagation();
         const btn = e.target.closest(".card-back-option-btn");
         if (!btn) return;
-        localStorage.setItem("r_cards_card_back", btn.dataset.backSrc);
-        applyCardBack();
+
+        setActiveCardBack(btn.dataset.backKey);
+
+        if (btn.dataset.backKey === "random") {
+          // The real pick is resolved server-side per (user, game) — see
+          // User#card_back_key — so it stays fixed for a whole game but
+          // differs game to game. This just swaps in *some* back so the
+          // click feels instant; the game's actual pick shows up on the
+          // very next board refresh (any game action re-renders it).
+          const choices = Array.from(cardBackOptions.querySelectorAll(".card-back-option-btn"))
+            .filter((b) => b.dataset.backKey !== "random");
+          const pick = choices[Math.floor(Math.random() * choices.length)];
+          if (pick) swapFaceDownImages(pick.dataset.backSrc);
+        } else {
+          swapFaceDownImages(btn.dataset.backSrc);
+        }
+
+        fetch("<%= update_card_back_path %>", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: new URLSearchParams({ card_back: btn.dataset.backKey })
+        });
       });
     }
 
     const colorTrigger  = document.getElementById("color-picker-trigger");
     const colorDropdown = document.getElementById("color-picker-dropdown");
     if (colorTrigger) {
-      applyCardBack();
       colorTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
         colorDropdown.classList.toggle("open");

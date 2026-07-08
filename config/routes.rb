@@ -3,6 +3,7 @@ Rails.application.routes.draw do
     registrations: 'users/registrations'
   }
   patch 'profile/name', to: 'profiles#update_name', as: :update_name
+  patch 'profile/card_back', to: 'profiles#update_card_back', as: :update_card_back
 
   resources :games
 

@@ -364,12 +364,15 @@ document.addEventListener("turbo:load", function () {
     }
   }
 
-  // ── Apply selected card back to all face-down card images ────────────────
+  // ── Apply the signed-in user's chosen card back to all face-down card
+  // images — server-rendered per-viewer (see current_user.card_back_key in
+  // _canasta_game.html.erb), so this is already correct for whoever's
+  // looking regardless of who else is at the table. ─────────────────────────
   const gameContainer = document.querySelector("[data-card-back]");
   if (gameContainer) {
-    const backSrc = localStorage.getItem("r_cards_card_back") || gameContainer.dataset.cardBack;
+    const backSrc = gameContainer.dataset.cardBack;
     document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
-      if (img.src.includes("blank_card")) img.src = backSrc;
+      if (img.src.includes("blank_card") || img.src.includes("/cards/backs/")) img.src = backSrc;
     });
   }
 

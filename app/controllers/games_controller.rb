@@ -382,7 +382,7 @@ class GamesController < ApplicationController
 
   def settings_params
     { pass_locks_out: params[:pass_locks_out], leader_can_continue: params[:leader_can_continue],
-      florida_rules: params[:florida_rules], card_back: params[:card_back],
+      florida_rules: params[:florida_rules],
       team1_name: params[:team1_name], team2_name: params[:team2_name] }.compact
   end
 end
