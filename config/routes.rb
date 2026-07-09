@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   }
   patch 'profile/name', to: 'profiles#update_name', as: :update_name
   patch 'profile/card_back', to: 'profiles#update_card_back', as: :update_card_back
+  patch 'profile/high_vis_fronts', to: 'profiles#update_high_vis_fronts', as: :update_high_vis_fronts
 
   resources :games
 
@@ -16,7 +17,6 @@ Rails.application.routes.draw do
       post 'play_cards'
       post 'pass'
       patch 'update_settings'
-      post 'leave'
       post 'start_round'
       post 'give_cards'
       post 'draw'

@@ -14,7 +14,7 @@ class GamesController < ApplicationController
   end
 
   def new
-    @game = Game.new(pass_locks_out: true, leader_can_continue: true)
+    @game = Game.new(game_type: :canasta, pass_locks_out: true, leader_can_continue: true)
   end
 
   def create
@@ -36,14 +36,6 @@ class GamesController < ApplicationController
     ActionCable.server.broadcast "game_#{@game.id}", { type: "game_ended" }
     @game.destroy
     ActionCable.server.broadcast "lobby", { message: "update" }
-    redirect_to games_path
-  end
-
-  def leave
-    @game = Game.find(params[:id])
-    @game.players.find_by(user_id: current_user.id)&.destroy
-    ActionCable.server.broadcast "lobby", { message: "update" }
-    ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
     redirect_to games_path
   end
 
@@ -85,14 +77,11 @@ class GamesController < ApplicationController
 
   def join
     @game = Game.find(params[:id])
-
-    if Player.where(user_id: current_user.id).exists?
-      return redirect_to games_path, alert: "You're already in a game — leave it before joining another."
-    end
+    return redirect_to @game if @game.players.exists?(user_id: current_user.id)
 
     @game.players.create(user: current_user)
     ActionCable.server.broadcast "lobby", { message: "update" }
-    ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
+    ActionCable.server.broadcast "game_#{@game.id}", { message: "update", silent: true }
     respond_with_game_update
   end
 
@@ -107,7 +96,7 @@ class GamesController < ApplicationController
     end
 
     @game.start_game
-    ActionCable.server.broadcast "game_#{@game.id}", { message: 'Game started!' }
+    ActionCable.server.broadcast "game_#{@game.id}", { message: 'Game started!', silent: true }
     ActionCable.server.broadcast "lobby", { message: "update" }
     respond_with_game_update
   end
@@ -123,7 +112,7 @@ class GamesController < ApplicationController
 
     player = @game.players.find(params[:player_id])
     player.update!(team: team)
-    ActionCable.server.broadcast "game_#{@game.id}", { message: "update" }
+    ActionCable.server.broadcast "game_#{@game.id}", { message: "update", silent: true }
     respond_with_game_update
   end
 
@@ -162,7 +151,7 @@ class GamesController < ApplicationController
   def update_settings
     @game = Game.find(params[:id])
     @game.update!(settings_params)
-    ActionCable.server.broadcast "game_#{@game.id}", { message: 'settings_updated' }
+    ActionCable.server.broadcast "game_#{@game.id}", { message: 'settings_updated', silent: true }
     respond_with_game_update
   end
 

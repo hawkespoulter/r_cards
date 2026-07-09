@@ -266,7 +266,7 @@ document.addEventListener("turbo:load", function () {
   // guard below skips past.
   const flashError = document.querySelector("[data-flash-error]");
   if (flashError) {
-    showCardModal({ title: flashError.dataset.flashError, duration: 2400 });
+    showCardModal({ title: flashError.dataset.flashError });
     // Remove it immediately — turbo:load can now fire repeatedly (once per
     // Turbo Stream render, not just full page loads), and without removing
     // this the same stale error would re-pop on every subsequent action.
@@ -305,6 +305,44 @@ document.addEventListener("turbo:load", function () {
     });
   }
 
+  // ── Pregame team-name inputs (host only) ───────────────────────────────────
+  // Runs on the pregame team-setup screen, which has no #canasta-hand, so
+  // this has to live up here rather than below the hand guard (the same
+  // reason the round-history bindings above do).
+  //
+  // Only saves on "Start Game" — a save's turbo_stream response replaces the
+  // *entire* #game-container, including whichever team-name input the user
+  // might be in, so saving on typing or on blur risked destroying/recreating
+  // a field out from under the user's cursor while they were still using it.
+  // Deferring to the one moment the user is done with the whole panel avoids
+  // that entirely.
+  document.querySelectorAll(".btn-start").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const forms = document.querySelectorAll(".team-setup-name-form");
+      if (!forms.length) return;
+      // Both team names have to go in a single request — update_settings
+      // does a read-modify-write on the whole settings column (load the
+      // record, set one field in memory, save the whole column back), so two
+      // separate PATCHes fired close together race: whichever one saves last
+      // overwrites the other's change, since neither request's in-memory
+      // copy knows about the other's edit. Folding every other form's
+      // current value into the first as a hidden field submits everything
+      // in one shot instead.
+      const primary = forms[0];
+      forms.forEach(function (form, i) {
+        if (i === 0) return;
+        const input = form.querySelector(".team-setup-name-input");
+        if (!input) return;
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.name = input.name;
+        hidden.value = input.value;
+        primary.appendChild(hidden);
+      });
+      primary.requestSubmit();
+    });
+  });
+
   const hand = document.getElementById("canasta-hand");
   if (hand === lastBoundHand) return;
   lastBoundHand = hand;
@@ -332,12 +370,7 @@ document.addEventListener("turbo:load", function () {
       if (sessionStorage.getItem(key) !== "1") {
         sessionStorage.setItem(key, "1");
         if (cards.length) {
-          const hasRedThree = cards.some((c) => c === "h3" || c === "d3");
-          showCardModal({
-            title: "You drew these cards",
-            cards,
-            duration: hasRedThree ? 2800 : 1800
-          });
+          showCardModal({ title: "You drew these cards", cards });
         }
       }
     }
@@ -358,7 +391,7 @@ document.addEventListener("turbo:load", function () {
       if (sessionStorage.getItem(key3) !== "1") {
         sessionStorage.setItem(key3, "1");
         if (pickedUpCards.length) {
-          showCardModal({ title: "You picked up the pile!", cards: pickedUpCards, duration: 3000 });
+          showCardModal({ title: "You picked up the pile!", cards: pickedUpCards, duration: 3000, autoDismiss: true });
         }
       }
     }
@@ -394,7 +427,8 @@ document.addEventListener("turbo:load", function () {
           cards: canastaCards0.length ? canastaCards0 : [rankCard0],
           confetti: true,
           confettiCard: rankCard0,
-          duration: 2800
+          duration: 2800,
+          autoDismiss: true
         });
       }
     }
@@ -431,9 +465,10 @@ document.addEventListener("turbo:load", function () {
 
   const totalEl = document.getElementById("meld-running-total");
   // Points already committed to melds earlier this turn (server-computed,
-  // scoped to whichever team is currently acting) — the displayed total
-  // should track cumulative progress toward the initial-meld threshold, not
-  // just whatever's presently selected in hand.
+  // zero unless it's this viewer's own turn — a teammate's in-progress
+  // total shouldn't show up on your screen) — the displayed total should
+  // track cumulative progress toward the initial-meld threshold, not just
+  // whatever's presently selected in hand.
   const turnMeldedPoints = parseInt(hand?.dataset.turnMeldedPoints || "0", 10);
   // Map<cardIndex, cardCode> for this render's DOM — index is unique per DOM
   // position so duplicate ranks (e.g. two "dt" from different decks) are

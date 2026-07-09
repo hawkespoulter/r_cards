@@ -38,8 +38,6 @@
     <% if @is_host %>
       <%= button_to 'End Game', game_path(@game), method: :delete, class: 'btn-quit',
             form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
-    <% else %>
-      <%= button_to 'Leave', leave_game_path(@game), method: :post, class: 'btn-quit' %>
     <% end %>
   </header>
 
@@ -119,7 +117,7 @@
             <div class="trade-card-row">
               <span>You gave:</span>
               <% my_gave.each do |card| %>
-                <%= image_tag "cards/#{card}.svg", class: "trade-card-img" %>
+                <%= image_tag "cards/#{card_asset(card)}.svg", class: "trade-card-img" %>
               <% end %>
             </div>
           <% end %>
@@ -127,7 +125,7 @@
             <div class="trade-card-row">
               <span>You received:</span>
               <% my_received.each do |card| %>
-                <%= image_tag "cards/#{card}.svg", class: "trade-card-img" %>
+                <%= image_tag "cards/#{card_asset(card)}.svg", class: "trade-card-img" %>
               <% end %>
             </div>
           <% end %>
@@ -217,7 +215,7 @@
       <% if @scum&.play_pile&.any? %>
         <div class="pile-cards">
           <% @scum.play_pile.each do |card| %>
-            <%= image_tag "cards/#{card}.svg", class: "pile-card" %>
+            <%= image_tag "cards/#{card_asset(card)}.svg", class: "pile-card" %>
           <% end %>
         </div>
         <p class="pile-info">

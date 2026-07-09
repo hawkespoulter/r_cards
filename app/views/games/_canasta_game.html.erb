@@ -99,7 +99,14 @@
       <div class="team-setup">
         <% [0, 1].each do |team| %>
           <div class="team-setup-column">
-            <h4><%= @game.team_name(team) %></h4>
+            <% if @is_host %>
+              <%= form_with url: update_settings_game_path(@game), method: :patch, html: { class: "team-setup-name-form" } do %>
+                <%= text_field_tag "team#{team + 1}_name", team.zero? ? @game.team1_name : @game.team2_name,
+                      class: "team-name-input team-setup-name-input", placeholder: "Team #{team + 1}", maxlength: 14 %>
+              <% end %>
+            <% else %>
+              <h4><%= @game.team_name(team) %></h4>
+            <% end %>
             <% @game.players.where(team: team).order(:created_at).each do |player| %>
               <div class="team-setup-player">
                 <span><%= player.user.name %><%= " (you)" if player.user_id == current_user.id %></span>
@@ -239,7 +246,7 @@
             <% discard_top = @canasta.discard_pile&.last %>
             <% frozen_by_wild = @canasta.frozen && discard_top && (discard_top == "jo" || discard_top[1..-1]&.downcase == "2" || (@canasta.discard_pile.length > 0 && discard_top[0]&.downcase&.in?(%w[s c]) && discard_top[1..-1]&.downcase == "3")) %>
             <% if (@canasta.discard_pile || []).any? %>
-              <%= image_tag "cards/#{canasta_card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card #{'pile-card-frozen' if frozen_by_wild}", title: frozen_by_wild ? "Frozen — can't be picked up" : nil %>
+              <%= image_tag "cards/#{card_asset(@canasta.discard_pile.last)}.svg", class: "pile-card #{'pile-card-frozen' if frozen_by_wild}", title: frozen_by_wild ? "Frozen — can't be picked up" : nil %>
               <% if frozen_by_wild %>
                 <div class="pile-frozen-overlay">✕</div>
               <% end %>
@@ -271,13 +278,12 @@
     </div>
 
 
-    <% current_turn_team = @game.players.find_by(id: @game.current_turn)&.team %>
-    <% turn_melded_points = current_turn_team == my_team ? @canasta.turn_melded_points : 0 %>
+    <% turn_melded_points = @game.current_turn == @current_player&.id ? @canasta.turn_melded_points : 0 %>
     <div class="hand-container">
       <div class="canasta-hand-row" id="canasta-hand" data-turn-melded-points="<%= turn_melded_points %>">
         <% canasta_sort(@current_player.hand).each do |card| %>
           <div class="hand-card-wrap" data-card="<%= card %>">
-            <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card", draggable: "false" %>
+            <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card", draggable: "false" %>
           </div>
         <% end %>
       </div>

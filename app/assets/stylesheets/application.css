@@ -188,6 +188,12 @@ nav ul li {
   color: #fca5a5;
 }
 
+#high-vis-fronts-toggle-label {
+  padding: 11px 16px;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.85);
+}
+
 input[type="submit"]{
   background-color: var(--light);
   border: 0; 

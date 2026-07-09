@@ -1,22 +1,43 @@
 <div class="lobby-card">
   <p class="lobby-card-title">♠ <%= game.game_type.capitalize %></p>
+  <p class="lobby-card-date"><%= game.created_at.strftime("%b") %> <%= game.created_at.day %></p>
 
-  <ul class="lobby-players">
-    <% if players.any? %>
-      <% players.each do |player| %>
-        <li><%= player.user.name %></li>
+  <% if game.canasta? %>
+    <% team_scores = game.canasta&.team_scores || {} %>
+    <div class="lobby-teams">
+      <% [0, 1].each do |team| %>
+        <div class="lobby-team">
+          <p class="lobby-team-name"><%= game.team_name(team) %>: <%= team_scores[team.to_s] || 0 %></p>
+          <ul class="lobby-players">
+            <% team_players = players.select { |p| p.team.to_i == team } %>
+            <% if team_players.any? %>
+              <% team_players.each do |player| %>
+                <li><%= player.user.name %></li>
+              <% end %>
+            <% else %>
+              <li style="opacity:0.5">No players yet</li>
+            <% end %>
+          </ul>
+        </div>
       <% end %>
-    <% else %>
-      <li style="opacity:0.5">No players yet</li>
-    <% end %>
-  </ul>
+    </div>
+  <% else %>
+    <ul class="lobby-players">
+      <% if players.any? %>
+        <% players.each do |player| %>
+          <li><%= player.user.name %></li>
+        <% end %>
+      <% else %>
+        <li style="opacity:0.5">No players yet</li>
+      <% end %>
+    </ul>
+  <% end %>
 
   <div class="lobby-actions">
-    <% already_in_game = Player.exists?(user_id: current_user.id) %>
-    <% in_this_game    = game.players.any? { |p| p.user_id == current_user.id } %>
+    <% in_this_game = game.players.any? { |p| p.user_id == current_user.id } %>
     <% if in_this_game %>
       <%= link_to 'Enter', game_path(game), class: 'btn-join' %>
-    <% elsif !already_in_game %>
+    <% else %>
       <%= form_with url: join_game_path(game), method: :post, data: { turbo: false } do |form| %>
         <%= form.submit 'Join', class: 'btn-join' %>
       <% end %>

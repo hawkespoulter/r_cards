@@ -21,4 +21,14 @@ class ProfilesController < ApplicationController
       head :unprocessable_entity
     end
   end
+
+  # Fired from the navbar's high-vis toggle. Unlike the card-back picker,
+  # this can't be applied instantly client-side (it'd mean re-deriving every
+  # card image on the page, not just the face-down ones), so the JS reloads
+  # the page after this persists — server-rendered fronts pick up the new
+  # deck on that next render via ApplicationHelper#card_asset.
+  def update_high_vis_fronts
+    current_user.update(high_vis_fronts: ActiveModel::Type::Boolean.new.cast(params[:high_vis_fronts]))
+    head :ok
+  end
 end

@@ -85,8 +85,9 @@ class Canasta < ApplicationRecord
     )
 
     game.players.update_all(is_turn: false)
-    starter = players[(round_number.to_i - 1) % players.length]
-    game.update!(current_turn: starter.id, turn_order: players.map(&:id))
+    seating = alternate_by_team(players)
+    starter = seating[(round_number.to_i - 1) % seating.length]
+    game.update!(current_turn: starter.id, turn_order: seating.map(&:id))
     starter.update!(is_turn: true)
   end
 
@@ -459,6 +460,18 @@ class Canasta < ApplicationRecord
   # --- Private ---
 
   private
+
+  # Turn order for partnership canasta must alternate teams (A, B, A's
+  # partner, B's partner) so partners never play back-to-back — join order
+  # alone doesn't guarantee that once the host has rearranged teams from the
+  # lobby (GamesController#set_team), so this derives seating from each
+  # player's current team instead. Relies on canasta's fixed 2-per-team, 4
+  # player table (enforced at GamesController#start).
+  def alternate_by_team(players)
+    team0 = players.select { |p| p.team.to_i == 0 }
+    team1 = players.select { |p| p.team.to_i == 1 }
+    team0.zip(team1).flatten.compact
+  end
 
   def write_game_state!(changes)
     merged = (game_state || {}).merge(changes)

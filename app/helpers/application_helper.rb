@@ -1,8 +1,21 @@
 module ApplicationHelper
   CANASTA_SORT_VALUES = Deck::CARD_VALUES.merge("jo" => 100, "2" => 99)
 
-  def canasta_card_asset(card)
-    card == "jo" ? "joker_black" : card
+  HIGH_VIS_RANKS = { "10" => "T", "a" => "A", "j" => "J", "q" => "Q", "k" => "K" }.freeze
+
+  # Filename stem (relative to "cards/") for a card code like "h10" or "jo".
+  # Normal deck files are keyed suit-first/lowercase (h10.svg, joker_black.svg);
+  # the high-vis deck's files are rank-first/uppercase with a single joker
+  # (high_vis_cards/TH.svg, high_vis_cards/1J.svg) — hence the reshuffle here
+  # rather than just swapping a directory prefix.
+  def card_asset(card)
+    return card if card == "blank_card"
+    return current_user&.high_vis_fronts? ? "high_vis_cards/1J" : "joker_black" if card == "jo"
+    return card unless current_user&.high_vis_fronts?
+
+    suit = card[0].upcase
+    rank = HIGH_VIS_RANKS[card[1..-1]] || card[1..-1].upcase
+    "high_vis_cards/#{rank}#{suit}"
   end
 
   # Tie-broken by each card's original position in `hand` (not just rank), so

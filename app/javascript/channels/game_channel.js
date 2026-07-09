@@ -53,7 +53,11 @@ document.addEventListener("turbo:load", function () {
           return;
         }
 
-        playCardSound();
+        // "silent" broadcasts are administrative, not gameplay — joining,
+        // starting the game, moving someone between teams, renaming teams —
+        // none of those are a card being played, so they shouldn't play the
+        // card sound the way an actual turn action does.
+        if (!data.silent) playCardSound();
 
         if (data.canasta_completed) {
           const myPlayerId = document.querySelector("[data-game-id]")?.dataset.playerId;
@@ -75,7 +79,8 @@ document.addEventListener("turbo:load", function () {
                 cards: canastaCards,
                 confetti: true,
                 confettiCard: rankCard,
-                duration: 2800
+                duration: 2800,
+                autoDismiss: true
               });
             }
           }
@@ -96,7 +101,8 @@ document.addEventListener("turbo:load", function () {
               showCardModal({
                 title: `${data.acting_player_name} picked up the pile!`,
                 cards: data.pickup_cards,
-                duration: 3000
+                duration: 3000,
+                autoDismiss: true
               });
             }
           }

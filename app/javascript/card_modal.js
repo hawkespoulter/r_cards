@@ -20,12 +20,36 @@ function spawnConfetti(overlay, card = "blank_card") {
   }
 }
 
-export function showCardModal({ title, subtitle = "", cards = [], confetti = false, confettiCard = "blank_card", duration = 1800 }) {
+// Most gameplay popups now require an explicit dismissal (close button or
+// clicking the backdrop) instead of just flashing away on a timer — easy to
+// miss mid-game, especially the ones with information you need (what you
+// drew, your peak hand, etc). Only canasta-completed and picked-up-the-pile
+// (both the acting player's own version and the one broadcast to everyone
+// else) pass `autoDismiss: true` to keep the old flash-and-fade behavior —
+// see their call sites in canasta_cards.js / game_channel.js.
+export function showCardModal({ title, subtitle = "", cards = [], confetti = false, confettiCard = "blank_card", duration = 1800, autoDismiss = false }) {
   const overlay = document.createElement("div");
   overlay.className = "card-modal-overlay";
 
   const modal = document.createElement("div");
   modal.className = "card-modal";
+
+  function dismiss() {
+    overlay.classList.remove("show");
+    setTimeout(() => overlay.remove(), 300);
+  }
+
+  if (!autoDismiss) {
+    overlay.classList.add("dismissible");
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) dismiss(); });
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "card-modal-close";
+    closeBtn.setAttribute("aria-label", "Dismiss");
+    closeBtn.textContent = "✕";
+    closeBtn.addEventListener("click", dismiss);
+    modal.appendChild(closeBtn);
+  }
 
   const titleEl = document.createElement("p");
   titleEl.className = "card-modal-title";
@@ -57,8 +81,5 @@ export function showCardModal({ title, subtitle = "", cards = [], confetti = fal
 
   requestAnimationFrame(() => overlay.classList.add("show"));
 
-  setTimeout(() => {
-    overlay.classList.remove("show");
-    setTimeout(() => overlay.remove(), 300);
-  }, duration);
+  if (autoDismiss) setTimeout(dismiss, duration);
 }

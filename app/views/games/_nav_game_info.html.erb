@@ -1,7 +1,21 @@
 <%# locals: game, canasta, current_player, game_started, is_host, my_turn %>
+<%
+  # Once the game's started, turn_order is the actual play sequence (for
+  # canasta, teams alternate per Canasta#alternate_by_team and can differ
+  # from join order if the host rearranged teams in the lobby; for scum it's
+  # a shuffle) — list players in that order so the chip row reads left to
+  # right the way turns actually advance. Pre-game, turn_order is still nil,
+  # so fall back to join order.
+  seated_players = if game.turn_order.present?
+                      players_by_id = game.players.index_by(&:id)
+                      game.turn_order.filter_map { |id| players_by_id[id] }
+                    else
+                      game.players.order(:created_at)
+                    end
+%>
 <div class="nav-game-info" id="nav-game-info">
   <div class="players-list">
-    <% game.players.order(:created_at).each do |player| %>
+    <% seated_players.each do |player| %>
       <% is_active = game.current_turn && player.id == game.current_turn %>
       <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == current_player&.id %>" data-team="<%= player.team.to_i + 1 %>">
         <span class="player-name"><%= player.user.name %></span>
@@ -20,7 +34,5 @@
   <% if is_host %>
     <%= button_to 'End', game_path(game), method: :delete, class: 'btn-quit',
           form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
-  <% else %>
-    <%= button_to 'Leave', leave_game_path(game), method: :post, class: 'btn-quit' %>
   <% end %>
 </div>

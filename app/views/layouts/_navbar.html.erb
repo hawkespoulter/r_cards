@@ -1,10 +1,9 @@
 <nav>
   <ul>
-    <% if content_for?(:nav_left) %>
-      <li class="nav-left">
-        <%= yield :nav_left %>
-      </li>
-    <% end %>
+    <li class="nav-left">
+      <%= link_to "♠", root_path, class: "nav-brand", title: "Back to lobby" %>
+      <%= yield :nav_left %>
+    </li>
     <% if content_for?(:nav_center) %>
       <li class="nav-center">
         <%= yield :nav_center %>
@@ -34,7 +33,7 @@
       <% end %>
 
       <% if user_signed_in? %>
-        <% if @game&.persisted? %>
+        <% if @game&.persisted? && @game_started %>
           <div class="color-picker-menu" id="color-picker-menu">
             <button class="bug-report-trigger" id="color-picker-trigger" title="Game settings">⚙</button>
             <div class="color-picker-dropdown" id="color-picker-dropdown">
@@ -42,9 +41,14 @@
               <div class="dropdown-divider"></div>
               <%# Team names are per-game and shared by everyone at the
                   table — this form persists them to the game itself via the
-                  same update_settings endpoint the pregame settings panel
+                  same update_settings endpoint the pregame team-setup panel
                   uses, so every player's view stays in sync instead of only
-                  the browser that set them. %>
+                  the browser that set them. Only shown once the game's
+                  started — pregame, the team-setup panel (_canasta_game.html)
+                  is the one place to rename teams; having both editable at
+                  once meant this copy's stale pre-load value could silently
+                  revert a rename made over there (blur this input with its
+                  original value still showing, and it'd resubmit that). %>
               <%= form_with url: update_settings_game_path(@game), method: :patch, html: { id: "team-names-form" } do %>
                 <div class="color-team-row">
                   <span class="color-team-label">Team 1 Name</span>
@@ -88,6 +92,12 @@
                 <% end %>
               </div>
             </div>
+            <div class="dropdown-divider"></div>
+            <label class="toggle-label" id="high-vis-fronts-toggle-label">
+              <input type="checkbox" id="high-vis-fronts-toggle" class="toggle-input" <%= 'checked' if current_user.high_vis_fronts? %>>
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text">High-Vis Card Fronts</span>
+            </label>
             <div class="dropdown-divider"></div>
             <%= link_to 'Edit Profile', edit_user_registration_path, class: 'dropdown-item' %>
             <%= link_to 'Bug Tracker', bugs_path, class: 'dropdown-item' %>
@@ -242,6 +252,27 @@
           },
           body: new URLSearchParams({ card_back: btn.dataset.backKey })
         });
+      });
+    }
+
+    // High-vis fronts toggle — tied to the signed-in user's profile like the
+    // card-back picker, but unlike that one it reloads after saving: every
+    // card face on the board would need re-deriving, not just the few
+    // face-down images the card-back swap touches, so a fresh server render
+    // is simpler and less error-prone than replicating card_asset in JS.
+    const highVisLabel  = document.getElementById("high-vis-fronts-toggle-label");
+    const highVisToggle = document.getElementById("high-vis-fronts-toggle");
+    if (highVisToggle) {
+      highVisLabel.addEventListener("click", function (e) { e.stopPropagation(); });
+      highVisToggle.addEventListener("change", function () {
+        fetch("<%= update_high_vis_fronts_path %>", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: new URLSearchParams({ high_vis_fronts: highVisToggle.checked ? "1" : "0" })
+        }).then(() => window.location.reload());
       });
     }
 

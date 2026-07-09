@@ -2,7 +2,7 @@
   <div class="new-game-card">
     <h2>♠ New Game</h2>
 
-    <%= form_with model: @game do |form| %>
+    <%= form_with model: @game, data: { turbo: false } do |form| %>
       <% if @game.errors.any? %>
         <div class="alert" style="margin-bottom: 16px;">
           <% @game.errors.full_messages.each do |msg| %>

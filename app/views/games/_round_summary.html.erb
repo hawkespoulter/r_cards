@@ -39,7 +39,7 @@
                   <tr>
                     <td class="rs-cards">
                       <% m["cards"].each do |card| %>
-                        <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "rs-card-img" %>
+                        <%= image_tag "cards/#{card_asset(card)}.svg", class: "rs-card-img" %>
                       <% end %>
                     </td>
                     <td class="rs-label">
@@ -81,7 +81,7 @@
                 <% if h["cards"].any? %>
                   <div class="rs-hand-cards">
                     <% h["cards"].each do |card| %>
-                      <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "rs-card-img" %>
+                      <%= image_tag "cards/#{card_asset(card)}.svg", class: "rs-card-img" %>
                     <% end %>
                   </div>
                 <% end %>

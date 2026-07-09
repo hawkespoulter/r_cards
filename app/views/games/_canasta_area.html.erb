@@ -14,7 +14,7 @@
           <% in_progress.each do |rank, cards| %>
             <div class="meld-group meld-hoverable <%= 'almost-canasta' if cards.length >= 5 %>">
               <% cards.each_with_index do |card, idx| %>
-                <%= image_tag "cards/#{canasta_card_asset(card)}.svg",
+                <%= image_tag "cards/#{card_asset(card)}.svg",
                       class: "game-card meld-card #{'meld-card-sideways' if cards.length == 6 && idx == cards.length - 1}" %>
               <% end %>
               <%= render "meld_count_overlay", cards: cards, rank: rank %>
@@ -29,13 +29,13 @@
             <% rep = canasta_representative_card(rank, cards) %>
             <% clean = canasta_clean?(cards) %>
             <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>">
-              <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
+              <%= image_tag "cards/#{card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
             </div>
           <% end %>
 
           <% red_threes.each do |card| %>
             <div class="canasta-single red-three-single">
-              <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
+              <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
             </div>
           <% end %>
         </div>
@@ -57,7 +57,7 @@
         <% if red_threes.any? %>
           <% red_threes.each do |card| %>
             <div class="canasta-single red-three-single">
-              <%= image_tag "cards/#{canasta_card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
+              <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card canasta-rep-card" %>
             </div>
           <% end %>
         <% else %>
@@ -69,7 +69,7 @@
         <% rep = canasta_representative_card(rank, cards) %>
         <% clean = canasta_clean?(cards) %>
         <div class="canasta-single <%= clean ? 'canasta-clean' : 'canasta-dirty' %> <%= idx.odd? ? 'canasta-horizontal' : 'canasta-vertical' %>" data-meld-rank="<%= rank %>">
-          <%= image_tag "cards/#{canasta_card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
+          <%= image_tag "cards/#{card_asset(rep)}.svg", class: "game-card canasta-rep-card" %>
         </div>
       <% end %>
     </div>
@@ -78,7 +78,7 @@
       <% in_progress.each do |rank, cards| %>
         <div class="meld-group meld-hoverable <%= 'almost-canasta' if cards.length >= 5 %>" data-meld-rank="<%= rank %>">
           <% cards.each_with_index do |card, idx| %>
-            <%= image_tag "cards/#{canasta_card_asset(card)}.svg",
+            <%= image_tag "cards/#{card_asset(card)}.svg",
                   class: "game-card meld-card #{'meld-card-sideways' if cards.length == 6 && idx == cards.length - 1}" %>
           <% end %>
           <%= render "meld_count_overlay", cards: cards, rank: rank %>

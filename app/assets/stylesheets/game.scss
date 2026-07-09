@@ -14,9 +14,18 @@
   &.show {
     background: rgba(0,0,0,0.45);
   }
+
+  // Auto-dismissing modals (canasta made, peak hand picked up) stay
+  // click-through, same as before — nothing to dismiss. Modals requiring an
+  // explicit dismissal need the backdrop and close button to actually
+  // receive clicks.
+  &.dismissible {
+    pointer-events: auto;
+  }
 }
 
 .card-modal {
+  position: relative;
   background: #1f2937;
   color: #fff;
   padding: 24px 36px;
@@ -36,6 +45,30 @@
   .show & {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+.card-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 1rem;
+  padding: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: rgba(255,255,255,0.12);
+    color: white;
   }
 }
 
@@ -129,8 +162,24 @@ body.my-turn-bg {
 
 li.nav-left {
   display: flex;
+  align-items: center;
   justify-content: flex-start;
   flex-shrink: 0;
+  gap: 14px;
+}
+
+.nav-brand {
+  font-size: 1.4rem;
+  line-height: 1;
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.9;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.nav-brand:hover {
+  opacity: 1;
+  transform: scale(1.08);
 }
 
 li.nav-center {
@@ -1229,6 +1278,16 @@ li.nav-center {
   }
 }
 
+.team-setup-name-form {
+  margin: 0 0 8px;
+}
+
+.team-setup-name-input {
+  margin-top: 0;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
 .team-setup-player {
   display: flex;
   align-items: center;
@@ -1858,6 +1917,7 @@ li.nav-center {
 }
 
 .team-name-input {
+  box-sizing: border-box;
   width: 100%;
   margin-top: 4px;
   background: rgba(255,255,255,0.08);
@@ -2214,6 +2274,29 @@ li.nav-center {
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
+}
+
+.lobby-card-date {
+  font-size: 0.75rem;
+  opacity: 0.5;
+  margin: -8px 0 0;
+}
+
+.lobby-teams {
+  display: flex;
+  gap: 12px;
+}
+
+.lobby-team {
+  flex: 1;
+  min-width: 0;
+}
+
+.lobby-team-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  opacity: 0.75;
+  margin: 0 0 4px;
 }
 
 .lobby-players {
