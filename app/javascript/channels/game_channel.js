@@ -121,7 +121,8 @@ document.addEventListener("turbo:load", function () {
         } else if (data.next_round) {
           showCardModal({
             title: `New round — hands dealt!`,
-            confetti: true
+            confetti: true,
+            autoDismiss: true
           });
           syncBoard(gameId);
         } else if (data.aces_played_by) {

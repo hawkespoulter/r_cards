@@ -23,10 +23,11 @@ function spawnConfetti(overlay, card = "blank_card") {
 // Most gameplay popups now require an explicit dismissal (close button or
 // clicking the backdrop) instead of just flashing away on a timer — easy to
 // miss mid-game, especially the ones with information you need (what you
-// drew, your peak hand, etc). Only canasta-completed and picked-up-the-pile
-// (both the acting player's own version and the one broadcast to everyone
-// else) pass `autoDismiss: true` to keep the old flash-and-fade behavior —
-// see their call sites in canasta_cards.js / game_channel.js.
+// drew, your peak hand, etc). canasta-completed, picked-up-the-pile (both the
+// acting player's own version and the one broadcast to everyone else), and
+// scum's "new round dealt" pass `autoDismiss: true` to keep the old
+// flash-and-fade behavior — see their call sites in canasta_cards.js /
+// game_channel.js.
 export function showCardModal({ title, subtitle = "", cards = [], confetti = false, confettiCard = "blank_card", duration = 1800, autoDismiss = false }) {
   const overlay = document.createElement("div");
   overlay.className = "card-modal-overlay";
