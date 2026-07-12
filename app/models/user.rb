@@ -42,4 +42,25 @@ class User < ApplicationRecord
 
     options[(id.to_i * 1_000_003 + game.id.to_i) % options.length]
   end
+
+  # Lifetime Canasta stat counters, incremented in place as events happen
+  # across the app (draws, melds, round/game outcomes, ...) — deliberately
+  # not derived from Game/Canasta/Player records, since those are destroyed
+  # once a game ends (Game has_one/has_many ... dependent: :destroy) and
+  # would erase all history. update_column skips validations/callbacks (this
+  # is pure bookkeeping, not a user-facing edit) and matches the same
+  # unlocked read-modify-write pattern Canasta#write_game_state! already uses
+  # for its own jsonb column — acceptable for a hobby-scale app.
+  def bump_canasta_stat!(key, by: 1)
+    current = canasta_stats.dup
+    current[key.to_s] = current[key.to_s].to_i + by
+    update_column(:canasta_stats, current)
+  end
+
+  # Records `value` only if it beats the current high score for `key` (e.g.
+  # best single-round score) — a no-op otherwise.
+  def track_canasta_high!(key, value)
+    return if value <= canasta_stats[key.to_s].to_i
+    update_column(:canasta_stats, canasta_stats.merge(key.to_s => value))
+  end
 end

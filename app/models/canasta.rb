@@ -112,6 +112,7 @@ class Canasta < ApplicationRecord
 
     hand = player.hand.dup.concat(drawn_cards)
     player.update!(hand: hand)
+    player.user.bump_canasta_stat!("cards_drawn", by: drawn_cards.length) if drawn_cards.any?
 
     if pile.empty? && drawn_cards.length < 2
       # Truly nothing left in either pile — the round can't continue. The
@@ -160,6 +161,7 @@ class Canasta < ApplicationRecord
 
     player.update!(hand: remaining)
     cards.each { |card| log_red_three!(player.team, card) }
+    player.user.bump_canasta_stat!("red_threes_played", by: cards.length)
 
     pending = (pending_red_three_draws || {}).dup
     pending[player.id.to_s] = pending[player.id.to_s].to_i + cards.length
@@ -196,6 +198,7 @@ class Canasta < ApplicationRecord
 
     hand = player.hand.dup.concat(drawn_cards)
     player.update!(hand: hand)
+    player.user.bump_canasta_stat!("cards_drawn", by: drawn_cards.length) if drawn_cards.any?
 
     pending = (pending_red_three_draws || {}).dup
     pending.delete(player.id.to_s)
@@ -240,6 +243,7 @@ class Canasta < ApplicationRecord
     return { error: "Need 2 matching natural cards in hand to pick up the pile" } if natural_count < 2
 
     player.update!(hand: hand + pile)
+    player.user.bump_canasta_stat!("piles_picked_up")
     next_seq = (last_pickup || {})["seq"].to_i + 1
     write_game_state!(
       "discard_pile" => [],
@@ -320,6 +324,11 @@ class Canasta < ApplicationRecord
     groups.each do |rank, g|
       group_cards = g[:naturals] + g[:wilds]
       last_result = add_to_meld(player.team, rank, group_cards)
+      if last_result[:canasta_completed]
+        player.user.bump_canasta_stat!("canastas_made")
+        clean = last_result[:canasta_cards].none? { |c| wild?(c) }
+        player.user.bump_canasta_stat!(clean ? "clean_canastas_made" : "dirty_canastas_made")
+      end
       new_log << { "rank" => rank, "cards" => group_cards }
     end
     write_game_state!("turn_meld_log" => new_log)
@@ -392,6 +401,8 @@ class Canasta < ApplicationRecord
 
     hand.delete_at(hand.index(card))
     player.update!(hand: hand)
+    player.user.bump_canasta_stat!("cards_discarded")
+    player.user.bump_canasta_stat!("times_gone_out") if going_out
 
     new_frozen = frozen || wild?(card)
     next_seq = (last_discard || {})["seq"].to_i + 1
@@ -424,7 +435,13 @@ class Canasta < ApplicationRecord
     write_game_state!("round_summary" => nil)
 
     if game_ending
-      { game_over: true, winning_team: winning_team }
+      winner = winning_team
+      %w[0 1].each do |team|
+        game.players.where(team: team.to_i).each do |p|
+          p.user.bump_canasta_stat!(team == winner ? "games_won" : "games_lost")
+        end
+      end
+      { game_over: true, winning_team: winner }
     else
       initialize_round
       { next_round: true }
@@ -607,6 +624,16 @@ class Canasta < ApplicationRecord
         "round_score"       => round_score,
         "new_total"         => new_team_scores[team]
       }
+    end
+
+    winning_round_team = new_round_scores["0"] == new_round_scores["1"] ? nil : new_round_scores.max_by { |_t, s| s }.first
+    %w[0 1].each do |team|
+      game.players.where(team: team.to_i).each do |p|
+        p.user.bump_canasta_stat!("rounds_played")
+        p.user.bump_canasta_stat!("rounds_won") if team == winning_round_team
+        p.user.bump_canasta_stat!("total_points", by: new_round_scores[team])
+        p.user.track_canasta_high!("best_round_score", new_round_scores[team])
+      end
     end
 
     history_entry = {

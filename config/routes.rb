@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   end  
 
   resources :bugs, only: [:index, :create, :update]
+  resources :stats, only: [:index]
 
   get "up" => "rails/health#show", as: :rails_health_check
 

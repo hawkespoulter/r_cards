@@ -2216,6 +2216,113 @@ li.nav-center {
   &:hover { background: rgba(245,158,11,0.12); }
 }
 
+// ── Stats page ────────────────────────────────────────────────────────────────
+
+.stats-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.stats-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  h1 { margin: 0; font-size: 1.6rem; }
+}
+
+.stats-count {
+  font-size: 0.85rem;
+  opacity: 0.5;
+}
+
+.stats-section-title {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  margin: 28px 0 12px;
+
+  &:first-of-type { margin-top: 0; }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  background: var(--medium);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  opacity: 0.6;
+}
+
+.stats-table-wrap {
+  background: var(--medium);
+  border-radius: 10px;
+  overflow-x: auto;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  white-space: nowrap;
+
+  th {
+    background: var(--dark);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.6;
+    font-weight: 600;
+  }
+
+  td { padding: 11px 14px; border-top: 1px solid rgba(255,255,255,0.06); }
+
+  .col-rank { width: 36px; opacity: 0.45; }
+  .col-name { font-weight: 600; }
+  .col-stat { text-align: right; }
+  th.col-stat { text-align: right; }
+}
+
+.stats-row-me {
+  background: rgba(16,185,129,0.08);
+}
+
+.stats-sort-link {
+  color: rgba(255,255,255,0.6);
+
+  &:hover { color: white; }
+  &.active { color: #6ee7b7; }
+}
+
+.stats-empty {
+  opacity: 0.6;
+  padding: 24px 0;
+}
+
 .bugs-empty {
   text-align: center;
   padding: 60px 20px;

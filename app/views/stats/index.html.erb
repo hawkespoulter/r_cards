@@ -1,0 +1,121 @@
+<%
+  my = @my_stats
+  my_games_played = canasta_stat(my, :games_played)
+  my_rounds_played = canasta_stat(my, :rounds_played)
+%>
+
+<div class="stats-page">
+  <div class="stats-header">
+    <h1>📊 Stats</h1>
+    <span class="stats-count">Canasta</span>
+  </div>
+
+  <h2 class="stats-section-title">My Stats</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :games_played) %></span>
+      <span class="stat-label">Games Played</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :games_won) %></span>
+      <span class="stat-label">Games Won</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat_pct(canasta_stat(my, :games_won), my_games_played) %>%</span>
+      <span class="stat-label">Win Rate</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :rounds_played) %></span>
+      <span class="stat-label">Rounds Played</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :rounds_won) %></span>
+      <span class="stat-label">Rounds Won</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat_pct(canasta_stat(my, :rounds_won), my_rounds_played) %>%</span>
+      <span class="stat-label">Round Win Rate</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :total_points) %></span>
+      <span class="stat-label">Total Points</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :best_round_score) %></span>
+      <span class="stat-label">Best Round Score</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :canastas_made) %></span>
+      <span class="stat-label">Canastas Made</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :clean_canastas_made) %></span>
+      <span class="stat-label">Clean Canastas</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :dirty_canastas_made) %></span>
+      <span class="stat-label">Dirty Canastas</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :red_threes_played) %></span>
+      <span class="stat-label">Red Threes Played</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :piles_picked_up) %></span>
+      <span class="stat-label">Piles Picked Up</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :cards_drawn) %></span>
+      <span class="stat-label">Cards Drawn</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :cards_discarded) %></span>
+      <span class="stat-label">Cards Discarded</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value"><%= canasta_stat(my, :times_gone_out) %></span>
+      <span class="stat-label">Times Gone Out</span>
+    </div>
+  </div>
+
+  <h2 class="stats-section-title">All Players</h2>
+  <% if @players.any? %>
+    <div class="stats-table-wrap">
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th class="col-rank">#</th>
+            <th class="col-name">Player</th>
+            <% [
+                 ["games_played", "Games"], ["games_won", "Wins"],
+                 ["canastas_made", "Canastas"], ["clean_canastas_made", "Clean"],
+                 ["total_points", "Points"], ["best_round_score", "Best Round"]
+               ].each do |key, label| %>
+              <th class="col-stat">
+                <%= link_to label, stats_path(sort: key), class: "stats-sort-link #{"active" if @sort == key}" %>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @players.each_with_index do |player, i| %>
+            <tr class="<%= "stats-row-me" if player.id == current_user.id %>">
+              <td class="col-rank"><%= i + 1 %></td>
+              <td class="col-name"><%= player.name %></td>
+              <td class="col-stat"><%= canasta_stat(player.canasta_stats, :games_played) %></td>
+              <td class="col-stat"><%= canasta_stat(player.canasta_stats, :games_won) %></td>
+              <td class="col-stat"><%= canasta_stat(player.canasta_stats, :canastas_made) %></td>
+              <td class="col-stat"><%= canasta_stat(player.canasta_stats, :clean_canastas_made) %></td>
+              <td class="col-stat"><%= canasta_stat(player.canasta_stats, :total_points) %></td>
+              <td class="col-stat"><%= canasta_stat(player.canasta_stats, :best_round_score) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="stats-empty">
+      <p>No games played yet.</p>
+    </div>
+  <% end %>
+</div>

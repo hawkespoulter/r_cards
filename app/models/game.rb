@@ -44,6 +44,7 @@ class Game < ApplicationRecord
       # can be rearranged by the host from the lobby (see
       # GamesController#set_team) — nothing to reassign here.
       initialize_canasta_game_state
+      players.each { |p| p.user.bump_canasta_stat!("games_played") }
     end
   end
 
