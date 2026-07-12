@@ -1,6 +1,17 @@
-function playFile(url) {
+// Per-sound volume multipliers (0.0–1.0), admin-configurable at
+// /sound_settings/edit and applied globally to every player's session —
+// window.SOUND_VOLUMES is rendered in the layout from SoundSetting.current,
+// keyed the same as SoundSetting::KEYS on the Rails side. The 1.0 fallback
+// only matters if that global ever isn't set (e.g. a stale cached page).
+function volume(key) {
+  return (window.SOUND_VOLUMES || {})[key] ?? 1.0;
+}
+
+function playFile(url, volumeKey) {
   if (!url) return;
-  new Audio(url).play().catch(() => {});
+  const audio = new Audio(url);
+  audio.volume = volume(volumeKey);
+  audio.play().catch(() => {});
 }
 
 // Picks `n` distinct URLs out of the pool without replacement (falls back to
@@ -31,29 +42,33 @@ export function playCardPlayedSounds(count) {
   while (picked.length < count) {
     picked.push(urls[Math.floor(Math.random() * urls.length)]);
   }
-  picked.forEach(playFile);
+  picked.forEach((url) => playFile(url, "cardPlayed"));
 }
 
 export function playYourTurnKnock() {
-  playFile(window.YOUR_TURN_KNOCK_URL);
+  playFile(window.YOUR_TURN_KNOCK_URL, "yourTurnKnock");
 }
 
 export function playTeamPilePickup(isMyTeam) {
-  playFile(isMyTeam ? window.YOUR_TEAM_PILE_PICKUP_URL : window.ENEMY_TEAM_PILE_PICKUP_URL);
+  if (isMyTeam) {
+    playFile(window.YOUR_TEAM_PILE_PICKUP_URL, "yourTeamPilePickup");
+  } else {
+    playFile(window.ENEMY_TEAM_PILE_PICKUP_URL, "enemyTeamPilePickup");
+  }
 }
 
 export function playRoundEnded() {
-  playFile(window.ROUND_ENDED_URL);
+  playFile(window.ROUND_ENDED_URL, "roundEnded");
 }
 
 export function playCanastaMade() {
-  playFile(window.CANASTA_MADE_URL);
+  playFile(window.CANASTA_MADE_URL, "canastaMade");
 }
 
 export function playPeakHandPickup() {
-  playFile(window.PEAK_HAND_PICKUP_URL);
+  playFile(window.PEAK_HAND_PICKUP_URL, "peakHandPickup");
 }
 
 export function playGameStart() {
-  playFile(window.GAME_START_URL);
+  playFile(window.GAME_START_URL, "gameStart");
 }

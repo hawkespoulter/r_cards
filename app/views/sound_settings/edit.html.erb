@@ -1,0 +1,98 @@
+<%
+  labels = {
+    "cardPlayed"          => "Card Played",
+    "yourTurnKnock"       => "Your Turn Knock",
+    "yourTeamPilePickup"  => "Your Team Pile Pickup",
+    "enemyTeamPilePickup" => "Enemy Team Pile Pickup",
+    "roundEnded"          => "Round Ended",
+    "canastaMade"         => "Canasta Made",
+    "peakHandPickup"      => "Peak Hand Pickup",
+    "gameStart"           => "Game Start"
+  }
+  volumes = @sound_setting.volumes_with_defaults
+%>
+
+<div class="stats-page">
+  <div class="stats-header">
+    <h1>🔊 Sound Settings</h1>
+    <span class="stats-count">admin only</span>
+  </div>
+
+  <div class="sound-settings-list">
+    <% SoundSetting::KEYS.each_key do |key| %>
+      <div class="sound-setting-row" data-sound-key="<%= key %>">
+        <span class="sound-setting-label"><%= labels[key] %></span>
+        <input type="range" class="sound-setting-slider" min="0" max="1" step="0.01" value="<%= volumes[key] %>">
+        <span class="sound-setting-pct"><%= (volumes[key] * 100).round %>%</span>
+        <button type="button" class="btn-sound-test">▶ Test</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Random pick for cardPlayed's test button — same variety the real
+    // gameplay sound uses, rather than always sampling just cp_1.
+    const TEST_URLS = {
+      cardPlayed: () => {
+        const urls = window.CARD_PLAYED_SOUND_URLS || [];
+        return urls[Math.floor(Math.random() * urls.length)];
+      },
+      yourTurnKnock: () => window.YOUR_TURN_KNOCK_URL,
+      yourTeamPilePickup: () => window.YOUR_TEAM_PILE_PICKUP_URL,
+      enemyTeamPilePickup: () => window.ENEMY_TEAM_PILE_PICKUP_URL,
+      roundEnded: () => window.ROUND_ENDED_URL,
+      canastaMade: () => window.CANASTA_MADE_URL,
+      peakHandPickup: () => window.PEAK_HAND_PICKUP_URL,
+      gameStart: () => window.GAME_START_URL
+    };
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    document.querySelectorAll(".sound-setting-row").forEach(function (row) {
+      const key    = row.dataset.soundKey;
+      const slider = row.querySelector(".sound-setting-slider");
+      const pct    = row.querySelector(".sound-setting-pct");
+      const test   = row.querySelector(".btn-sound-test");
+      let saveDebounce = null;
+
+      function currentVolume() {
+        return parseFloat(slider.value);
+      }
+
+      function save() {
+        clearTimeout(saveDebounce);
+        saveDebounce = setTimeout(function () {
+          fetch("<%= sound_settings_path %>", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "X-CSRF-Token": csrfToken
+            },
+            body: new URLSearchParams({ key: key, volume: currentVolume() })
+          }).then(function () {
+            // Live sounds elsewhere on this page (or a game open in another
+            // tab reusing this same window) pick up the new value on their
+            // very next play, without waiting for a reload.
+            window.SOUND_VOLUMES = window.SOUND_VOLUMES || {};
+            window.SOUND_VOLUMES[key] = currentVolume();
+          });
+        }, 400);
+      }
+
+      slider.addEventListener("input", function () {
+        pct.textContent = Math.round(currentVolume() * 100) + "%";
+        save();
+      });
+
+      test.addEventListener("click", function () {
+        const url = TEST_URLS[key] && TEST_URLS[key]();
+        if (!url) return;
+        const audio = new Audio(url);
+        audio.volume = currentVolume();
+        audio.play().catch(() => {});
+      });
+    });
+  });
+</script>

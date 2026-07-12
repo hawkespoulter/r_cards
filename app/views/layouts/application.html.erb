@@ -17,6 +17,7 @@
       window.CANASTA_MADE_URL = <%= raw(asset_path("canasta_made.mp3").to_json) %>;
       window.PEAK_HAND_PICKUP_URL = <%= raw(asset_path("peak_hand_pickup.mp3").to_json) %>;
       window.GAME_START_URL = <%= raw(asset_path("game_start.mp3").to_json) %>;
+      window.SOUND_VOLUMES = <%= raw(SoundSetting.current.volumes_with_defaults.to_json) %>;
     </script>
   </head>
 

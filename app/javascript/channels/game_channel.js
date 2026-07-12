@@ -117,12 +117,6 @@ document.addEventListener("turbo:load", function () {
             }
           }
           syncBoard(gameId);
-        } else if (data.game_over) {
-          showCardModal({
-            title: `🏆 Team ${parseInt(data.winning_team, 10) + 1} wins the game!`,
-            confetti: true
-          });
-          syncBoard(gameId);
         } else if (data.round_ended) {
           // Reveals the round-summary screen — actual scoring toast/sync
           // for starting the next round comes later, from `next_round`,

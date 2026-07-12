@@ -243,6 +243,11 @@ function setupLongPress() {
 // reliably tells the two cases apart.
 let lastBoundHand = null;
 
+// Whether the round-by-round score popup should be open — see the
+// round-history binding block below for why this needs to persist across
+// #game-container re-renders instead of relying on the "open" class alone.
+let roundHistoryOpen = false;
+
 // Selected hand cards, keyed by a card-identity string ("<code>#<occurrence>",
 // e.g. the second "d10" in hand is "d10#1") rather than DOM position, so a
 // selection survives the hand being torn down and re-rendered from under it
@@ -282,10 +287,19 @@ document.addEventListener("turbo:load", function () {
   // identity across renders) so a freshly-replaced element always gets
   // bound exactly once, regardless of how many other regions did or didn't
   // change in the same render.
+  //
+  // The "open" class itself is purely client-side state, but #round-history-
+  // popup lives inside #game-container, which syncBoard() replaces wholesale
+  // on every board update — including ones triggered by someone else's
+  // action, not just your own. Without persisting the open/closed intent
+  // here (roundHistoryOpen, mirroring persistedSelectionKeys above), the
+  // freshly-rendered popup always comes back closed, silently kicking
+  // whoever had it open the moment anyone at the table played a card.
   document.querySelectorAll(".round-history-trigger").forEach((trigger) => {
     if (trigger.dataset.historyBound) return;
     trigger.dataset.historyBound = "1";
     trigger.addEventListener("click", () => {
+      roundHistoryOpen = true;
       document.getElementById("round-history-popup")?.classList.add("open");
     });
   });
@@ -294,16 +308,24 @@ document.addEventListener("turbo:load", function () {
   if (roundHistoryClose && !roundHistoryClose.dataset.historyBound) {
     roundHistoryClose.dataset.historyBound = "1";
     roundHistoryClose.addEventListener("click", () => {
+      roundHistoryOpen = false;
       document.getElementById("round-history-popup")?.classList.remove("open");
     });
   }
 
   const roundHistoryPopup = document.getElementById("round-history-popup");
-  if (roundHistoryPopup && !roundHistoryPopup.dataset.historyBound) {
-    roundHistoryPopup.dataset.historyBound = "1";
-    roundHistoryPopup.addEventListener("click", (e) => {
-      if (e.target === roundHistoryPopup) roundHistoryPopup.classList.remove("open");
-    });
+  if (roundHistoryPopup) {
+    if (roundHistoryOpen) roundHistoryPopup.classList.add("open");
+
+    if (!roundHistoryPopup.dataset.historyBound) {
+      roundHistoryPopup.dataset.historyBound = "1";
+      roundHistoryPopup.addEventListener("click", (e) => {
+        if (e.target === roundHistoryPopup) {
+          roundHistoryOpen = false;
+          roundHistoryPopup.classList.remove("open");
+        }
+      });
+    }
   }
 
   // ── Pregame team-name inputs (host only) ───────────────────────────────────

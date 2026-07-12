@@ -31,8 +31,8 @@ class Canasta < ApplicationRecord
     [3000, 50],
     [5000, 70],
     [7000, 90],
-    [9000, 110],
-    [Float::INFINITY, 130]
+    [9000, 120],
+    [Float::INFINITY, 150]
   ].freeze
 
   CANASTA_SIZE = 7

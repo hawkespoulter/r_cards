@@ -32,6 +32,7 @@ Rails.application.routes.draw do
 
   resources :bugs, only: [:index, :create, :update]
   resources :stats, only: [:index]
+  resource :sound_settings, only: [:edit, :update]
 
   get "up" => "rails/health#show", as: :rails_health_check
 

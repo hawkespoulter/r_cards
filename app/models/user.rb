@@ -7,6 +7,15 @@ class User < ApplicationRecord
   has_many :players
   has_many :games, through: :players
 
+  # Hardcoded rather than a DB flag so it's true in every environment
+  # (dev/prod) without needing a data migration/seed run in each — a fresh
+  # prod restore or a new dev DB both grant this immediately.
+  ADMIN_EMAILS = %w[hawkespoulter@gmail.com].freeze
+
+  def admin?
+    ADMIN_EMAILS.include?(email)
+  end
+
   CARD_BACKS = {
     "hawkes_sam_blue"  => "Hawkes + Sam Blue",
     "hawkes_sam_red"   => "Hawkes + Sam Red",
