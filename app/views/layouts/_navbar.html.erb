@@ -101,6 +101,7 @@
             <div class="dropdown-divider"></div>
             <%= link_to 'Edit Profile', edit_user_registration_path, class: 'dropdown-item' %>
             <%= link_to 'Bug Tracker', bugs_path, class: 'dropdown-item' %>
+            <span class="dropdown-build-version">Build <%= build_version %></span>
             <%= link_to 'Sign Out', destroy_user_session_path,
                   data: { "turbo-method": :delete },
                   class: 'dropdown-item dropdown-item-danger' %>

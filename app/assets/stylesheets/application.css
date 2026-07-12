@@ -189,6 +189,13 @@ nav ul li {
   color: #fca5a5;
 }
 
+.dropdown-build-version {
+  display: block;
+  padding: 4px 16px 11px;
+  font-size: 0.72rem;
+  opacity: 0.45;
+}
+
 #high-vis-fronts-toggle-label {
   padding: 11px 16px;
   font-size: 0.9rem;

@@ -63,4 +63,8 @@ module ApplicationHelper
   def meld_wild_count(cards)
     cards.count { |c| c == "jo" || c[1..-1]&.downcase == "2" }
   end
+
+  def build_version
+    Rails.application.config.build_version
+  end
 end
