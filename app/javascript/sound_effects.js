@@ -1,35 +1,59 @@
-let audioCtx = null;
-
-function ctx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === "suspended") audioCtx.resume();
-  return audioCtx;
+function playFile(url) {
+  if (!url) return;
+  new Audio(url).play().catch(() => {});
 }
 
-function tone(freq, duration, type, gainValue, delay = 0) {
-  const c = ctx();
-  const osc  = c.createOscillator();
-  const gain = c.createGain();
-  osc.type = type;
-  osc.frequency.value = freq;
-  gain.gain.value = gainValue;
-  osc.connect(gain);
-  gain.connect(c.destination);
-  const start = c.currentTime + delay;
-  osc.start(start);
-  gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-  osc.stop(start + duration);
+// Picks `n` distinct URLs out of the pool without replacement (falls back to
+// fewer than `n` if the pool is smaller), so a simultaneous "chord" doesn't
+// risk landing the same sample on top of itself at the exact same instant.
+function pickRandomDistinct(arr, n) {
+  const pool = [...arr];
+  const picked = [];
+  for (let i = 0; i < n && pool.length; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    picked.push(pool.splice(idx, 1)[0]);
+  }
+  return picked;
 }
 
-export function playKnock() {
-  tone(120, 0.1, "square", 0.25);
-  tone(90, 0.12, "square", 0.2, 0.08);
+// `count` simultaneous samples from the "card played" set — one per card
+// drawn or melded (2 for a normal draw, 1-3 for red-three replacements,
+// however many cards a meld drop contains). Distinct as long as there are
+// enough sounds to go around; once count exceeds the pool size, the
+// overflow falls back to random repeats rather than refusing to play
+// anything for the extra cards. (window.CARD_PLAYED_SOUND_URLS is set in
+// the layout via asset_path, since Sprockets fingerprints these files and
+// importmap JS can't compute that path itself.)
+export function playCardPlayedSounds(count) {
+  const urls = window.CARD_PLAYED_SOUND_URLS || [];
+  if (!urls.length || !count) return;
+  const picked = pickRandomDistinct(urls, count);
+  while (picked.length < count) {
+    picked.push(urls[Math.floor(Math.random() * urls.length)]);
+  }
+  picked.forEach(playFile);
 }
 
-export function playCardSound() {
-  tone(600, 0.06, "triangle", 0.15);
+export function playYourTurnKnock() {
+  playFile(window.YOUR_TURN_KNOCK_URL);
 }
 
-export function playDealSound() {
-  for (let i = 0; i < 4; i++) tone(500 + i * 30, 0.05, "triangle", 0.12, i * 0.05);
+export function playTeamPilePickup(isMyTeam) {
+  playFile(isMyTeam ? window.YOUR_TEAM_PILE_PICKUP_URL : window.ENEMY_TEAM_PILE_PICKUP_URL);
+}
+
+export function playRoundEnded() {
+  playFile(window.ROUND_ENDED_URL);
+}
+
+export function playCanastaMade() {
+  playFile(window.CANASTA_MADE_URL);
+}
+
+export function playPeakHandPickup() {
+  playFile(window.PEAK_HAND_PICKUP_URL);
+}
+
+export function playGameStart() {
+  playFile(window.GAME_START_URL);
 }

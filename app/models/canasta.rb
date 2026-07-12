@@ -17,6 +17,8 @@ class Canasta < ApplicationRecord
     :red_threes,       # { "0" => [cards...], "1" => [cards...] } collected red 3s per team
     :last_draw,        # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last draw, for the "you got these cards" popup
     :last_pickup,      # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last discard pile pickup, for the "you picked up these cards" popup
+    :last_discard,     # { "player_id" => Integer, "card" => String, "seq" => Integer } - last discard, for the acting player's own discard sound
+    :last_red_three_play, # { "player_id" => Integer, "cards" => [...], "seq" => Integer } - last red three(s) played, for the acting player's own sound
     :peak_hands,       # { "player_id" => [cards] } - face-down foot pile; nil once picked up (auto on first canasta)
     :foot_pickups,     # { "player_id" => { "cards" => [...], "seq" => N } } - cleared after client sees it
     :last_canasta,     # { "rank" => rank, "seq" => N } - last completed canasta, for acting-player notification
@@ -161,7 +163,11 @@ class Canasta < ApplicationRecord
 
     pending = (pending_red_three_draws || {}).dup
     pending[player.id.to_s] = pending[player.id.to_s].to_i + cards.length
-    write_game_state!("pending_red_three_draws" => pending)
+    next_seq = (last_red_three_play || {})["seq"].to_i + 1
+    write_game_state!(
+      "pending_red_three_draws" => pending,
+      "last_red_three_play" => { "player_id" => player.id, "cards" => cards, "seq" => next_seq }
+    )
 
     { success: true }
   end
@@ -388,7 +394,11 @@ class Canasta < ApplicationRecord
     player.update!(hand: hand)
 
     new_frozen = frozen || wild?(card)
-    write_game_state!("discard_pile" => discard_pile + [card], "frozen" => new_frozen, "turn_meld_log" => [])
+    next_seq = (last_discard || {})["seq"].to_i + 1
+    write_game_state!(
+      "discard_pile" => discard_pile + [card], "frozen" => new_frozen, "turn_meld_log" => [],
+      "last_discard" => { "player_id" => player.id, "card" => card, "seq" => next_seq }
+    )
 
     team_str = player.team.to_s
     team_has_canasta = (melds[team_str] || {}).values.any? { |c| c.length >= CANASTA_SIZE }

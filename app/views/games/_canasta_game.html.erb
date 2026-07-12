@@ -17,7 +17,7 @@
   <%= render "nav_game_info", game: @game, canasta: @canasta, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn %>
 <% end %>
 
-<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-card-back="<%= asset_path("cards/backs/#{current_user.card_back_key(@game)}.jpg") %>">
+<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-my-team="<%= my_team %>" data-card-back="<%= asset_path("cards/backs/#{current_user.card_back_key(@game)}.jpg") %>">
 
   <% if @canasta %>
     <div class="round-history-overlay" id="round-history-popup">
@@ -188,6 +188,21 @@
            data-pickup-player="<%= @canasta.last_pickup["player_id"] %>"
            data-pickup-seq="<%= @canasta.last_pickup["seq"] %>"
            data-pickup-cards="<%= @canasta.last_pickup["cards"].to_json %>"
+           style="display:none;"></div>
+    <% end %>
+
+    <% if (@canasta.last_discard || {})["card"].present? %>
+      <div data-last-discard="true"
+           data-discard-player="<%= @canasta.last_discard["player_id"] %>"
+           data-discard-seq="<%= @canasta.last_discard["seq"] %>"
+           style="display:none;"></div>
+    <% end %>
+
+    <% if (@canasta.last_red_three_play || {})["cards"].present? %>
+      <div data-last-red-three-play="true"
+           data-red-three-player="<%= @canasta.last_red_three_play["player_id"] %>"
+           data-red-three-seq="<%= @canasta.last_red_three_play["seq"] %>"
+           data-red-three-count="<%= @canasta.last_red_three_play["cards"].length %>"
            style="display:none;"></div>
     <% end %>
 

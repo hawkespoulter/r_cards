@@ -96,7 +96,7 @@ class GamesController < ApplicationController
     end
 
     @game.start_game
-    ActionCable.server.broadcast "game_#{@game.id}", { message: 'Game started!', silent: true }
+    ActionCable.server.broadcast "game_#{@game.id}", { message: 'Game started!', silent: true, game_started: true }
     ActionCable.server.broadcast "lobby", { message: "update" }
     respond_with_game_update
   end
@@ -238,7 +238,7 @@ class GamesController < ApplicationController
         message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
         canasta_seq: result[:canasta_seq],
         pickup_cards: result[:pickup_cards], pickup_seq: result[:pickup_seq],
-        acting_player_id: @current_player.id, acting_player_name: @current_player.user.name
+        acting_player_id: @current_player.id, acting_player_name: @current_player.user.name, acting_team: @current_player.team
       }
       respond_with_game_update
     end
@@ -261,8 +261,9 @@ class GamesController < ApplicationController
       respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
-        message: 'update', canasta_completed: result[:canasta_completed], canasta_rank: result[:canasta_rank],
-        canasta_seq: result[:canasta_seq], canasta_cards: result[:canasta_cards], acting_player_id: @current_player.id
+        message: 'update', action: 'meld', meld_card_count: cards.length, canasta_completed: result[:canasta_completed],
+        canasta_rank: result[:canasta_rank], canasta_seq: result[:canasta_seq], canasta_cards: result[:canasta_cards],
+        acting_player_id: @current_player.id
       }
       respond_with_game_update
     end

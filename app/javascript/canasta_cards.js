@@ -1,4 +1,5 @@
 import { showCardModal } from "card_modal"
+import { playCardPlayedSounds, playPeakHandPickup } from "sound_effects"
 
 // These three behaviors bind to `document` itself, which persists across
 // Turbo Stream renders (unlike the elements inside #game-container, which
@@ -370,8 +371,46 @@ document.addEventListener("turbo:load", function () {
       if (sessionStorage.getItem(key) !== "1") {
         sessionStorage.setItem(key, "1");
         if (cards.length) {
+          playCardPlayedSounds(cards.length);
           showCardModal({ title: "You drew these cards", cards });
         }
+      }
+    }
+  }
+
+  // ── Discard sound (once per discard, actor only) ────────────────────────────
+  const discardInfo = document.querySelector("[data-last-discard]");
+  if (discardInfo) {
+    const container4     = document.querySelector("[data-game-id]");
+    const gameId4         = container4?.dataset.gameId;
+    const myPlayerId4     = container4?.dataset.playerId;
+    const discardPlayer   = discardInfo.dataset.discardPlayer;
+    const seq4            = discardInfo.dataset.discardSeq;
+
+    if (gameId4 && myPlayerId4 && discardPlayer === myPlayerId4) {
+      const key4 = `r_cards_canasta_discard_${gameId4}_${seq4}`;
+      if (sessionStorage.getItem(key4) !== "1") {
+        sessionStorage.setItem(key4, "1");
+        playCardPlayedSounds(1);
+      }
+    }
+  }
+
+  // ── Red three played sound (once per play, actor only) ──────────────────────
+  const redThreePlayInfo = document.querySelector("[data-last-red-three-play]");
+  if (redThreePlayInfo) {
+    const container5     = document.querySelector("[data-game-id]");
+    const gameId5         = container5?.dataset.gameId;
+    const myPlayerId5     = container5?.dataset.playerId;
+    const redThreePlayer  = redThreePlayInfo.dataset.redThreePlayer;
+    const seq5            = redThreePlayInfo.dataset.redThreeSeq;
+    const redThreeCount   = parseInt(redThreePlayInfo.dataset.redThreeCount || "0", 10);
+
+    if (gameId5 && myPlayerId5 && redThreePlayer === myPlayerId5) {
+      const key5 = `r_cards_canasta_red_three_${gameId5}_${seq5}`;
+      if (sessionStorage.getItem(key5) !== "1") {
+        sessionStorage.setItem(key5, "1");
+        playCardPlayedSounds(redThreeCount);
       }
     }
   }
@@ -445,6 +484,7 @@ document.addEventListener("turbo:load", function () {
       const key2 = `r_cards_canasta_foot_${gameId2}_${seq2}`;
       if (sessionStorage.getItem(key2) !== "1") {
         sessionStorage.setItem(key2, "1");
+        playPeakHandPickup();
         showCardModal({ title: "Your peak hand — added to your hand!", cards: footCards });
       }
     }

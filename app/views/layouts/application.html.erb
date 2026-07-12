@@ -9,6 +9,14 @@
     <% card_codes = Scum::CARD_VALUES.keys.flat_map { |r| %w[h d c s].map { |s| "#{s}#{r}" } } + ["jo", "blank_card"] %>
     <script>
       window.CARD_ASSET_MAP = <%= raw(card_codes.index_with { |c| asset_path("cards/#{card_asset(c)}.svg") }.to_json) %>;
+      window.CARD_PLAYED_SOUND_URLS = <%= raw((1..7).map { |i| asset_path("card_played/cp_#{i}.wav") }.to_json) %>;
+      window.YOUR_TURN_KNOCK_URL = <%= raw(asset_path("your_turn_knock.mp3").to_json) %>;
+      window.YOUR_TEAM_PILE_PICKUP_URL = <%= raw(asset_path("your_team_pile_pickup.mp3").to_json) %>;
+      window.ENEMY_TEAM_PILE_PICKUP_URL = <%= raw(asset_path("enemy_team_pile_pickup.mp3").to_json) %>;
+      window.ROUND_ENDED_URL = <%= raw(asset_path("game_finished.mp3").to_json) %>;
+      window.CANASTA_MADE_URL = <%= raw(asset_path("canasta_made.mp3").to_json) %>;
+      window.PEAK_HAND_PICKUP_URL = <%= raw(asset_path("peak_hand_pickup.mp3").to_json) %>;
+      window.GAME_START_URL = <%= raw(asset_path("game_start.mp3").to_json) %>;
     </script>
   </head>
 

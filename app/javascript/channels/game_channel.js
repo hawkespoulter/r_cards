@@ -1,5 +1,5 @@
 import consumer from "channels/consumer"
-import { playKnock, playCardSound } from "sound_effects"
+import { playCardPlayedSounds, playYourTurnKnock, playTeamPilePickup, playRoundEnded, playCanastaMade, playGameStart } from "sound_effects"
 import { showCardModal } from "card_modal"
 
 let currentSubscription = null;
@@ -23,7 +23,7 @@ document.addEventListener("turbo:load", function () {
     const key = `r_cards_knock_${gameId}`;
     if (sessionStorage.getItem(key) !== "1") {
       sessionStorage.setItem(key, "1");
-      playKnock();
+      playYourTurnKnock();
     }
   } else if (gameId) {
     sessionStorage.removeItem(`r_cards_knock_${gameId}`);
@@ -53,13 +53,11 @@ document.addEventListener("turbo:load", function () {
           return;
         }
 
-        // "silent" broadcasts are administrative, not gameplay — joining,
-        // starting the game, moving someone between teams, renaming teams —
-        // none of those are a card being played, so they shouldn't play the
-        // card sound the way an actual turn action does.
-        if (!data.silent) playCardSound();
+        if (!data.silent && data.action === 'meld') playCardPlayedSounds(data.meld_card_count);
 
         if (data.canasta_completed) {
+          playCanastaMade();
+
           const myPlayerId = document.querySelector("[data-game-id]")?.dataset.playerId;
           const isActingPlayer = myPlayerId != null && String(data.acting_player_id) === myPlayerId;
 
@@ -86,6 +84,18 @@ document.addEventListener("turbo:load", function () {
           }
           syncBoard(gameId);
         } else if (data.pickup_cards) {
+          // The team-pickup sound plays for everyone (including the actor,
+          // who's on "your team" from their own perspective) — unlike the
+          // popup below, it isn't excluded for the acting player.
+          const myTeam = document.querySelector("[data-game-id]")?.dataset.myTeam;
+          if (myTeam != null && data.acting_team != null) {
+            const soundKey = data.pickup_seq != null ? `r_cards_canasta_pickup_sound_${gameId}_${data.pickup_seq}` : null;
+            if (!soundKey || sessionStorage.getItem(soundKey) !== "1") {
+              if (soundKey) sessionStorage.setItem(soundKey, "1");
+              playTeamPilePickup(String(data.acting_team) === myTeam);
+            }
+          }
+
           // Same acting-player exclusion as canasta_completed above — the
           // acting player already sees this via their own synced board
           // (canasta_cards.js's [data-last-pickup] check), which shares the
@@ -117,6 +127,7 @@ document.addEventListener("turbo:load", function () {
           // Reveals the round-summary screen — actual scoring toast/sync
           // for starting the next round comes later, from `next_round`,
           // once the host reviews the summary and continues.
+          playRoundEnded();
           syncBoard(gameId);
         } else if (data.next_round) {
           showCardModal({
@@ -138,6 +149,9 @@ document.addEventListener("turbo:load", function () {
             title: `🎉 ${data.finished_player_name} is out!`,
             confetti: true
           });
+          syncBoard(gameId);
+        } else if (data.game_started) {
+          playGameStart();
           syncBoard(gameId);
         } else {
           syncBoard(gameId);
