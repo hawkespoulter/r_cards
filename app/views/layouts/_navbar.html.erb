@@ -139,11 +139,26 @@
 <% end %>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
+  // turbo:load — not DOMContentLoaded — fires after every Turbo Drive visit
+  // *and* after every turbo_stream render (see canasta_cards.js's own notes
+  // on this). DOMContentLoaded only ever fires once per real browser page
+  // load, so on any subsequent Turbo navigation this whole block would never
+  // re-run, leaving the freshly-rendered navbar's buttons with zero
+  // listeners attached until an actual hard refresh restarted the page
+  // lifecycle — that was the bug.
+  //
+  // Since turbo:load also fires for game-action stream renders that don't
+  // touch these particular nodes (e.g. playing a card only replaces
+  // #game-container/#nav-team-scores/#nav-game-info, not <nav> itself),
+  // every binding below needs its own "already bound" dataset guard —
+  // otherwise the same still-present node would pick up a fresh duplicate
+  // listener on every single action instead of just once.
+  document.addEventListener("turbo:load", function () {
     // Profile dropdown
     const trigger  = document.getElementById("profile-trigger");
     const dropdown = document.getElementById("profile-dropdown");
-    if (trigger) {
+    if (trigger && !trigger.dataset.navBound) {
+      trigger.dataset.navBound = "1";
       trigger.addEventListener("click", function (e) {
         e.stopPropagation();
         const open = dropdown.classList.toggle("open");
@@ -158,7 +173,8 @@
     // Test accounts dropdown
     const testTrigger  = document.getElementById("test-accounts-trigger");
     const testDropdown = document.getElementById("test-accounts-dropdown");
-    if (testTrigger) {
+    if (testTrigger && !testTrigger.dataset.navBound) {
+      testTrigger.dataset.navBound = "1";
       testTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
         const open = testDropdown.classList.toggle("open");
@@ -175,7 +191,8 @@
     const bugOverlay = document.getElementById("bug-modal-overlay");
     const bugClose   = document.getElementById("bug-modal-close");
 
-    if (bugTrigger && bugOverlay) {
+    if (bugTrigger && bugOverlay && !bugTrigger.dataset.navBound) {
+      bugTrigger.dataset.navBound = "1";
       bugTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
         bugOverlay.classList.add("open");
@@ -196,7 +213,8 @@
     // beyond submitting changes: debounced while typing, and immediately on
     // blur so a quick type-then-click-away doesn't wait out the debounce.
     const teamNamesForm = document.getElementById("team-names-form");
-    if (teamNamesForm) {
+    if (teamNamesForm && !teamNamesForm.dataset.navBound) {
+      teamNamesForm.dataset.navBound = "1";
       let teamNameDebounce = null;
       teamNamesForm.querySelectorAll(".team-name-input").forEach(function (input) {
         input.addEventListener("click", function (e) { e.stopPropagation(); });
@@ -227,7 +245,8 @@
     }
 
     const cardBackOptions = document.getElementById("navbar-card-back-options");
-    if (cardBackOptions) {
+    if (cardBackOptions && !cardBackOptions.dataset.navBound) {
+      cardBackOptions.dataset.navBound = "1";
       cardBackOptions.addEventListener("click", function (e) {
         e.stopPropagation();
         const btn = e.target.closest(".card-back-option-btn");
@@ -267,7 +286,8 @@
     // is simpler and less error-prone than replicating card_asset in JS.
     const highVisLabel  = document.getElementById("high-vis-fronts-toggle-label");
     const highVisToggle = document.getElementById("high-vis-fronts-toggle");
-    if (highVisToggle) {
+    if (highVisToggle && !highVisToggle.dataset.navBound) {
+      highVisToggle.dataset.navBound = "1";
       highVisLabel.addEventListener("click", function (e) { e.stopPropagation(); });
       highVisToggle.addEventListener("change", function () {
         fetch("<%= update_high_vis_fronts_path %>", {
@@ -283,7 +303,8 @@
 
     const colorTrigger  = document.getElementById("color-picker-trigger");
     const colorDropdown = document.getElementById("color-picker-dropdown");
-    if (colorTrigger) {
+    if (colorTrigger && !colorTrigger.dataset.navBound) {
+      colorTrigger.dataset.navBound = "1";
       colorTrigger.addEventListener("click", function (e) {
         e.stopPropagation();
         colorDropdown.classList.toggle("open");

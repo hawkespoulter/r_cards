@@ -22,8 +22,14 @@ let globalHandlersBound = false;
 // undo-meld are all plain <button>s outside #canasta-hand, so without this
 // exclusion, clicking any of them looked like "click outside the hand" and
 // wiped out a selection you were still building for later.
+//
+// .card-modal-overlay covers the whole popup (card_modal.js) — its own
+// backdrop div isn't a button/link/etc., so without listing it explicitly,
+// dismissing a popup by clicking the dark backdrop outside the modal box
+// (not just its ✕, which the bare "button" entry above already covers) read
+// as "clicked away from the hand" and cleared your selection.
 const BOARD_INTERACTIVE_SELECTOR =
-  ".hand-card-wrap, button, a, input, textarea, select, label, .round-history-modal, .settings-panel, .profile-dropdown, .color-picker-dropdown, .meld-group, .canasta-single, .draw-pile-block, #discard-pile-drop, #red-three-drop, #new-meld-drop";
+  ".hand-card-wrap, button, a, input, textarea, select, label, .round-history-modal, .settings-panel, .profile-dropdown, .color-picker-dropdown, .meld-group, .canasta-single, .draw-pile-block, #discard-pile-drop, #red-three-drop, #new-meld-drop, .card-modal-overlay";
 
 // Builds an off-screen fanned stack of the given cards to use as a custom
 // drag image, so dragging a multi-card selection shows all of it instead of

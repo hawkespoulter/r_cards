@@ -319,21 +319,34 @@ class Canasta < ApplicationRecord
     cards.each { |c| remaining_hand.delete_at(remaining_hand.index(c)) }
     player.update!(hand: remaining_hand)
 
-    last_result = {}
+    # A single meld call can span multiple ranks (e.g. dragging a mixed-rank
+    # selection onto the "new meld" drop zone) — each rank group is melded
+    # separately below, so tracking only the *last* group's result would
+    # silently drop an earlier group's canasta completion the moment a
+    # later, non-completing group processed after it (Ruby hashes iterate in
+    # insertion order, not rank order). That meant the controller broadcast
+    # canasta_completed: false even though a canasta really did complete —
+    # so *nobody*, not even the acting player, got the sound/popup for it.
+    # Collecting every completion and reporting the last one instead fixes
+    # that; a single call completing two canastas at once is still only
+    # announced for one of them, but that's a rare edge case worth less
+    # complexity than losing the common case's notification entirely.
+    completed_results = []
     new_log = (turn_meld_log || []).dup
     groups.each do |rank, g|
       group_cards = g[:naturals] + g[:wilds]
-      last_result = add_to_meld(player.team, rank, group_cards)
-      if last_result[:canasta_completed]
+      result = add_to_meld(player.team, rank, group_cards)
+      if result[:canasta_completed]
+        completed_results << result
         player.user.bump_canasta_stat!("canastas_made")
-        clean = last_result[:canasta_cards].none? { |c| wild?(c) }
+        clean = result[:canasta_cards].none? { |c| wild?(c) }
         player.user.bump_canasta_stat!(clean ? "clean_canastas_made" : "dirty_canastas_made")
       end
       new_log << { "rank" => rank, "cards" => group_cards }
     end
     write_game_state!("turn_meld_log" => new_log)
 
-    last_result.merge(success: true)
+    (completed_results.last || { canasta_completed: false }).merge(success: true)
   end
 
   # Undoes this player's most recent meld addition this turn, returning those
