@@ -28,6 +28,12 @@ document.addEventListener("turbo:load", function () {
   }
 
   // ── Card drag / select ────────────────────────────────────────────────────
+
+  // Lucky Seven drives the same #play-form / #selected-cards-input from
+  // lucky_seven_cards.js — bail out so both don't bind to and reset the
+  // shared input.
+  if (document.querySelector(".seven-hand-row")) return;
+
   const rankGroups = document.querySelectorAll(".rank");
   const playPile   = document.getElementById("play-pile");
   const input      = document.getElementById("selected-cards-input");

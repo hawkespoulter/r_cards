@@ -126,6 +126,7 @@ class GamesController < ApplicationController
   def play_cards
     @game           = Game.find(params[:id])
     @scum           = @game.scum
+    @lucky_seven    = @game.lucky_seven
     @current_player = @game.players.find_by(user_id: current_user.id)
 
     cards = begin
@@ -133,14 +134,20 @@ class GamesController < ApplicationController
     rescue JSON::ParserError
       []
     end
-    result = @scum.play_cards(@current_player, cards)
+    result = if @game.lucky_seven?
+      @lucky_seven.play_card(@current_player, cards.first)
+    else
+      @scum.play_cards(@current_player, cards)
+    end
 
     if result[:error]
       respond_with_game_error(result[:error])
     else
       ActionCable.server.broadcast "game_#{@game.id}", {
         message:              'update',
+        action:               ('play_card' if @game.lucky_seven?),
         finished_player_name: result[:finished_player_name],
+        knocked_names:        result[:knocked_names],
         aces_played_by:       result[:aces_played_by],
         aces_played_cards:    result[:aces_played_cards]
       }
@@ -333,6 +340,7 @@ class GamesController < ApplicationController
     @game_started   = @game.turn_order.present?
     @scum           = @game.scum if @game.scum?
     @canasta        = @game.canasta if @game.canasta?
+    @lucky_seven    = @game.lucky_seven if @game.lucky_seven?
 
     if @game_started
       @current_turn_name = @game.players.find(@game.current_turn).user.name

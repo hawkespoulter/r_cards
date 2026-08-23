@@ -54,6 +54,7 @@ document.addEventListener("turbo:load", function () {
         }
 
         if (!data.silent && data.action === 'meld') playCardPlayedSounds(data.meld_card_count);
+        if (!data.silent && data.action === 'play_card') playCardPlayedSounds(1);
 
         if (data.canasta_completed) {
           playCanastaMade();

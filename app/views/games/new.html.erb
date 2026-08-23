@@ -14,7 +14,7 @@
       <div class="form-group">
         <%= form.label :game_type, "Game Type" %>
         <%= form.select :game_type,
-              Game.game_types.keys.map { |t| [t.humanize, t] },
+              Game.game_types.keys.map { |t| [t.titleize, t] },
               {},
               { id: "game-type-select" } %>
       </div>
@@ -54,6 +54,15 @@
         </label>
       </div>
 
+      <div class="settings-section" id="lucky-seven-settings" style="display:none;">
+        <p class="settings-heading">Lucky Seven Settings</p>
+        <p class="toggle-hint">
+          Build each suit out from its 7, aces low. The ♦7 opens the game and the
+          first player to empty their hand wins. A second deck joins at 6 players,
+          a third at 11.
+        </p>
+      </div>
+
       <%= form.submit "Create Game", class: "btn-create" %>
     <% end %>
   </div>
@@ -64,11 +73,13 @@
     const select      = document.getElementById("game-type-select");
     const scumOpts    = document.getElementById("scum-settings");
     const canastaOpts = document.getElementById("canasta-settings");
+    const sevenOpts   = document.getElementById("lucky-seven-settings");
     if (!select) return;
 
     function updateSettings() {
-      if (scumOpts)    scumOpts.style.display    = select.value === "scum"    ? "block" : "none";
-      if (canastaOpts) canastaOpts.style.display = select.value === "canasta" ? "block" : "none";
+      if (scumOpts)    scumOpts.style.display    = select.value === "scum"        ? "block" : "none";
+      if (canastaOpts) canastaOpts.style.display = select.value === "canasta"     ? "block" : "none";
+      if (sevenOpts)   sevenOpts.style.display   = select.value === "lucky_seven" ? "block" : "none";
     }
 
     select.addEventListener("change", updateSettings);

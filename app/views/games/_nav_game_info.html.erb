@@ -8,6 +8,7 @@
   finished_ids = local_assigns.fetch(:finished_ids, [])
   passed_ids   = local_assigns.fetch(:passed_ids, [])
   rankings     = local_assigns.fetch(:rankings, [])
+  passed_label = local_assigns.fetch(:passed_label, "Passed")
 
   # Once the game's started, turn_order is the actual play sequence (for
   # canasta, teams alternate per Canasta#alternate_by_team and can differ
@@ -35,7 +36,7 @@
           <span class="card-count">· <%= (player.hand || []).length %></span>
         <% end %>
         <% if p_passed && !p_finished %>
-          <span class="player-passed-badge">· Passed</span>
+          <span class="player-passed-badge">· <%= passed_label %></span>
         <% end %>
         <% if ranking %>
           <span class="player-title-badge">· <%= ranking[:title] %></span>

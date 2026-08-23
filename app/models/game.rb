@@ -3,6 +3,7 @@ class Game < ApplicationRecord
   has_many :decks, dependent: :destroy
   has_one :scum, dependent: :destroy
   has_one :canasta, dependent: :destroy
+  has_one :lucky_seven, dependent: :destroy
   has_many :users, through: :players
 
   enum game_type: { scum: 0, canasta: 1, lucky_seven: 2 }
@@ -45,6 +46,8 @@ class Game < ApplicationRecord
       # GamesController#set_team) — nothing to reassign here.
       initialize_canasta_game_state
       players.each { |p| p.user.bump_canasta_stat!("games_played") }
+    elsif lucky_seven?
+      initialize_lucky_seven_game_state
     end
   end
 
@@ -68,6 +71,14 @@ class Game < ApplicationRecord
   def initialize_canasta_game_state
     return if canasta.present?
     Canasta.create(game: self).initialize_round
+  end
+
+  # turn_order has to be set before the LuckySeven exists — creating it deals
+  # the hands, and begin_play! then seats whoever drew the 7 of diamonds.
+  def initialize_lucky_seven_game_state
+    return if lucky_seven.present?
+    update(turn_order: players.pluck(:id).shuffle)
+    LuckySeven.create(game: self).begin_play!
   end
 
   def update_current_turn(player_id)

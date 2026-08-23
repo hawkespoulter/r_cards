@@ -1,5 +1,11 @@
 <%= turbo_stream.replace "game-container" do %>
-  <%= render @game.canasta? ? "canasta_game" : "scum_game" %>
+  <% if @game.canasta? %>
+    <%= render "canasta_game" %>
+  <% elsif @game.lucky_seven? %>
+    <%= render "lucky_seven_game" %>
+  <% else %>
+    <%= render "scum_game" %>
+  <% end %>
 <% end %>
 
 <% if @game.canasta? %>
@@ -9,5 +15,12 @@
   <% end %>
   <%= turbo_stream.replace "nav-game-info" do %>
     <%= render "nav_game_info", game: @game, canasta: @canasta, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn %>
+  <% end %>
+<% elsif @game.lucky_seven? %>
+  <% my_turn = @game_started && @lucky_seven && !@lucky_seven.game_over? && @game.current_turn == @current_player&.id %>
+  <%= turbo_stream.replace "nav-game-info" do %>
+    <%= render "nav_game_info", game: @game, canasta: nil, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
+          show_settings_trigger: false, finished_ids: (@lucky_seven&.finished_player_ids || []),
+          passed_ids: (@lucky_seven&.knocked_ids || []), rankings: (@lucky_seven&.rankings || []) %>
   <% end %>
 <% end %>

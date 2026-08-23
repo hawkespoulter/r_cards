@@ -64,6 +64,17 @@ module ApplicationHelper
     cards.count { |c| c == "jo" || c[1..-1]&.downcase == "2" }
   end
 
+  SEVEN_RANK_KEYS = LuckySeven::RANK_VALUES.invert.freeze
+
+  # Card code for a slot on a Lucky Seven run, e.g. ("d", 12) => "dq".
+  def seven_card_code(suit, value)
+    "#{suit}#{SEVEN_RANK_KEYS[value]}"
+  end
+
+  def seven_rank_label(value)
+    SEVEN_RANK_KEYS[value].upcase
+  end
+
   def build_version
     Rails.application.config.build_version
   end

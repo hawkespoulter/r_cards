@@ -1,5 +1,5 @@
 <div class="lobby-card">
-  <p class="lobby-card-title">♠ <%= game.game_type.capitalize %></p>
+  <p class="lobby-card-title">♠ <%= game.game_type.titleize %></p>
   <p class="lobby-card-date"><%= game.created_at.strftime("%b") %> <%= game.created_at.day %></p>
 
   <% if game.canasta? %>

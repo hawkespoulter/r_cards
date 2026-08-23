@@ -2633,3 +2633,199 @@ li.nav-center {
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 }
+
+// ── Lucky Seven: the four runs on the table ──────────────────────────────────
+
+// Every suit shows all 13 slots (A low through K) rather than only the cards
+// played so far — the empty slots are the whole read of the game, since they
+// spell out exactly which cards are still owed and which ends are live.
+.seven-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+  padding: 16px 12px;
+  overflow-x: auto;
+}
+
+.seven-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: min-content;
+}
+
+.seven-track-suit {
+  font-size: 1.5rem;
+  line-height: 1;
+  width: 26px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.seven-suit-d, .seven-suit-h { color: #f87171; }
+.seven-suit-s, .seven-suit-c { color: rgba(255,255,255,0.85); }
+
+.seven-slots {
+  display: grid;
+  grid-template-columns: repeat(13, 46px);
+  gap: 4px;
+}
+
+.seven-slot {
+  position: relative;
+  aspect-ratio: 62 / 88;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.seven-slot-card {
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45);
+}
+
+.seven-slot-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.seven-slot-empty {
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed rgba(255,255,255,0.15);
+
+  .seven-slot-label { color: rgba(255,255,255,0.25); }
+}
+
+// An open end anyone could build on next.
+.seven-slot-next {
+  background: rgba(16,185,129,0.12);
+  border: 1px dashed rgba(16,185,129,0.6);
+
+  .seven-slot-label { color: #10b981; }
+}
+
+// An open end you personally hold the card for.
+.seven-slot-mine {
+  background: rgba(251,191,36,0.18);
+  border: 1px solid #fbbf24;
+  box-shadow: 0 0 12px rgba(251,191,36,0.35);
+
+  .seven-slot-label { color: #fbbf24; }
+}
+
+// Multi-deck games stack duplicate ranks in the same slot.
+.seven-slot-copies {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  background: #1f2937;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 8px;
+  padding: 0 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
+.seven-knock-note {
+  opacity: 0.6;
+  font-size: 0.85rem;
+}
+
+// ── Lucky Seven: hand ────────────────────────────────────────────────────────
+
+// Wraps (unlike canasta's single condensed row) because hands here start large
+// and every card needs to stay individually clickable.
+.seven-hand-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 24px 12px;
+  justify-content: center;
+
+  .hand-card-wrap {
+    position: relative;
+    flex-shrink: 0;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+
+    .game-card {
+      display: block;
+      position: relative;
+      pointer-events: none;
+      width: 62px;
+      min-width: 62px;
+      max-width: 62px;
+    }
+  }
+
+  .seven-playable {
+    cursor: pointer;
+
+    .game-card {
+      box-shadow: 0 0 0 2px #10b981, 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    // Gated to real pointing devices — touch browsers stick :hover after a tap
+    // with no gesture to clear it, leaving the card raised (same reasoning as
+    // .rank and .canasta-hand-row above).
+    @media (hover: hover) and (pointer: fine) {
+      &:hover { transform: translateY(-10px); }
+    }
+  }
+
+  .seven-blocked {
+    cursor: default;
+    opacity: 0.4;
+  }
+
+  .hand-card-wrap.selected {
+    transform: translateY(-14px);
+
+    .game-card {
+      box-shadow: 0 0 0 3px #fbbf24, 0 8px 20px rgba(0,0,0,0.45);
+    }
+  }
+}
+
+@keyframes seven-nudge {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+
+.seven-nudge {
+  animation: seven-nudge 0.25s ease;
+}
+
+// Phone widths: shrink both the runs and the hand. The runs still scroll
+// sideways inside .seven-table, but a smaller slot keeps that scroll short,
+// and a smaller hand card keeps a 17-card opening hand from pushing the table
+// off the top of the screen.
+@media (max-width: 640px) {
+  .seven-table { padding: 10px 8px; gap: 6px; }
+
+  .seven-slots { grid-template-columns: repeat(13, 34px); }
+
+  .seven-track-suit {
+    font-size: 1.15rem;
+    width: 18px;
+  }
+
+  .seven-slot-label { font-size: 0.6rem; }
+
+  .seven-hand-row {
+    gap: 4px;
+    padding: 0 10px 10px;
+
+    .hand-card-wrap .game-card {
+      width: 46px;
+      min-width: 46px;
+      max-width: 46px;
+    }
+  }
+}

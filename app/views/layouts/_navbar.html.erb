@@ -33,7 +33,9 @@
       <% end %>
 
       <% if user_signed_in? %>
-        <% if @game&.persisted? && @game_started %>
+        <%# Team names only mean anything in canasta — scum and lucky seven
+            have no teams, so this dropdown has nothing to offer them. %>
+        <% if @game&.persisted? && @game_started && @game.canasta? %>
           <div class="color-picker-menu" id="color-picker-menu">
             <button class="bug-report-trigger" id="color-picker-trigger" title="Game settings">⚙</button>
             <div class="color-picker-dropdown" id="color-picker-dropdown">

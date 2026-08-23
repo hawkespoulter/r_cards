@@ -4,6 +4,7 @@ import "controllers"
 import "channels"
 import "click_cards"
 import "canasta_cards"
+import "lucky_seven_cards"
 
 // click_cards.js / canasta_cards.js bind their interaction handlers on
 // "turbo:load", which only fires on full Turbo Drive navigations. Turbo

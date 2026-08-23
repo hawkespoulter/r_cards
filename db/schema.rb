@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_07_12_193713) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_23_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -44,6 +44,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_12_193713) do
     t.integer "current_turn"
     t.integer "game_type", default: 0
     t.jsonb "settings", default: {}
+  end
+
+  create_table "lucky_sevens", force: :cascade do |t|
+    t.bigint "game_id"
+    t.jsonb "game_state", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["game_id"], name: "index_lucky_sevens_on_game_id"
   end
 
   create_table "players", force: :cascade do |t|
@@ -90,6 +98,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_07_12_193713) do
 
   add_foreign_key "canastas", "games"
   add_foreign_key "decks", "games"
+  add_foreign_key "lucky_sevens", "games"
   add_foreign_key "players", "games"
   add_foreign_key "players", "users"
   add_foreign_key "scums", "games"

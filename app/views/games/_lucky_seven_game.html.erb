@@ -1,0 +1,154 @@
+<% seven         = @lucky_seven %>
+<% finished_ids  = seven&.finished_player_ids || [] %>
+<% knocked_ids   = seven&.knocked_ids || [] %>
+<% all_players   = (@players + [@current_player]).compact.sort_by(&:id) %>
+<% is_me_finished = finished_ids.include?(@current_player&.id) %>
+<% my_turn       = @game_started && !seven&.game_over? && @game.current_turn == @current_player&.id && !is_me_finished %>
+<% playable      = my_turn ? seven.playable_cards(@current_player).uniq : [] %>
+
+<% content_for :nav_center do %>
+  <%= render "nav_game_info", game: @game, canasta: nil, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
+        show_settings_trigger: false, finished_ids: finished_ids, passed_ids: knocked_ids,
+        passed_label: "Knocked", rankings: (seven&.rankings || []) %>
+<% end %>
+
+<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>">
+
+  <% if seven&.game_over? %>
+
+    <div class="game-over">
+      <h2>🏆 <%= seven.rankings.first&.dig(:name) %> wins!</h2>
+      <ol class="rankings-list">
+        <% seven.rankings.each do |r| %>
+          <li>
+            <span class="ranking-title"><%= r[:title] %></span>
+            <span>
+              <%= r[:name] %>
+              <% if r[:player_id] == @current_player&.id %>
+                <span class="ranking-you">(you)</span>
+              <% end %>
+            </span>
+          </li>
+        <% end %>
+      </ol>
+      <div class="game-over-actions">
+        <%= link_to 'Back to Lobby', games_path, class: 'btn-quit', style: 'display:inline-block;padding:10px 24px;border-radius:6px;text-decoration:none;' %>
+      </div>
+    </div>
+
+  <% elsif @game_started %>
+
+    <div class="status-bar">
+      <% if my_turn %>
+        <span class="your-turn-text">⚡ Your turn!</span>
+        <% if seven.started? %>
+          — play a card onto either end of a run, or start a suit with its 7
+        <% else %>
+          — open the game with the <%= LuckySeven::SUIT_SYMBOLS["d"] %>7
+        <% end %>
+      <% elsif is_me_finished %>
+        You're out — watching the rest play it down
+      <% else %>
+        Waiting for <strong><%= @current_turn_name %></strong>…
+      <% end %>
+      <% if knocked_ids.any? %>
+        <span class="seven-knock-note">
+          · <%= knocked_ids.map { |id| @game.players.find(id).user.name }.to_sentence %>
+          had nothing to play
+        </span>
+      <% end %>
+    </div>
+
+    <div class="seven-table">
+      <% LuckySeven::SUITS.each do |suit| %>
+        <% row    = seven.layout_row(suit) %>
+        <% values = row.keys.map(&:to_i) %>
+        <div class="seven-track" data-suit="<%= suit %>">
+          <span class="seven-track-suit seven-suit-<%= suit %>"><%= LuckySeven::SUIT_SYMBOLS[suit] %></span>
+          <div class="seven-slots">
+            <% (1..13).each do |value| %>
+              <% copies = seven.copies_played(suit, value) %>
+              <%
+                code  = seven_card_code(suit, value)
+                state = if copies.positive?
+                          "filled"
+                        elsif !seven.started?
+                          # Nothing but the ♦7 can be played until it opens.
+                          code == LuckySeven::STARTING_CARD ? "next" : "empty"
+                        elsif values.empty?
+                          value == LuckySeven::ANCHOR ? "next" : "empty"
+                        elsif value == values.min - 1 || value == values.max + 1
+                          "next"
+                        else
+                          "empty"
+                        end
+              %>
+              <div class="seven-slot seven-slot-<%= state %> <%= 'seven-slot-mine' if playable.include?(code) %>">
+                <% if copies.positive? %>
+                  <%= image_tag "cards/#{card_asset(code)}.svg", class: "seven-slot-card" %>
+                  <% if copies > 1 %>
+                    <span class="seven-slot-copies">×<%= copies %></span>
+                  <% end %>
+                <% else %>
+                  <span class="seven-slot-label"><%= seven_rank_label(value) %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="hand-container">
+      <% if is_me_finished %>
+        <p class="hand-label">Your hand is empty — nicely done</p>
+      <% else %>
+        <p class="hand-label">
+          Your hand
+          <% if my_turn %>· <%= playable.length %> playable<% end %>
+        </p>
+        <div class="seven-hand-row">
+          <% @current_player.hand.each_with_index do |card, i| %>
+            <div class="hand-card-wrap <%= playable.include?(card) ? 'seven-playable' : 'seven-blocked' %>"
+                 data-card="<%= card %>" data-hand-index="<%= i %>">
+              <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card", draggable: "false" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="game-footer">
+      <% if my_turn %>
+        <%= form_with url: play_cards_game_path(@game), method: :post, html: { id: "play-form" } do |f| %>
+          <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
+          <%= f.submit "Play Card", class: "btn-play", id: "play-cards-btn" %>
+        <% end %>
+      <% end %>
+    </div>
+
+  <% else %>
+
+    <div class="pregame">
+      <p>Waiting for players to join…</p>
+      <p class="waiting-hint">
+        <%= all_players.length %> in — dealing
+        <%= LuckySeven.deck_count_for(all_players.length) %>
+        deck<%= "s" if LuckySeven.deck_count_for(all_players.length) > 1 %>.
+        A second deck joins at 6 players, a third at 11.
+      </p>
+      <% if all_players.length < 2 %>
+        <p>You need at least 2 players to start.</p>
+      <% end %>
+      <% if @is_host %>
+        <%= button_to 'Start Game', start_game_path(@game), method: :post,
+              class: 'btn-start',
+              disabled: all_players.length < 2 %>
+      <% else %>
+        <p style="opacity:0.5;font-size:0.9rem;">Waiting for the host to start the game…</p>
+      <% end %>
+    </div>
+
+  <% end %>
+
+</div>
