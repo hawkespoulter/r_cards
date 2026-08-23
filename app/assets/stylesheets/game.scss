@@ -2773,6 +2773,11 @@ li.nav-center {
   padding: 0 24px 12px;
   justify-content: center;
 
+  // Every card in hand looks and behaves identically whether or not it can be
+  // played — no dimming, no shadow or cursor tell, so the hand gives nothing
+  // away at a glance. Working out what's legal is the player's job. The board
+  // still refuses an invalid card and clicking one nudges it, so the rules are
+  // enforced on the attempt rather than advertised in advance.
   .hand-card-wrap {
     position: relative;
     flex-shrink: 0;
@@ -2785,13 +2790,6 @@ li.nav-center {
       width: 62px;
       min-width: 62px;
       max-width: 62px;
-    }
-  }
-
-  .seven-playable {
-    cursor: pointer;
-
-    .game-card {
       box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     }
 
@@ -2801,11 +2799,6 @@ li.nav-center {
     @media (hover: hover) and (pointer: fine) {
       &:hover { transform: translateY(-10px); }
     }
-  }
-
-  .seven-blocked {
-    cursor: default;
-    opacity: 0.4;
   }
 
   .hand-card-wrap.selected {
@@ -2833,7 +2826,7 @@ li.nav-center {
   opacity: 0.25;
 }
 
-.seven-hand-row .hand-card-wrap.seven-playable {
+.seven-hand-row .hand-card-wrap {
   cursor: grab;
 
   &:active { cursor: grabbing; }
