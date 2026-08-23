@@ -56,16 +56,10 @@ document.addEventListener("turbo:load", function () {
   let selectedCard = null;
   let draggedCard = null;
 
-  function clearTargets() {
-    document.querySelectorAll(".seven-row.drop-active")
-      .forEach((el) => el.classList.remove("drop-active"));
-  }
-
   function clearSelection() {
     selectedCard = null;
     input.value = "";
     handRow.querySelectorAll(".hand-card-wrap.selected").forEach((el) => el.classList.remove("selected"));
-    clearTargets();
   }
 
   function selectWrap(wrap) {
@@ -94,7 +88,6 @@ document.addEventListener("turbo:load", function () {
     wrap.addEventListener("dragend", function () {
       this.classList.remove("dragging");
       draggedCard = null;
-      clearTargets();
     });
   });
 
@@ -112,15 +105,12 @@ document.addEventListener("turbo:load", function () {
   // ── Playing: drop a dragged card, or tap the row for a held one ────────────
 
   document.querySelectorAll(".seven-row").forEach((rowEl) => {
+    // preventDefault is what marks the row as a place the drag can land; without
+    // it the drop event never fires. It draws nothing.
     rowEl.addEventListener("dragover", function (e) {
       if (!accepts(this, draggedCard)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
-      this.classList.add("drop-active");
-    });
-
-    rowEl.addEventListener("dragleave", function (e) {
-      if (!this.contains(e.relatedTarget)) this.classList.remove("drop-active");
     });
 
     rowEl.addEventListener("drop", function (e) {
@@ -129,7 +119,6 @@ document.addEventListener("turbo:load", function () {
       e.stopPropagation();
       const card = draggedCard;
       draggedCard = null;
-      clearTargets();
       play(card, this);
     });
 
@@ -140,7 +129,6 @@ document.addEventListener("turbo:load", function () {
       e.stopPropagation();
       const card = selectedCard;
       selectedCard = null;
-      clearTargets();
       play(card, this);
     });
   });

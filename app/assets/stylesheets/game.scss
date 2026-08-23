@@ -2666,7 +2666,6 @@ li.nav-center {
   min-width: min-content;
   height: var(--sv-card-h);
   border-radius: 10px;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
 // Each side gets equal space so the 7 stays on the centre line however
@@ -2761,13 +2760,6 @@ li.nav-center {
   padding: 0 4px;
   font-size: 0.6rem;
   font-weight: 700;
-}
-
-// Only the row actually being dragged over lights up — the same single cue
-// canasta gives a meld, rather than pre-marking every legal target.
-.seven-row.drop-active {
-  background: rgba(251,191,36,0.18);
-  box-shadow: inset 0 0 0 2px #fbbf24;
 }
 
 // ── Lucky Seven: hand ────────────────────────────────────────────────────────
