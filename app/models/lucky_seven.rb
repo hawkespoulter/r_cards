@@ -14,9 +14,11 @@ class LuckySeven < ApplicationRecord
   SUIT_SYMBOLS   = { "d" => "♦", "h" => "♥", "s" => "♠", "c" => "♣" }.freeze
   ANCHOR         = 7
   STARTING_CARD  = "d7"
+  ROWS           = 4
 
   store_accessor :game_state,
     :layouts,          # { suit => { rank_value_string => copies_played } } — the four fanned runs on the table
+    :row_suits,        # [suit|nil] x ROWS — which run sits in which spot on the table; filled as each 7 is played
     :deck_count,       # 1, 2 or 3 depending on player count (see .deck_count_for)
     :finished_players, # Array of player IDs in the order they emptied their hands
     :last_play,        # { "player_id", "card", "seq" } - for the acting player's own card sound
@@ -44,7 +46,10 @@ class LuckySeven < ApplicationRecord
     set_turn(starter.id) if starter
   end
 
-  def play_card(player, card)
+  # `row` only matters when the card is opening its suit — the 7 goes into
+  # whichever of the four spots the player dropped it on. Once a suit has a
+  # spot, everything else in that suit follows it there.
+  def play_card(player, card, row: nil)
     return { error: "Not your turn" }             unless game.current_turn == player.id
     return { error: "Game is over" }              if game_over?
     return { error: "No card selected" }          if card.blank?
@@ -54,8 +59,16 @@ class LuckySeven < ApplicationRecord
       return { error: started? ? "That card doesn't extend a run" : "The #{SUIT_SYMBOLS['d']}7 opens the game" }
     end
 
-    new_layouts = layouts_with(card)
-    new_hand    = player.hand.dup
+    suit       = card_suit(card)
+    target_row = row_index_for(suit)
+
+    if target_row.nil?
+      target_row = row.presence&.to_i
+      return { error: "Drop the 7 on one of the open spots" } if target_row.nil?
+      return { error: "That spot is already taken" } unless free_row?(target_row)
+    end
+
+    new_hand = player.hand.dup
     new_hand.delete_at(new_hand.index(card))
     player.update!(hand: new_hand)
 
@@ -63,14 +76,13 @@ class LuckySeven < ApplicationRecord
     new_finished    = player_finished ? finished_player_ids + [player.id] : finished_player_ids
 
     write_game_state!(
-      "layouts"          => new_layouts,
+      "layouts"          => layouts_with(card),
+      "row_suits"        => rows_with(suit, target_row),
       "started"          => true,
       "finished_players" => new_finished,
       "seq"              => seq.to_i + 1,
       "last_play"        => { "player_id" => player.id, "card" => card, "seq" => seq.to_i + 1 }
     )
-
-    extras = { finished_player_name: player_finished ? player.user.name : nil }
 
     # First hand emptied wins and the game stops there — the rest are placed by
     # how many cards they were left holding, which is ordering for the results
@@ -78,7 +90,7 @@ class LuckySeven < ApplicationRecord
     if player_finished
       trailing = active_player_ids.sort_by { |id| (game.players.find(id).hand || []).length }
       write_game_state!("finished_players" => [player.id] + trailing, "knocked" => [])
-      return { game_over: true, rankings: rankings, winner_name: player.user.name }.merge(extras)
+      return { game_over: true, rankings: rankings, winner_name: player.user.name }
     end
 
     # Capping a run earns another card. It chains — king, then ace, then a
@@ -87,11 +99,30 @@ class LuckySeven < ApplicationRecord
     if caps_run?(card) && playable_cards(player).any?
       write_game_state!("knocked" => [])
       set_turn(player.id)
-      return { success: true, extra_turn: true, capped_card: card }.merge(extras)
+      return { success: true, extra_turn: true, capped_card: card }
     end
 
     skipped = advance_turn(from_player_id: player.id)
-    { success: true, knocked_names: skipped.map { |id| game.players.find(id).user.name } }.merge(extras)
+    { success: true, knocked_names: skipped.map { |id| game.players.find(id).user.name } }
+  end
+
+  # Deals a fresh hand to everyone and starts over with the same table.
+  def start_new_game
+    return { error: "Game is not over" } unless game_over?
+
+    write_game_state!(
+      "layouts"          => {},
+      "row_suits"        => Array.new(ROWS),
+      "finished_players" => [],
+      "knocked"          => [],
+      "started"          => false,
+      "last_play"        => nil,
+      "seq"              => 0
+    )
+    game.update!(turn_order: game.players.pluck(:id).shuffle)
+    deal_cards(deck_count.to_i.positive? ? deck_count.to_i : self.class.deck_count_for(game.players.count))
+    begin_play!
+    { success: true }
   end
 
   # The two cards that close off an end of a run: the ace at the bottom and the
@@ -127,6 +158,38 @@ class LuckySeven < ApplicationRecord
 
   def layout_row(suit)
     (layouts || {})[suit] || {}
+  end
+
+  # --- Table spots ---
+
+  def rows
+    stored = row_suits || []
+    Array.new(ROWS) { |i| stored[i] }
+  end
+
+  def row_suit(index)
+    rows[index]
+  end
+
+  def row_index_for(suit)
+    rows.index(suit)
+  end
+
+  def free_row?(index)
+    index.is_a?(Integer) && index.between?(0, ROWS - 1) && rows[index].nil?
+  end
+
+  # Cards for one side of a run, nearest-the-7 last so they overlap outward.
+  def run_cards(suit, high:)
+    range = high ? ((ANCHOR + 1)..13) : (1...ANCHOR)
+    range.flat_map do |value|
+      copies = copies_played(suit, value)
+      copies.positive? ? [[seven_code(suit, value), copies]] : []
+    end
+  end
+
+  def seven_code(suit, value)
+    "#{suit}#{RANK_VALUES.invert[value]}"
   end
 
   def copies_played(suit, value)
@@ -178,6 +241,7 @@ class LuckySeven < ApplicationRecord
     decks = self.class.deck_count_for(game.players.count)
     update!(game_state: {
       "layouts"          => {},
+      "row_suits"        => Array.new(ROWS),
       "deck_count"       => decks,
       "finished_players" => [],
       "last_play"        => nil,
@@ -205,6 +269,12 @@ class LuckySeven < ApplicationRecord
 
   def sort_hand(cards)
     cards.sort_by { |card| [SUITS.index(card_suit(card)) || SUITS.length, card_value(card) || 0] }
+  end
+
+  def rows_with(suit, index)
+    updated = rows
+    updated[index] = suit
+    updated
   end
 
   def layouts_with(card)

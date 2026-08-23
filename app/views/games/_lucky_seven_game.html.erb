@@ -32,49 +32,57 @@
         <% end %>
       </ol>
       <div class="game-over-actions">
+        <% if @is_host %>
+          <%= button_to 'Play Again', start_round_game_path(@game), method: :post, class: 'btn-start' %>
+        <% else %>
+          <p class="waiting-hint">Waiting for the host to deal again…</p>
+        <% end %>
         <%= link_to 'Back to Lobby', games_path, class: 'btn-quit', style: 'display:inline-block;padding:10px 24px;border-radius:6px;text-decoration:none;' %>
       </div>
     </div>
 
   <% elsif @game_started %>
 
-    <div class="seven-table">
-      <% LuckySeven::SUITS.each do |suit| %>
-        <% row    = seven.layout_row(suit) %>
-        <% values = row.keys.map(&:to_i) %>
-        <div class="seven-track" data-suit="<%= suit %>">
-          <span class="seven-track-suit seven-suit-<%= suit %>"><%= LuckySeven::SUIT_SYMBOLS[suit] %></span>
-          <div class="seven-slots">
-            <% (1..13).each do |value| %>
-              <% copies = seven.copies_played(suit, value) %>
-              <%
-                code  = seven_card_code(suit, value)
-                state = if copies.positive?
-                          "filled"
-                        elsif !seven.started?
-                          # Nothing but the ♦7 can be played until it opens.
-                          code == LuckySeven::STARTING_CARD ? "next" : "empty"
-                        elsif values.empty?
-                          value == LuckySeven::ANCHOR ? "next" : "empty"
-                        elsif value == values.min - 1 || value == values.max + 1
-                          "next"
-                        else
-                          "empty"
-                        end
-              %>
-              <div class="seven-slot seven-slot-<%= state %> <%= 'seven-slot-mine' if playable.include?(code) %>"
-                   data-slot-card="<%= code %>">
-                <% if copies.positive? %>
-                  <%= image_tag "cards/#{card_asset(code)}.svg", class: "seven-slot-card" %>
-                  <% if copies > 1 %>
-                    <span class="seven-slot-copies">×<%= copies %></span>
-                  <% end %>
-                <% else %>
-                  <span class="seven-slot-label"><%= seven_rank_label(value) %></span>
-                <% end %>
-              </div>
-            <% end %>
-          </div>
+    <%# Four spots, one per suit, but which suit lands in which is up to whoever
+        plays the 7 — the rows carry no suit identity until then. Cards other
+        than the 7 fan out sideways from it and overlap, so a run condenses the
+        way a canasta meld does instead of reserving a slot per rank. %>
+    <div class="seven-board">
+      <% (0...LuckySeven::ROWS).each do |row_index| %>
+        <% suit = seven.row_suit(row_index) %>
+        <div class="seven-row <%= suit ? 'seven-row-open' : 'seven-row-empty' %>"
+             data-row="<%= row_index %>" data-suit="<%= suit %>">
+          <% if suit %>
+            <%# The low run fans leftward, so its stacking is the reverse of DOM
+                order — the outermost card sits on top, matching the high run. %>
+            <div class="seven-run seven-run-low">
+              <% seven.run_cards(suit, high: false).each_with_index do |(code, copies), i| %>
+                <div class="seven-run-card" style="z-index: <%= 20 - i %>;">
+                  <%= image_tag "cards/#{card_asset(code)}.svg", class: "seven-run-img" %>
+                  <% if copies > 1 %><span class="seven-copies">×<%= copies %></span><% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="seven-anchor">
+              <%= image_tag "cards/#{card_asset(seven.seven_code(suit, LuckySeven::ANCHOR))}.svg", class: "seven-anchor-img" %>
+              <% anchor_copies = seven.copies_played(suit, LuckySeven::ANCHOR) %>
+              <% if anchor_copies > 1 %><span class="seven-copies">×<%= anchor_copies %></span><% end %>
+            </div>
+
+            <div class="seven-run seven-run-high">
+              <% seven.run_cards(suit, high: true).each do |code, copies| %>
+                <div class="seven-run-card">
+                  <%= image_tag "cards/#{card_asset(code)}.svg", class: "seven-run-img" %>
+                  <% if copies > 1 %><span class="seven-copies">×<%= copies %></span><% end %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="seven-run seven-run-low"></div>
+            <div class="seven-anchor seven-anchor-open"><span class="seven-anchor-hint">7</span></div>
+            <div class="seven-run seven-run-high"></div>
+          <% end %>
         </div>
       <% end %>
     </div>
@@ -101,6 +109,7 @@
       <%= form_with url: play_cards_game_path(@game), method: :post,
             html: { id: "play-form", style: "display:none;" } do |f| %>
         <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
+        <%= f.hidden_field :row, id: "selected-row-input", value: "" %>
       <% end %>
     <% end %>
 

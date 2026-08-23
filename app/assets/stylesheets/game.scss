@@ -2635,101 +2635,144 @@ li.nav-center {
 }
 
 // ── Lucky Seven: the four runs on the table ──────────────────────────────────
+//
+// Four spots stacked vertically, filling the height between the navbar and the
+// hand. Each run keeps its 7 upright in the middle and fans the rest of the
+// suit out sideways, rotated flat and overlapping so only a sliver of each card
+// shows — the same condensing a canasta meld does, so a full 13-card run still
+// fits the width. There are no per-rank slots: a card goes where it belongs.
+.seven-board {
+  --sv-card-w: 76px;                        // upright card width
+  --sv-card-h: 108px;                       // upright card height (62:88)
+  --sv-step: 27px;                          // how much of each fanned card shows
 
-// Every suit shows all 13 slots (A low through K) rather than only the cards
-// played so far — the empty slots are the whole read of the game, since they
-// spell out exactly which cards are still owed and which ends are live.
-.seven-table {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1;
+  align-items: center;
   justify-content: center;
-  padding: 16px 12px;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 14px 12px;
   overflow-x: auto;
 }
 
-.seven-track {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: min-content;
-}
-
-.seven-track-suit {
-  font-size: 1.5rem;
-  line-height: 1;
-  width: 26px;
-  flex-shrink: 0;
-  text-align: center;
-}
-
-.seven-suit-d, .seven-suit-h { color: #f87171; }
-.seven-suit-s, .seven-suit-c { color: rgba(255,255,255,0.85); }
-
-.seven-slots {
-  display: grid;
-  grid-template-columns: repeat(13, 46px);
-  gap: 4px;
-}
-
-.seven-slot {
-  position: relative;
-  aspect-ratio: 62 / 88;
-  border-radius: 4px;
+.seven-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: box-shadow 0.15s ease, background 0.15s ease;
+  gap: 4px;
+  width: 100%;
+  min-width: min-content;
+  height: var(--sv-card-h);
+  border-radius: 10px;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.seven-slot-card {
+// Each side gets equal space so the 7 stays on the centre line however
+// lopsided the run is.
+.seven-run {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+  height: var(--sv-card-w);                 // a flat card is only as tall as an upright one is wide
+}
+
+.seven-run-low  { justify-content: flex-end; }
+.seven-run-high { justify-content: flex-start; }
+
+.seven-anchor {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--sv-card-w);
+  height: var(--sv-card-h);
+}
+
+.seven-anchor-img {
   display: block;
   width: 100%;
-  border-radius: 4px;
+  border-radius: 5px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+}
+
+// A spot no 7 has claimed yet. Any suit can open here, so it carries no suit
+// mark — just a card-shaped gap.
+.seven-anchor-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255,255,255,0.18);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+}
+
+.seven-anchor-hint {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.18);
+}
+
+// The fanned cards. Each sits in a narrow box and its image is rotated flat and
+// pinned to one edge of it, so the box width alone decides how much shows and
+// the rest slides under the neighbour. Low cards pin right and high cards pin
+// left, both running outward from the 7; the rotation direction follows suit so
+// each card's rank corner lands on the exposed sliver rather than under it.
+.seven-run-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--sv-step);
+  height: var(--sv-card-w);
+}
+
+.seven-run-img {
+  position: absolute;
+  display: block;
+  width: var(--sv-card-w);
+  top: calc((var(--sv-card-w) - var(--sv-card-h)) / 2);
+  border-radius: 5px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.45);
 }
 
-.seven-slot-label {
-  font-size: 0.75rem;
-  font-weight: 700;
+.seven-run-low .seven-run-img {
+  left: calc(var(--sv-step) - (var(--sv-card-h) + var(--sv-card-w)) / 2);
+  transform: rotate(90deg);
 }
 
-.seven-slot-empty {
-  background: rgba(255,255,255,0.04);
-  border: 1px dashed rgba(255,255,255,0.15);
-
-  .seven-slot-label { color: rgba(255,255,255,0.25); }
+.seven-run-high .seven-run-img {
+  left: calc((var(--sv-card-h) - var(--sv-card-w)) / 2);
+  transform: rotate(-90deg);
 }
 
-// An open end anyone could build on next.
-.seven-slot-next {
-  background: rgba(16,185,129,0.12);
-  border: 1px dashed rgba(16,185,129,0.6);
+// Each run fans outward from the 7 with its far end on top, so the card that
+// matters — the end you can build on — is the one fully in view on both sides.
+// The high run gets that from plain DOM order; the low run runs the other way,
+// so its stacking is set per card in the template.
 
-  .seven-slot-label { color: #10b981; }
-}
-
-// An open end you personally hold the card for.
-.seven-slot-mine {
-  background: rgba(251,191,36,0.18);
-  border: 1px solid #fbbf24;
-  box-shadow: 0 0 12px rgba(251,191,36,0.35);
-
-  .seven-slot-label { color: #fbbf24; }
-}
-
-// Multi-deck games stack duplicate ranks in the same slot.
-.seven-slot-copies {
+// Multi-deck games stack duplicate ranks in one place.
+.seven-copies {
   position: absolute;
-  right: -3px;
-  bottom: -3px;
+  right: 2px;
+  bottom: 2px;
+  z-index: 2;
   background: #1f2937;
   border: 1px solid rgba(255,255,255,0.4);
   border-radius: 8px;
   padding: 0 4px;
   font-size: 0.6rem;
   font-weight: 700;
+}
+
+// A row the held card could go to. An unopened 7 lights every free row at once,
+// which is what shows the choice of spot is open.
+.seven-row.drop-target {
+  background: rgba(251,191,36,0.1);
+  box-shadow: inset 0 0 0 2px rgba(251,191,36,0.55);
+}
+
+.seven-row.drop-active {
+  background: rgba(251,191,36,0.18);
+  box-shadow: inset 0 0 0 2px #fbbf24;
 }
 
 // ── Lucky Seven: hand ────────────────────────────────────────────────────────
@@ -2809,42 +2852,20 @@ li.nav-center {
   &:active { cursor: grabbing; }
 }
 
-// The one slot the dragged card belongs in, marked as soon as the drag starts.
-.seven-slot.drop-target {
-  background: rgba(251,191,36,0.3);
-  border: 2px solid #fbbf24;
-  box-shadow: 0 0 16px rgba(251,191,36,0.55);
-  animation: seven-drop-pulse 1s ease-in-out infinite;
-
-  .seven-slot-label { color: #fbbf24; }
-}
-
-@keyframes seven-drop-pulse {
-  0%, 100% { box-shadow: 0 0 16px rgba(251,191,36,0.55); }
-  50%      { box-shadow: 0 0 26px rgba(251,191,36,0.9); }
-}
-
-// The whole track accepts the drop too, so the aim doesn't have to be exact.
-.seven-track.drop-active {
-  background: rgba(251,191,36,0.08);
-  border-radius: 8px;
-}
-
-// Phone widths: shrink both the runs and the hand. The runs still scroll
-// sideways inside .seven-table, but a smaller slot keeps that scroll short,
-// and a smaller hand card keeps a 17-card opening hand from pushing the table
-// off the top of the screen.
+// Phone widths: scale the whole board down through its custom properties, so
+// the fan geometry stays consistent instead of needing its own rules, and shrink
+// the hand so a 17-card opening hand doesn't push the runs off the top.
 @media (max-width: 640px) {
-  .seven-table { padding: 10px 8px; gap: 6px; }
+  .seven-board {
+    --sv-card-w: 52px;
+    --sv-card-h: 74px;
+    --sv-step: 19px;
 
-  .seven-slots { grid-template-columns: repeat(13, 34px); }
-
-  .seven-track-suit {
-    font-size: 1.15rem;
-    width: 18px;
+    gap: 6px;
+    padding: 8px 6px;
   }
 
-  .seven-slot-label { font-size: 0.6rem; }
+  .seven-anchor-hint { font-size: 1.1rem; }
 
   .seven-hand-row {
     gap: 4px;

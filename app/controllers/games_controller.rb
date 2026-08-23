@@ -46,7 +46,7 @@ class GamesController < ApplicationController
     is_host = @game.players.order(:created_at).first&.user_id == current_user.id
     return redirect_to @game, alert: "Only the host can start a new round." unless is_host
 
-    result = @scum.start_new_round
+    result = @game.lucky_seven? ? @game.lucky_seven.start_new_game : @scum.start_new_round
     if result[:error]
       respond_with_game_error(result[:error])
     else
@@ -135,7 +135,7 @@ class GamesController < ApplicationController
       []
     end
     result = if @game.lucky_seven?
-      @lucky_seven.play_card(@current_player, cards.first)
+      @lucky_seven.play_card(@current_player, cards.first, row: params[:row])
     else
       @scum.play_cards(@current_player, cards)
     end
