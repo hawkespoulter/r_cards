@@ -5,34 +5,17 @@ document.addEventListener("turbo:load", function () {
   // turbo:load fires many times per board — Turbo's own event plus the
   // redispatch application.js does after every stream render — and each run
   // would otherwise bind a second set of handlers to the same nodes. Two
-  // handlers on one drop meant two POSTs, the second landing after the turn had
+  // handlers on one play meant two POSTs, the second landing after the turn had
   // already moved on ("Not your turn" / "card isn't in your hand"). A stream
   // render replaces #game-container outright, so a genuinely new board arrives
   // without this flag and binds exactly once. Same guard pattern as _navbar.
   if (board.dataset.sevenBound === "1") return;
   board.dataset.sevenBound = "1";
 
-  const handRow = document.querySelector(".seven-hand-row");
-  const input   = document.getElementById("selected-cards-input");
-  const playBtn = document.getElementById("play-cards-btn");
+  const handRow  = document.querySelector(".seven-hand-row");
+  const input    = document.getElementById("selected-cards-input");
   const playForm = document.getElementById("play-form");
   if (!handRow || !input) return;
-
-  let selected = null;
-
-  function select(wrap) {
-    handRow.querySelectorAll(".hand-card-wrap.selected").forEach((el) => el.classList.remove("selected"));
-
-    if (selected === wrap) {
-      selected = null;
-    } else {
-      selected = wrap;
-      wrap.classList.add("selected");
-    }
-
-    input.value = selected ? JSON.stringify([selected.dataset.card]) : "";
-    if (playBtn) playBtn.disabled = !selected;
-  }
 
   // One play in flight at a time. The flag lives on the form node rather than in
   // this closure so it still holds if more than one handler set ever reaches
@@ -51,40 +34,75 @@ document.addEventListener("turbo:load", function () {
     delete this.dataset.submitting;
   });
 
+  // ── Selection ──────────────────────────────────────────────────────────────
+
+  let selectedCard = null;
+
+  function clearSelection() {
+    selectedCard = null;
+    input.value = "";
+    handRow.querySelectorAll(".hand-card-wrap.selected").forEach((el) => el.classList.remove("selected"));
+    clearTargets();
+  }
+
+  // Marks where the held card can go, so tapping a card shows its destination
+  // before the second tap — the touch equivalent of the drag hint.
+  function markTargets(card) {
+    clearTargets();
+    const slot = document.querySelector(`.seven-slot[data-slot-card="${card}"]`);
+    if (slot) slot.classList.add("drop-target");
+  }
+
+  function clearTargets() {
+    document.querySelectorAll(".seven-slot.drop-target, .seven-track.drop-active")
+      .forEach((el) => el.classList.remove("drop-target", "drop-active"));
+  }
+
+  function selectWrap(wrap) {
+    const wasSelected = wrap.classList.contains("selected");
+    clearSelection();
+    if (wasSelected) return;
+
+    selectedCard = wrap.dataset.card;
+    wrap.classList.add("selected");
+    input.value = JSON.stringify([selectedCard]);
+    markTargets(selectedCard);
+  }
+
   handRow.querySelectorAll(".hand-card-wrap.seven-playable").forEach((wrap) => {
     wrap.addEventListener("click", function (e) {
       e.stopPropagation();
-      select(this);
+      selectWrap(this);
     });
   });
 
   // A blocked card is a dead end this turn — flash it rather than silently
-  // ignoring the click, so it's clear the card was seen and rejected.
+  // ignoring the tap, so it's clear the card was seen and rejected.
   handRow.querySelectorAll(".hand-card-wrap.seven-blocked").forEach((wrap) => {
-    wrap.addEventListener("click", function () {
+    wrap.addEventListener("click", function (e) {
+      e.stopPropagation();
       this.classList.remove("seven-nudge");
       void this.offsetWidth;
       this.classList.add("seven-nudge");
     });
   });
 
-  if (playBtn) playBtn.disabled = true;
-
-  // ── Drag to the run ────────────────────────────────────────────────────────
+  // ── Playing: drop a dragged card, or tap the destination for a held one ────
   //
   // Every card has exactly one legal destination (its own suit + rank slot), so
-  // the drop targets are that slot and — more forgivingly — anywhere on that
-  // suit's track. Dropping anywhere else cancels, which is what gives the drag
-  // a way out once started.
+  // the targets are that slot and — more forgivingly — anywhere on its suit's
+  // track. Anywhere else cancels, which is what gives both a started drag and a
+  // held selection a way out.
   //
-  // The dragged card is tracked in a variable rather than read back from
-  // dataTransfer because getData() is deliberately blocked during dragover,
-  // and dragover is where the target has to decide whether to accept.
+  // The dragged card is kept in a variable rather than read back from
+  // dataTransfer because getData() is blocked during dragover, and dragover is
+  // where the target has to decide whether to accept.
   let draggedCard = null;
 
-  function clearDropHints() {
-    document.querySelectorAll(".seven-slot.drop-target, .seven-track.drop-active")
-      .forEach((el) => el.classList.remove("drop-target", "drop-active"));
+  function accepts(el, card) {
+    if (!card) return false;
+    if (el.classList.contains("seven-track")) return el.dataset.suit === card[0];
+    return el.dataset.slotCard === card;
   }
 
   handRow.querySelectorAll(".hand-card-wrap.seven-playable").forEach((wrap) => {
@@ -93,44 +111,45 @@ document.addEventListener("turbo:load", function () {
       e.dataTransfer.setData("text/plain", draggedCard);
       e.dataTransfer.effectAllowed = "move";
       setTimeout(() => this.classList.add("dragging"), 0);
-
-      // Point at where this card is headed, so the target is obvious the
-      // moment the drag starts rather than only on hover.
-      const slot = document.querySelector(`.seven-slot[data-slot-card="${draggedCard}"]`);
-      if (slot) slot.classList.add("drop-target");
+      markTargets(draggedCard);
     });
 
     wrap.addEventListener("dragend", function () {
       this.classList.remove("dragging");
       draggedCard = null;
-      clearDropHints();
+      if (selectedCard) markTargets(selectedCard); else clearTargets();
     });
   });
-
-  function accepts(el) {
-    if (!draggedCard) return false;
-    if (el.classList.contains("seven-track")) return el.dataset.suit === draggedCard[0];
-    return el.dataset.slotCard === draggedCard;
-  }
 
   document.querySelectorAll(".seven-track").forEach((track) => {
     const targets = [track, ...track.querySelectorAll(".seven-slot")];
 
     targets.forEach((el) => {
       el.addEventListener("dragover", function (e) {
-        if (!accepts(this)) return;
+        if (!accepts(this, draggedCard)) return;
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
         track.classList.add("drop-active");
       });
 
       el.addEventListener("drop", function (e) {
-        if (!accepts(this)) return;
+        if (!accepts(this, draggedCard)) return;
         e.preventDefault();
         e.stopPropagation();
         const card = draggedCard;
         draggedCard = null;
-        clearDropHints();
+        clearTargets();
+        play(card);
+      });
+
+      // Tap-to-play: select a card in hand, then tap where it goes. This is the
+      // only route on touch, where HTML5 drag events never fire.
+      el.addEventListener("click", function (e) {
+        if (!accepts(this, selectedCard)) return;
+        e.stopPropagation();
+        const card = selectedCard;
+        selectedCard = null;
+        clearTargets();
         play(card);
       });
     });
@@ -138,5 +157,18 @@ document.addEventListener("turbo:load", function () {
     track.addEventListener("dragleave", function (e) {
       if (!this.contains(e.relatedTarget)) this.classList.remove("drop-active");
     });
+  });
+
+  // Tapping away drops the selection so a held card isn't left armed. Taps
+  // landing anywhere on the runs or the hand still count as using the board,
+  // though — otherwise a near-miss on touch would silently disarm the card and
+  // the next tap on the right slot would do nothing. Mirrors the exclusion
+  // canasta makes with BOARD_INTERACTIVE_SELECTOR.
+  const KEEPS_SELECTION = ".seven-table, .seven-hand-row, button, a, input, textarea, select, label";
+
+  document.addEventListener("click", function (e) {
+    if (!selectedCard) return;
+    if (e.target.closest(KEEPS_SELECTION)) return;
+    clearSelection();
   });
 });

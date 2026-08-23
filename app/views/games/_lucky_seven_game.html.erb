@@ -38,36 +38,6 @@
 
   <% elsif @game_started %>
 
-    <div class="status-bar">
-      <% if my_turn %>
-        <%
-          last = seven.last_play || {}
-          capped_again = last["player_id"].to_i == @current_player&.id &&
-                         last["card"].present? && seven.caps_run?(last["card"])
-        %>
-        <% if capped_again %>
-          <span class="your-turn-text">⚡ You capped a run — play again!</span>
-        <% else %>
-          <span class="your-turn-text">⚡ Your turn!</span>
-          <% if seven.started? %>
-            — play a card onto either end of a run, or start a suit with its 7
-          <% else %>
-            — open the game with the <%= LuckySeven::SUIT_SYMBOLS["d"] %>7
-          <% end %>
-        <% end %>
-      <% elsif is_me_finished %>
-        You're out — watching the rest play it down
-      <% else %>
-        Waiting for <strong><%= @current_turn_name %></strong>…
-      <% end %>
-      <% if knocked_ids.any? %>
-        <span class="seven-knock-note">
-          · <%= knocked_ids.map { |id| @game.players.find(id).user.name }.to_sentence %>
-          had nothing to play
-        </span>
-      <% end %>
-    </div>
-
     <div class="seven-table">
       <% LuckySeven::SUITS.each do |suit| %>
         <% row    = seven.layout_row(suit) %>
@@ -109,34 +79,30 @@
       <% end %>
     </div>
 
+    <%# No one can be finished here — the first player out ends the game, which
+        renders the results screen above instead. %>
     <div class="hand-container">
-      <% if is_me_finished %>
-        <p class="hand-label">Your hand is empty — nicely done</p>
-      <% else %>
-        <p class="hand-label">
-          Your hand
-          <% if my_turn %>· <%= playable.length %> playable<% end %>
-        </p>
-        <div class="seven-hand-row">
-          <% @current_player.hand.each_with_index do |card, i| %>
-            <div class="hand-card-wrap <%= playable.include?(card) ? 'seven-playable' : 'seven-blocked' %>"
-                 draggable="<%= playable.include?(card) %>"
-                 data-card="<%= card %>" data-hand-index="<%= i %>">
-              <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card", draggable: "false" %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+      <p class="hand-label">Your hand</p>
+      <div class="seven-hand-row">
+        <% @current_player.hand.each_with_index do |card, i| %>
+          <div class="hand-card-wrap <%= playable.include?(card) ? 'seven-playable' : 'seven-blocked' %>"
+               draggable="<%= playable.include?(card) %>"
+               data-card="<%= card %>" data-hand-index="<%= i %>">
+            <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card", draggable: "false" %>
+          </div>
+        <% end %>
+      </div>
     </div>
 
-    <div class="game-footer">
-      <% if my_turn %>
-        <%= form_with url: play_cards_game_path(@game), method: :post, html: { id: "play-form" } do |f| %>
-          <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
-          <%= f.submit "Play Card", class: "btn-play", id: "play-cards-btn" %>
-        <% end %>
+    <%# Submitted by lucky_seven_cards.js — a card is played by dropping it on
+        its slot or, on touch, tapping the card and then the slot. Same hidden
+        form pattern canasta uses for meld/discard/red-three. %>
+    <% if my_turn %>
+      <%= form_with url: play_cards_game_path(@game), method: :post,
+            html: { id: "play-form", style: "display:none;" } do |f| %>
+        <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
       <% end %>
-    </div>
+    <% end %>
 
   <% else %>
 

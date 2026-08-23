@@ -72,16 +72,19 @@ class LuckySeven < ApplicationRecord
 
     extras = { finished_player_name: player_finished ? player.user.name : nil }
 
-    remaining = active_player_ids
-    if remaining.length <= 1
-      write_game_state!("finished_players" => finished_player_ids + remaining, "knocked" => [])
-      return { game_over: true, rankings: rankings }.merge(extras)
+    # First hand emptied wins and the game stops there — the rest are placed by
+    # how many cards they were left holding, which is ordering for the results
+    # screen, not scoring.
+    if player_finished
+      trailing = active_player_ids.sort_by { |id| (game.players.find(id).hand || []).length }
+      write_game_state!("finished_players" => [player.id] + trailing, "knocked" => [])
+      return { game_over: true, rankings: rankings, winner_name: player.user.name }.merge(extras)
     end
 
     # Capping a run earns another card. It chains — king, then ace, then a
     # plain card — so the turn only moves on once they play something that
     # isn't an end, or run out of legal cards to follow up with.
-    if !player_finished && caps_run?(card) && playable_cards(player).any?
+    if caps_run?(card) && playable_cards(player).any?
       write_game_state!("knocked" => [])
       set_turn(player.id)
       return { success: true, extra_turn: true, capped_card: card }.merge(extras)
@@ -130,8 +133,10 @@ class LuckySeven < ApplicationRecord
     layout_row(suit)[value.to_s].to_i
   end
 
+  # The first player to empty their hand ends it — everyone else is still
+  # holding cards, so there's no play-on-for-places phase.
   def game_over?
-    active_player_ids.length <= 1
+    finished_player_ids.any?
   end
 
   def started?
