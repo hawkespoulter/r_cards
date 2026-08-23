@@ -40,11 +40,20 @@
 
     <div class="status-bar">
       <% if my_turn %>
-        <span class="your-turn-text">⚡ Your turn!</span>
-        <% if seven.started? %>
-          — play a card onto either end of a run, or start a suit with its 7
+        <%
+          last = seven.last_play || {}
+          capped_again = last["player_id"].to_i == @current_player&.id &&
+                         last["card"].present? && seven.caps_run?(last["card"])
+        %>
+        <% if capped_again %>
+          <span class="your-turn-text">⚡ You capped a run — play again!</span>
         <% else %>
-          — open the game with the <%= LuckySeven::SUIT_SYMBOLS["d"] %>7
+          <span class="your-turn-text">⚡ Your turn!</span>
+          <% if seven.started? %>
+            — play a card onto either end of a run, or start a suit with its 7
+          <% else %>
+            — open the game with the <%= LuckySeven::SUIT_SYMBOLS["d"] %>7
+          <% end %>
         <% end %>
       <% elsif is_me_finished %>
         You're out — watching the rest play it down

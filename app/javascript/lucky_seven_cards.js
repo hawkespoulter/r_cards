@@ -1,4 +1,17 @@
 document.addEventListener("turbo:load", function () {
+  const board = document.getElementById("game-container");
+  if (!board) return;
+
+  // turbo:load fires many times per board — Turbo's own event plus the
+  // redispatch application.js does after every stream render — and each run
+  // would otherwise bind a second set of handlers to the same nodes. Two
+  // handlers on one drop meant two POSTs, the second landing after the turn had
+  // already moved on ("Not your turn" / "card isn't in your hand"). A stream
+  // render replaces #game-container outright, so a genuinely new board arrives
+  // without this flag and binds exactly once. Same guard pattern as _navbar.
+  if (board.dataset.sevenBound === "1") return;
+  board.dataset.sevenBound = "1";
+
   const handRow = document.querySelector(".seven-hand-row");
   const input   = document.getElementById("selected-cards-input");
   const playBtn = document.getElementById("play-cards-btn");
@@ -21,17 +34,22 @@ document.addEventListener("turbo:load", function () {
     if (playBtn) playBtn.disabled = !selected;
   }
 
-  // One play per board render. A drop and a click can both reach here, and the
-  // board is replaced by the turbo_stream response anyway, so a second submit
-  // could only ever be a duplicate of the first.
-  let submitted = false;
-
+  // One play in flight at a time. The flag lives on the form node rather than in
+  // this closure so it still holds if more than one handler set ever reaches
+  // here — a closure-local flag is invisible to the other closure, which is what
+  // let the duplicate POST through before.
   function play(card) {
-    if (!playForm || submitted) return;
-    submitted = true;
+    if (!playForm || playForm.dataset.submitting === "1") return;
+    playForm.dataset.submitting = "1";
     input.value = JSON.stringify([card]);
     playForm.requestSubmit ? playForm.requestSubmit() : playForm.submit();
   }
+
+  // A rejected play only patches the flash container, leaving this same form on
+  // the page — so release the flag or the player would be locked out of retrying.
+  playForm?.addEventListener("turbo:submit-end", function () {
+    delete this.dataset.submitting;
+  });
 
   handRow.querySelectorAll(".hand-card-wrap.seven-playable").forEach((wrap) => {
     wrap.addEventListener("click", function (e) {

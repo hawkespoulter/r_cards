@@ -78,8 +78,23 @@ class LuckySeven < ApplicationRecord
       return { game_over: true, rankings: rankings }.merge(extras)
     end
 
+    # Capping a run earns another card. It chains — king, then ace, then a
+    # plain card — so the turn only moves on once they play something that
+    # isn't an end, or run out of legal cards to follow up with.
+    if !player_finished && caps_run?(card) && playable_cards(player).any?
+      write_game_state!("knocked" => [])
+      set_turn(player.id)
+      return { success: true, extra_turn: true, capped_card: card }.merge(extras)
+    end
+
     skipped = advance_turn(from_player_id: player.id)
     { success: true, knocked_names: skipped.map { |id| game.players.find(id).user.name } }.merge(extras)
+  end
+
+  # The two cards that close off an end of a run: the ace at the bottom and the
+  # king at the top (ace is low here).
+  def caps_run?(card)
+    [1, 13].include?(card_value(card))
   end
 
   # --- Queries used by the views ---
