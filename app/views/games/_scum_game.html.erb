@@ -1,45 +1,16 @@
 <% finished_ids    = (@scum&.finished_players || []).map(&:to_i) %>
 <% is_me_finished = finished_ids.include?(@current_player&.id) %>
 <% all_players    = (@players + [@current_player]).compact.sort_by(&:id) %>
+<% passed_ids     = (@scum&.passed_this_round || []).map(&:to_i) %>
 
 <% my_turn = @game_started && !@scum&.game_over? && @game.current_turn == @current_player&.id && !is_me_finished %>
+
+<% content_for :nav_center do %>
+  <%= render "nav_game_info", game: @game, canasta: nil, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
+        show_settings_trigger: @is_host, finished_ids: finished_ids, passed_ids: passed_ids, rankings: (@scum&.rankings || []) %>
+<% end %>
+
 <div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>">
-
-  <header class="game-header">
-    <div class="game-title">♠ <%= @game.game_type.capitalize %></div>
-
-    <div class="players-list">
-      <% passed_ids = (@scum&.passed_this_round || []).map(&:to_i) %>
-      <% all_players.each do |player| %>
-        <% is_active  = @game.current_turn && player.id == @game.current_turn %>
-        <% p_finished = finished_ids.include?(player.id) %>
-        <% p_passed   = passed_ids.include?(player.id) %>
-        <% ranking    = @scum&.rankings&.find { |r| r[:player_id] == player.id } %>
-        <div class="player-chip <%= 'active-turn' if is_active %> <%= 'player-finished' if p_finished %> <%= 'player-passed' if p_passed %>">
-          <span class="player-name">
-            <%= player.user_id == current_user.id ? "You" : player.user.name %>
-          </span>
-          <% if @game_started %>
-            <span class="card-count">· <%= (player.hand || []).flatten.length %> cards</span>
-          <% end %>
-          <% if p_passed && !p_finished %>
-            <span class="player-passed-badge">· Passed</span>
-          <% end %>
-          <% if ranking %>
-            <span class="player-title-badge">· <%= ranking[:title] %></span>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
-
-    <% if @is_host %>
-      <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
-    <% end %>
-    <% if @is_host %>
-      <%= button_to 'End Game', game_path(@game), method: :delete, class: 'btn-quit',
-            form: { data: { turbo_confirm: 'End the game for everyone?' } } %>
-    <% end %>
-  </header>
 
   <% if @is_host %>
   <div class="settings-panel" id="settings-panel">

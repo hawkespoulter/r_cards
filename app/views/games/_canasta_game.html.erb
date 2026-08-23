@@ -14,7 +14,8 @@
 <% end %>
 
 <% content_for :nav_center do %>
-  <%= render "nav_game_info", game: @game, canasta: @canasta, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn %>
+  <%= render "nav_game_info", game: @game, canasta: @canasta, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
+        show_settings_trigger: @is_host && !@game_started %>
 <% end %>
 
 <div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>" data-my-team="<%= my_team %>" data-card-back="<%= asset_path("cards/backs/#{current_user.card_back_key(@game)}.jpg") %>">

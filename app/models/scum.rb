@@ -52,13 +52,17 @@
 
     # Players who already passed this hand stay locked out even when someone
     # else extends the pile — only a genuinely new hand (fresh lead or an
-    # ace clearing the pile) resets who's eligible to act.
+    # ace clearing the pile) resets who's eligible to act. The acting player
+    # is always dropped from the list, though: with pass_locks_out off they
+    # can reach here having passed earlier this same hand, and a stale
+    # "passed" flag would wrongly exempt them from #pass_turn's "has the
+    # leader themselves passed" check once they become the new leader.
     write_game_state!(
       "play_pile"         => aces_played ? [] : cards,
       "play_pile_count"   => aces_played ? nil : cards.length,
       "last_played_by"    => aces_played ? nil : player.id,
       "last_played_cards" => cards,
-      "passed_this_round" => fresh_hand ? [] : passed_this_round,
+      "passed_this_round" => fresh_hand ? [] : (passed_this_round || []).map(&:to_i) - [player.id],
       "finished_players"  => new_finished
     )
 
@@ -104,14 +108,24 @@
     leader_still_active = active_ids.include?(leader_id)
     leader_passed        = current_passed.include?(leader_id)
 
-    # Leader gets one extra turn to extend the hand, unless they've already
-    # passed themselves or the setting is off.
-    if leader_still_active && !leader_passed && game.leader_can_continue?
+    if leader_still_active && !leader_passed
+      # Leader gets one extra turn to extend the hand, unless the setting is
+      # off — but either way, an uncontested leader has won this hand and is
+      # the one who leads the next one (standard rule), so without the
+      # setting they lead again immediately rather than being skipped.
+      if game.leader_can_continue?
+        set_turn(leader_id)
+        return { success: true }
+      end
+
+      clear_pile
       set_turn(leader_id)
-      return { success: true }
+      return { success: true, pile_cleared: true }
     end
 
-    # Hand is over: clear the pile and move on to whoever's next after the leader.
+    # Leader has either finished (no longer in the game) or explicitly passed
+    # on their own extension — either way they've forfeited the lead, so
+    # clear the pile and move on to whoever's next after them.
     clear_pile
     advance_turn(from_player_id: leader_id)
     { success: true, pile_cleared: true }
@@ -292,8 +306,12 @@
   end
 
   # Once a player passes, they're locked out of the current hand until the
-  # pile clears — this is unconditional, not gated by a setting.
+  # pile clears — but only when the host has pass_locks_out turned on. With
+  # it off, a pass just skips that one turn: the player stays in the normal
+  # rotation and gets asked again next time it comes around.
   def eligible_player_ids
+    return active_player_ids unless game.pass_locks_out?
+
     passed = (passed_this_round || []).map(&:to_i)
     active_player_ids.reject { |id| passed.include?(id) }
   end

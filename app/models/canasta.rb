@@ -25,7 +25,8 @@ class Canasta < ApplicationRecord
     :pending_red_three_draws, # { "player_id" => Integer } - replacement draws owed for played red threes, not yet claimed
     :turn_meld_log,    # [{ "rank" => rank, "cards" => [...] }, ...] - this turn's meld additions, for undo; reset on draw/pickup/discard
     :round_summary,    # full scoring breakdown for the round that just ended; blocks the table until the host advances (see #advance_round)
-    :round_history     # [{ "round_number", "going_out_team", "teams" => { "0"/"1" => { "round_score", "base_score", "card_count", "new_total" } } }, ...] - one compact entry per completed round, for the round-by-round score popup
+    :round_history,    # [{ "round_number", "going_out_team", "teams" => { "0"/"1" => { "round_score", "base_score", "card_count", "new_total" } } }, ...] - one compact entry per completed round, for the round-by-round score popup
+    :black_threes_discarded # { "0" => [cards...], "1" => [cards...] } black 3s discarded per team - 5 is an alternate way to go out
 
   MELD_THRESHOLDS = [
     [3000, 50],
@@ -37,6 +38,7 @@ class Canasta < ApplicationRecord
 
   CANASTA_SIZE = 7
   GOAL_SCORE = 10_000
+  BLACK_THREES_TO_GO_OUT = 5
 
   # --- Setup ---
 
@@ -83,7 +85,8 @@ class Canasta < ApplicationRecord
       "team_scores"    => team_scores || { "0" => 0, "1" => 0 },
       "round_scores"   => { "0" => 0, "1" => 0 },
       "red_threes"     => { "0" => [], "1" => [] },
-      "peak_hands"     => dealt_peak_hands
+      "peak_hands"     => dealt_peak_hands,
+      "black_threes_discarded" => { "0" => [], "1" => [] }
     )
 
     game.players.update_all(is_turn: false)
@@ -408,14 +411,20 @@ class Canasta < ApplicationRecord
     return { error: "Card not in hand" } unless hand.include?(card)
 
     going_out = hand.length == 1
-    if going_out && !can_go_out?(player.team)
-      return { error: "Cannot go out yet - your team needs at least 5 canastas, including 1 clean" }
+    if going_out
+      extra_black_three = black_three?(card) ? 1 : 0
+      unless can_go_out?(player.team, extra_black_threes: extra_black_three)
+        return { error: "Cannot go out yet - your team needs at least 5 canastas (including 1 clean), " \
+          "or to have discarded #{BLACK_THREES_TO_GO_OUT} black threes" }
+      end
     end
 
     hand.delete_at(hand.index(card))
     player.update!(hand: hand)
     player.user.bump_canasta_stat!("cards_discarded")
     player.user.bump_canasta_stat!("times_gone_out") if going_out
+
+    log_black_three_discard!(player.team, card) if black_three?(card)
 
     new_frozen = frozen || wild?(card)
     next_seq = (last_discard || {})["seq"].to_i + 1
@@ -547,6 +556,12 @@ class Canasta < ApplicationRecord
     write_game_state!("red_threes" => log)
   end
 
+  def log_black_three_discard!(team, card)
+    log = (black_threes_discarded || {}).dup
+    log[team.to_s] = (log[team.to_s] || []) + [card]
+    write_game_state!("black_threes_discarded" => log)
+  end
+
   def add_to_meld(team, rank, cards)
     team_melds = (melds[team.to_s] || {}).dup
     team_melds[rank] = (team_melds[rank] || []) + cards
@@ -565,10 +580,12 @@ class Canasta < ApplicationRecord
       canasta_cards: completed_canasta ? team_melds[rank] : nil }
   end
 
-  def can_go_out?(team)
+  def can_go_out?(team, extra_black_threes: 0)
     team_melds = melds[team.to_s] || {}
     canastas   = team_melds.values.select { |cards| cards.length >= CANASTA_SIZE }
-    canastas.length >= 5 && canastas.any? { |cards| cards.none? { |c| wild?(c) } }
+    return true if canastas.length >= 5 && canastas.any? { |cards| cards.none? { |c| wild?(c) } }
+
+    ((black_threes_discarded || {})[team.to_s] || []).length + extra_black_threes >= BLACK_THREES_TO_GO_OUT
   end
 
   # Builds a full, itemized score breakdown for the round that just ended and

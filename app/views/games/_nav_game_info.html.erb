@@ -1,5 +1,14 @@
-<%# locals: game, canasta, current_player, game_started, is_host, my_turn %>
+<%# locals: game, canasta, current_player, game_started, is_host, my_turn
+    optional locals: show_settings_trigger (default is_host && !game_started),
+    finished_ids, passed_ids, rankings — per-player badges scum uses that
+    canasta has no equivalent for; each defaults to empty so canasta's call
+    stays a no-op here. %>
 <%
+  show_settings_trigger = local_assigns.fetch(:show_settings_trigger, is_host && !game_started)
+  finished_ids = local_assigns.fetch(:finished_ids, [])
+  passed_ids   = local_assigns.fetch(:passed_ids, [])
+  rankings     = local_assigns.fetch(:rankings, [])
+
   # Once the game's started, turn_order is the actual play sequence (for
   # canasta, teams alternate per Canasta#alternate_by_team and can differ
   # from join order if the host rearranged teams in the lobby; for scum it's
@@ -16,11 +25,20 @@
 <div class="nav-game-info" id="nav-game-info">
   <div class="players-list">
     <% seated_players.each do |player| %>
-      <% is_active = game.current_turn && player.id == game.current_turn %>
-      <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == current_player&.id %>" data-team="<%= player.team.to_i + 1 %>">
+      <% is_active  = game.current_turn && player.id == game.current_turn %>
+      <% p_finished = finished_ids.include?(player.id) %>
+      <% p_passed   = passed_ids.include?(player.id) %>
+      <% ranking    = rankings.find { |r| r[:player_id] == player.id } %>
+      <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == current_player&.id %> <%= 'player-finished' if p_finished %> <%= 'player-passed' if p_passed %>" data-team="<%= player.team.to_i + 1 %>">
         <span class="player-name"><%= player.user.name %></span>
         <% if game_started %>
           <span class="card-count">· <%= (player.hand || []).length %></span>
+        <% end %>
+        <% if p_passed && !p_finished %>
+          <span class="player-passed-badge">· Passed</span>
+        <% end %>
+        <% if ranking %>
+          <span class="player-title-badge">· <%= ranking[:title] %></span>
         <% end %>
       </div>
     <% end %>
@@ -28,7 +46,7 @@
   <% if my_turn && (canasta&.turn_meld_log || []).any? %>
     <%= button_to "↺", undo_meld_game_path(game), method: :post, class: "btn-undo", title: "Undo last meld" %>
   <% end %>
-  <% if is_host && !game_started %>
+  <% if show_settings_trigger %>
     <button class="btn-settings" id="settings-trigger" title="Game settings">⚙</button>
   <% end %>
   <% if is_host %>
