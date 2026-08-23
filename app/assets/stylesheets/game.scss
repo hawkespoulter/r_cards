@@ -212,7 +212,9 @@ li.nav-center {
   gap: 12px;
   flex: 1;
   min-width: 0;
-  justify-content: center;
+  // .players-list is absolutely positioned, so these are the only children
+  // still in flow — keep them against the right edge where they've always sat.
+  justify-content: flex-end;
 }
 
 .nav-game-title {
@@ -223,12 +225,21 @@ li.nav-center {
   opacity: 0.7;
 }
 
+// Centred on the screen, not on the gap between the nav's left and right
+// groups — those differ in width (canasta hangs team scores off nav-left, and
+// the End button sits to the right of the chips), which used to drag the turn
+// order visibly off-centre. Taken out of flow so neither side can pull on it.
 .players-list {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   gap: 8px;
   flex-wrap: nowrap;
-  flex: 1;
   justify-content: center;
+  width: max-content;
+  max-width: calc(100% - 360px);
   min-width: 0;
   overflow: hidden;
 }

@@ -5,6 +5,10 @@
 <% is_me_finished = finished_ids.include?(@current_player&.id) %>
 <% my_turn       = @game_started && !seven&.game_over? && @game.current_turn == @current_player&.id && !is_me_finished %>
 <% playable      = my_turn ? seven.playable_cards(@current_player).uniq : [] %>
+<%# Out of turn every card can still be picked up and thrown at the table — the
+    server answers with a "not your turn" popup, which beats a hand that quietly
+    refuses to respond. On your turn only legal cards lift. %>
+<% attemptable   = my_turn ? playable : (@current_player&.hand || []) %>
 
 <% content_for :nav_center do %>
   <%= render "nav_game_info", game: @game, canasta: nil, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
@@ -12,7 +16,8 @@
         passed_label: "Knocked", rankings: (seven&.rankings || []) %>
 <% end %>
 
-<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>">
+<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container"
+     data-game-id="<%= @game.id %>" data-my-turn="<%= my_turn %>">
 
   <% if seven&.game_over? %>
 
@@ -90,11 +95,10 @@
     <%# No one can be finished here — the first player out ends the game, which
         renders the results screen above instead. %>
     <div class="hand-container">
-      <p class="hand-label">Your hand</p>
       <div class="seven-hand-row">
         <% @current_player.hand.each_with_index do |card, i| %>
-          <div class="hand-card-wrap <%= playable.include?(card) ? 'seven-playable' : 'seven-blocked' %>"
-               draggable="<%= playable.include?(card) %>"
+          <div class="hand-card-wrap <%= attemptable.include?(card) ? 'seven-playable' : 'seven-blocked' %>"
+               draggable="<%= attemptable.include?(card) %>"
                data-card="<%= card %>" data-hand-index="<%= i %>">
             <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card", draggable: "false" %>
           </div>
@@ -103,14 +107,14 @@
     </div>
 
     <%# Submitted by lucky_seven_cards.js — a card is played by dropping it on
-        its slot or, on touch, tapping the card and then the slot. Same hidden
-        form pattern canasta uses for meld/discard/red-three. %>
-    <% if my_turn %>
-      <%= form_with url: play_cards_game_path(@game), method: :post,
-            html: { id: "play-form", style: "display:none;" } do |f| %>
-        <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
-        <%= f.hidden_field :row, id: "selected-row-input", value: "" %>
-      <% end %>
+        its row or, on touch, tapping the card and then the row. Same hidden
+        form pattern canasta uses for meld/discard/red-three. Rendered out of
+        turn too, so an out-of-turn attempt has something to submit and can come
+        back with the popup. %>
+    <%= form_with url: play_cards_game_path(@game), method: :post,
+          html: { id: "play-form", style: "display:none;" } do |f| %>
+      <%= f.hidden_field :cards, id: "selected-cards-input", value: "" %>
+      <%= f.hidden_field :row, id: "selected-row-input", value: "" %>
     <% end %>
 
   <% else %>

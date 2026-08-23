@@ -42,6 +42,9 @@ nav {
 }
 
 nav ul {
+  /* Positioning context for .players-list, which centres on the screen rather
+     than on the space left between the nav's left and right groups. */
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;

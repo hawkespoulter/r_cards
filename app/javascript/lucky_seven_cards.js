@@ -44,9 +44,14 @@ document.addEventListener("turbo:load", function () {
   // nowhere else. A seven whose suit hasn't been played yet can open any free
   // row — which spot it takes is the player's choice.
   const isSeven = (card) => card.slice(1).toLowerCase() === "7";
+  const myTurn  = board.dataset.myTurn === "true";
 
   function accepts(rowEl, card) {
     if (!card) return false;
+    // Out of turn every row takes the attempt, so the play reaches the server
+    // and comes back as the "not your turn" popup rather than dying silently
+    // against a board that won't respond.
+    if (!myTurn) return true;
     if (rowEl.dataset.suit) return rowEl.dataset.suit === card[0];
     return isSeven(card);
   }
