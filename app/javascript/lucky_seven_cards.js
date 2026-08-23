@@ -51,25 +51,14 @@ document.addEventListener("turbo:load", function () {
     return isSeven(card);
   }
 
-  function targetRows(card) {
-    return Array.from(document.querySelectorAll(".seven-row")).filter((r) => accepts(r, card));
-  }
-
   // ── Selection ──────────────────────────────────────────────────────────────
 
   let selectedCard = null;
   let draggedCard = null;
 
   function clearTargets() {
-    document.querySelectorAll(".seven-row.drop-target, .seven-row.drop-active")
-      .forEach((el) => el.classList.remove("drop-target", "drop-active"));
-  }
-
-  // Lighting up every legal row is what makes the free choice of spot visible —
-  // an unopened seven shows all the empty rows at once.
-  function markTargets(card) {
-    clearTargets();
-    targetRows(card).forEach((r) => r.classList.add("drop-target"));
+    document.querySelectorAll(".seven-row.drop-active")
+      .forEach((el) => el.classList.remove("drop-active"));
   }
 
   function clearSelection() {
@@ -87,7 +76,6 @@ document.addEventListener("turbo:load", function () {
     selectedCard = wrap.dataset.card;
     wrap.classList.add("selected");
     input.value = JSON.stringify([selectedCard]);
-    markTargets(selectedCard);
   }
 
   handRow.querySelectorAll(".hand-card-wrap.seven-playable").forEach((wrap) => {
@@ -101,13 +89,12 @@ document.addEventListener("turbo:load", function () {
       e.dataTransfer.setData("text/plain", draggedCard);
       e.dataTransfer.effectAllowed = "move";
       setTimeout(() => this.classList.add("dragging"), 0);
-      markTargets(draggedCard);
     });
 
     wrap.addEventListener("dragend", function () {
       this.classList.remove("dragging");
       draggedCard = null;
-      if (selectedCard) markTargets(selectedCard); else clearTargets();
+      clearTargets();
     });
   });
 

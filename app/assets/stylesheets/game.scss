@@ -2763,13 +2763,8 @@ li.nav-center {
   font-weight: 700;
 }
 
-// A row the held card could go to. An unopened 7 lights every free row at once,
-// which is what shows the choice of spot is open.
-.seven-row.drop-target {
-  background: rgba(251,191,36,0.1);
-  box-shadow: inset 0 0 0 2px rgba(251,191,36,0.55);
-}
-
+// Only the row actually being dragged over lights up — the same single cue
+// canasta gives a meld, rather than pre-marking every legal target.
 .seven-row.drop-active {
   background: rgba(251,191,36,0.18);
   box-shadow: inset 0 0 0 2px #fbbf24;
