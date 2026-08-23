@@ -83,7 +83,8 @@
                           "empty"
                         end
               %>
-              <div class="seven-slot seven-slot-<%= state %> <%= 'seven-slot-mine' if playable.include?(code) %>">
+              <div class="seven-slot seven-slot-<%= state %> <%= 'seven-slot-mine' if playable.include?(code) %>"
+                   data-slot-card="<%= code %>">
                 <% if copies.positive? %>
                   <%= image_tag "cards/#{card_asset(code)}.svg", class: "seven-slot-card" %>
                   <% if copies > 1 %>
@@ -110,6 +111,7 @@
         <div class="seven-hand-row">
           <% @current_player.hand.each_with_index do |card, i| %>
             <div class="hand-card-wrap <%= playable.include?(card) ? 'seven-playable' : 'seven-blocked' %>"
+                 draggable="<%= playable.include?(card) %>"
                  data-card="<%= card %>" data-hand-index="<%= i %>">
               <%= image_tag "cards/#{card_asset(card)}.svg", class: "game-card", draggable: "false" %>
             </div>

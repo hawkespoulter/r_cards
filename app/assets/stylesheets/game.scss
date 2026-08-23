@@ -2802,6 +2802,39 @@ li.nav-center {
   animation: seven-nudge 0.25s ease;
 }
 
+// ── Lucky Seven: drag states ─────────────────────────────────────────────────
+
+.seven-hand-row .hand-card-wrap.dragging {
+  opacity: 0.25;
+}
+
+.seven-hand-row .hand-card-wrap.seven-playable {
+  cursor: grab;
+
+  &:active { cursor: grabbing; }
+}
+
+// The one slot the dragged card belongs in, marked as soon as the drag starts.
+.seven-slot.drop-target {
+  background: rgba(251,191,36,0.3);
+  border: 2px solid #fbbf24;
+  box-shadow: 0 0 16px rgba(251,191,36,0.55);
+  animation: seven-drop-pulse 1s ease-in-out infinite;
+
+  .seven-slot-label { color: #fbbf24; }
+}
+
+@keyframes seven-drop-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(251,191,36,0.55); }
+  50%      { box-shadow: 0 0 26px rgba(251,191,36,0.9); }
+}
+
+// The whole track accepts the drop too, so the aim doesn't have to be exact.
+.seven-track.drop-active {
+  background: rgba(251,191,36,0.08);
+  border-radius: 8px;
+}
+
 // Phone widths: shrink both the runs and the hand. The runs still scroll
 // sideways inside .seven-table, but a smaller slot keeps that scroll short,
 // and a smaller hand card keeps a 17-card opening hand from pushing the table
