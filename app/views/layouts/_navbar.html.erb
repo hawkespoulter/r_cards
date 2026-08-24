@@ -66,6 +66,11 @@
         <% end %>
 
         <button class="bug-report-trigger" id="bug-report-trigger" title="Report a bug">🐛</button>
+        <%# Replays the your-turn knock on demand, for when it's missed. Admin
+            only — see User#admin?. %>
+        <% if current_user.admin? %>
+          <button class="bug-report-trigger" id="turn-reminder-trigger" title="Play the turn knock again">🔔</button>
+        <% end %>
         <%= link_to "📊", stats_path, class: "bug-report-trigger", title: "Stats" %>
 
         <div class="profile-menu">
