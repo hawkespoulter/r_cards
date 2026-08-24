@@ -122,10 +122,8 @@
     <div class="pregame">
       <p>Waiting for players to join…</p>
       <p class="waiting-hint">
-        <%= all_players.length %> in — dealing
-        <%= LuckySeven.deck_count_for(all_players.length) %>
-        deck<%= "s" if LuckySeven.deck_count_for(all_players.length) > 1 %>.
-        A second deck joins at 6 players, a third at 11.
+        <%= all_players.length %> in — one deck dealt out between you,
+        so the more players the shorter the hands.
       </p>
       <% if all_players.length < 2 %>
         <p>You need at least 2 players to start.</p>

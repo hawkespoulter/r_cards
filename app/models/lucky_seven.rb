@@ -19,7 +19,7 @@ class LuckySeven < ApplicationRecord
   store_accessor :game_state,
     :layouts,          # { suit => { rank_value_string => copies_played } } — the four fanned runs on the table
     :row_suits,        # [suit|nil] x ROWS — which run sits in which spot on the table; filled as each 7 is played
-    :deck_count,       # 1, 2 or 3 depending on player count (see .deck_count_for)
+    :deck_count,       # always 1 for now (see .deck_count_for)
     :finished_players, # Array of player IDs in the order they emptied their hands
     :last_play,        # { "player_id", "card", "seq" } - for the acting player's own card sound
     :knocked,          # Player IDs auto-skipped since the last successful play (see #advance_turn)
@@ -28,13 +28,11 @@ class LuckySeven < ApplicationRecord
 
   after_create :initialize_state
 
-  # More than 5 players makes a single deck's hands too thin to be interesting,
-  # and past 10 even two decks runs out — matching the house rule the table
-  # plays by.
-  def self.deck_count_for(player_count)
-    return 3 if player_count > 10
-    return 2 if player_count > 5
-
+  # Always one deck. The extra-deck house rule (a second at 6 players, a third
+  # at 11) is held back until the table can show a rank holding more than one
+  # copy — the runs fan out one card per rank, so duplicates have nowhere to go
+  # and the board misreads. Hands just get thinner at a big table instead.
+  def self.deck_count_for(_player_count)
     1
   end
 
@@ -56,7 +54,8 @@ class LuckySeven < ApplicationRecord
     return { error: "That card isn't in your hand" } unless (player.hand || []).include?(card)
 
     unless playable?(card)
-      return { error: started? ? "That card doesn't extend a run" : "The #{SUIT_SYMBOLS['d']}7 opens the game" }
+      return { error: opening_error } if opening_error
+      return { error: "That card doesn't extend a run" }
     end
 
     suit       = card_suit(card)
@@ -120,7 +119,11 @@ class LuckySeven < ApplicationRecord
       "seq"              => 0
     )
     game.update!(turn_order: game.players.pluck(:id).shuffle)
-    deal_cards(deck_count.to_i.positive? ? deck_count.to_i : self.class.deck_count_for(game.players.count))
+    # Recomputed rather than carried over, so a game dealt before the one-deck
+    # rule doesn't keep redealing itself a shoe the table can't draw.
+    decks = self.class.deck_count_for(game.players.count)
+    write_game_state!("deck_count" => decks)
+    deal_cards(decks)
     begin_play!
     { success: true }
   end
@@ -142,6 +145,12 @@ class LuckySeven < ApplicationRecord
     return false unless value
     return card == STARTING_CARD unless started?
 
+    # The opening is forced: ♦7, then ♦8, then ♦6, and nothing else counts until
+    # all three are down — so no ♦9 before the ♦6. Only once the first run has
+    # both its ends open does the table go free.
+    opener = required_opening_card
+    return card == opener if opener
+
     row = layout_row(card_suit(card))
     return value == ANCHOR if row.empty?
 
@@ -154,6 +163,34 @@ class LuckySeven < ApplicationRecord
 
   def playable_cards(player)
     (player.hand || []).select { |card| playable?(card) }
+  end
+
+  # Names the card the opening still owes, so a rejected play says which one it
+  # is rather than the generic "doesn't extend a run".
+  def opening_error
+    return "The #{SUIT_SYMBOLS['d']}7 opens the game" unless started?
+
+    needed = required_opening_card
+    return nil unless needed
+
+    "#{SUIT_SYMBOLS['d']}#{seven_rank_label_for(needed)} has to be played next"
+  end
+
+  def seven_rank_label_for(code)
+    RANK_VALUES.invert[card_value(code)].to_s.upcase
+  end
+
+  # The one card the opening sequence still owes, or nil once it's complete.
+  # Single deck, so each of these sits in exactly one hand — the table can
+  # always reach whoever holds it, skipping everyone else in the meantime.
+  def required_opening_card
+    return nil unless started?
+
+    diamonds = layout_row("d")
+    return seven_code("d", ANCHOR + 1) if diamonds[(ANCHOR + 1).to_s].to_i.zero?
+    return seven_code("d", ANCHOR - 1) if diamonds[(ANCHOR - 1).to_s].to_i.zero?
+
+    nil
   end
 
   def layout_row(suit)
