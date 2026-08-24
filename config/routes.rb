@@ -27,6 +27,7 @@ Rails.application.routes.draw do
       post 'meld'
       post 'undo_meld'
       post 'advance_round'
+      post 'nudge'
     end
   end  
 

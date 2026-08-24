@@ -10,7 +10,7 @@
         show_settings_trigger: @is_host, finished_ids: finished_ids, passed_ids: passed_ids, rankings: (@scum&.rankings || []) %>
 <% end %>
 
-<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>">
+<div class="game-container <%= 'my-turn' if my_turn %>" id="game-container" data-game-id="<%= @game.id %>" data-player-id="<%= @current_player&.id %>">
 
   <% if @is_host %>
   <div class="settings-panel" id="settings-panel">

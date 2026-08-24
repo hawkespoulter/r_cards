@@ -5,19 +5,29 @@ import "channels"
 import "click_cards"
 import "canasta_cards"
 import "lucky_seven_cards"
-import { playYourTurnKnock } from "sound_effects"
 
-// Navbar turn reminder (admin only — the button is only rendered for them):
-// replays the your-turn knock on demand, for when the original was missed.
+// Navbar turn reminder (admin only — the button is only rendered for them).
+// This knocks on the *current player's* browser, not the clicker's, so it posts
+// and lets the server broadcast; game_channel.js plays the sound for whoever the
+// nudge names. Nothing to nudge outside a game, hence the game-id check.
+//
 // The navbar element survives Turbo renders while turbo:load fires repeatedly,
-// so this needs its own "already bound" guard or the knock would stack up one
-// extra play per render — the same reason _navbar guards its own handlers.
+// so this needs its own "already bound" guard or one click would fire several
+// requests — the same reason _navbar guards its own handlers.
 document.addEventListener("turbo:load", () => {
   const btn = document.getElementById("turn-reminder-trigger");
   if (!btn || btn.dataset.reminderBound === "1") return;
 
   btn.dataset.reminderBound = "1";
-  btn.addEventListener("click", () => playYourTurnKnock());
+  btn.addEventListener("click", () => {
+    const gameId = document.querySelector("[data-game-id]")?.dataset.gameId;
+    if (!gameId) return;
+
+    fetch(`/games/${gameId}/nudge`, {
+      method: "POST",
+      headers: { "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content }
+    });
+  });
 });
 
 // click_cards.js / canasta_cards.js bind their interaction handlers on

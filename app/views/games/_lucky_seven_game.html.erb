@@ -17,7 +17,8 @@
 <% end %>
 
 <div class="game-container <%= 'my-turn' if my_turn %>" id="game-container"
-     data-game-id="<%= @game.id %>" data-my-turn="<%= my_turn %>">
+     data-game-id="<%= @game.id %>" data-my-turn="<%= my_turn %>"
+     data-player-id="<%= @current_player&.id %>">
 
   <% if seven&.game_over? %>
 

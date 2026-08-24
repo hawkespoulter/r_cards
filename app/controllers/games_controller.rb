@@ -330,6 +330,21 @@ class GamesController < ApplicationController
     end
   end
 
+  # Knocks on the current player's browser — the reminder button in the navbar.
+  # Broadcast rather than played locally, since the point is to get the
+  # attention of whoever the table is waiting on. Every client receives it and
+  # only the one it names actually plays the sound.
+  def nudge
+    @game = Game.find(params[:id])
+    return head :forbidden unless current_user.admin?
+    return head :no_content if @game.current_turn.blank?
+
+    ActionCable.server.broadcast "game_#{@game.id}", {
+      type: "nudge", player_id: @game.current_turn, silent: true
+    }
+    head :ok
+  end
+
   private
 
   # Populates everything `show.html.erb`/`show.turbo_stream.erb` need to

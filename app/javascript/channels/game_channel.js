@@ -53,6 +53,15 @@ document.addEventListener("turbo:load", function () {
           return;
         }
 
+        // Turn reminder from the navbar button. Everyone at the table receives
+        // it, but only the player it names hears the knock. It changes no state,
+        // so it returns before the sync below rather than re-rendering boards.
+        if (data.type === "nudge") {
+          const myPlayerId = document.querySelector("[data-game-id]")?.dataset.playerId;
+          if (myPlayerId && String(data.player_id) === myPlayerId) playYourTurnKnock();
+          return;
+        }
+
         if (!data.silent && data.action === 'meld') playCardPlayedSounds(data.meld_card_count);
         if (!data.silent && data.action === 'play_card') playCardPlayedSounds(1);
 
