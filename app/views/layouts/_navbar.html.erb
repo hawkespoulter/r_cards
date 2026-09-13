@@ -246,8 +246,9 @@
       });
     }
     function swapFaceDownImages(backSrc) {
-      document.querySelectorAll("img.pile-card, .peak-hand-stack img").forEach(img => {
+      document.querySelectorAll("img.pile-card, .peak-hand-stack img, img.butch-card-img, img.butch-pile-card").forEach(img => {
         if (img.src.includes("blank_card") || img.src.includes("/cards/backs/")) img.src = backSrc;
+        if (img.dataset.back) img.dataset.back = backSrc;
       });
     }
 

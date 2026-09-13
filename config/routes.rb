@@ -28,6 +28,14 @@ Rails.application.routes.draw do
       post 'undo_meld'
       post 'advance_round'
       post 'nudge'
+      post 'butch_peek'
+      post 'butch_draw'
+      post 'butch_swap'
+      post 'butch_discard'
+      post 'butch_power'
+      post 'butch_skip'
+      post 'butch_call'
+      post 'butch_match'
     end
   end  
 

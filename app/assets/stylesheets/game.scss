@@ -2869,3 +2869,404 @@ li.nav-center {
     }
   }
 }
+
+// ── Butch ────────────────────────────────────────────────────────────────────
+//
+// Everything on the table is face down, so the board is rows of card slots:
+// everyone else across the top, the piles in the middle, your own five at the
+// bottom. A slot keeps its place when its card is matched away, since
+// remembering which spot holds what is the whole game.
+.butch-table {
+  --bc-opp-w: 46px;
+  --bc-mine-w: 78px;
+  --bc-pile-w: 80px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  flex: 1 1 auto;
+  padding: 18px 14px 28px;
+}
+
+.butch-opponents {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.butch-seat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.18);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &.active-turn {
+    border-color: #fbbf24;
+    box-shadow: 0 0 14px rgba(251,191,36,0.35);
+  }
+
+  &.butch-seat-caller {
+    border-color: #ef4444;
+  }
+}
+
+.butch-seat-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.butch-seat-name {
+  font-weight: 700;
+}
+
+.butch-seat-score {
+  padding: 0 7px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.12);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.butch-seat-status {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.butch-badge {
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #b91c1c;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+// ── Butch: card slots ────────────────────────────────────────────────────────
+
+.butch-slots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.butch-slot {
+  --bc-w: var(--bc-opp-w);
+
+  position: relative;
+  flex: 0 0 auto;
+  width: var(--bc-w);
+  height: calc(var(--bc-w) * 88 / 62);
+  border-radius: 5px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.butch-slots-mine .butch-slot { --bc-w: var(--bc-mine-w); }
+.butch-slots-results .butch-slot { --bc-w: 34px; }
+
+.butch-slot-empty {
+  border: 2px dashed rgba(255,255,255,0.15);
+}
+
+.butch-card-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.45);
+  pointer-events: none;
+}
+
+@keyframes butch-flip {
+  0%   { transform: scaleX(0.1); }
+  100% { transform: scaleX(1); }
+}
+
+.butch-revealed .butch-card-img {
+  animation: butch-flip 0.2s ease;
+  object-fit: contain;
+  background: white;
+}
+
+.butch-held    { box-shadow: 0 0 0 3px #fbbf24; }
+.butch-missed  { box-shadow: 0 0 0 3px #ef4444; }
+
+.butch-slot.selected {
+  transform: translateY(-8px);
+  box-shadow: 0 0 0 3px #fbbf24, 0 8px 20px rgba(0,0,0,0.45);
+}
+
+.butch-slot.dragging { opacity: 0.25; }
+
+.butch-slots-frozen .butch-slot-full { opacity: 0.75; }
+
+@keyframes butch-nudge {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+
+.butch-nudge { animation: butch-nudge 0.25s ease; }
+
+// Which slots answer a tap depends on the mode the server rendered — only
+// those get a pointer and a lift, so the board shows what it's asking for.
+.butch-container {
+  &[data-butch-mode="peek"],
+  &[data-butch-mode="swap"],
+  &[data-butch-mode="jack"],
+  &[data-butch-mode="ten_swap"],
+  &[data-butch-mode="queen"],
+  &.butch-match-armed {
+    .butch-slots-mine .butch-slot-full { cursor: pointer; }
+  }
+
+  &[data-butch-mode="ten_look"],
+  &[data-butch-mode="queen"] {
+    .butch-seat-target .butch-slot-full { cursor: pointer; }
+    .butch-seat-target { border-color: rgba(251,191,36,0.55); }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .butch-container {
+    &[data-butch-mode="peek"],
+    &[data-butch-mode="swap"],
+    &[data-butch-mode="jack"],
+    &[data-butch-mode="ten_swap"],
+    &[data-butch-mode="queen"],
+    &.butch-match-armed {
+      .butch-slots-mine .butch-slot-full:hover { transform: translateY(-8px); }
+    }
+
+    &[data-butch-mode="ten_look"],
+    &[data-butch-mode="queen"] {
+      .butch-seat-target .butch-slot-full:hover { transform: translateY(-5px); }
+    }
+  }
+}
+
+@keyframes butch-armed-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(251,191,36,0.9); }
+  50%      { box-shadow: 0 0 0 5px rgba(251,191,36,0.25); }
+}
+
+.butch-match-armed {
+  .butch-slots-mine .butch-slot-full,
+  .butch-discard .butch-pile-card {
+    animation: butch-armed-pulse 1s ease infinite;
+  }
+}
+
+// ── Butch: piles ─────────────────────────────────────────────────────────────
+
+.butch-center {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 26px;
+}
+
+.butch-pile-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  form { margin: 0; }
+}
+
+.butch-pile-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--bc-pile-w);
+  height: calc(var(--bc-pile-w) * 88 / 62);
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+}
+
+.butch-pile-empty {
+  border: 2px dashed rgba(255,255,255,0.18);
+  box-shadow: none;
+  color: rgba(255,255,255,0.3);
+  font-size: 1.4rem;
+}
+
+.butch-pile-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: transform 0.15s ease;
+
+  .butch-pile-card { box-shadow: 0 0 0 3px #10b981, 0 4px 14px rgba(0,0,0,0.5); }
+
+  &:hover { transform: translateY(-4px); }
+}
+
+.butch-drawn-card {
+  box-shadow: 0 0 0 3px #fbbf24, 0 6px 18px rgba(0,0,0,0.5);
+}
+
+.butch-pile-label {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+.butch-prompt {
+  margin: 0;
+  max-width: 560px;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.butch-prompt-caller {
+  display: block;
+  margin-top: 4px;
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+// ── Butch: your hand and actions ─────────────────────────────────────────────
+
+.butch-mine {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.25);
+}
+
+.butch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+
+  form { margin: 0; }
+}
+
+.butch-btn {
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.35);
+  color: rgba(255,255,255,0.9);
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    border-color: white;
+    background: rgba(255,255,255,0.08);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.butch-btn-call {
+  background: #b91c1c;
+  border-color: #ef4444;
+  color: white;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+
+  &:hover:not(:disabled) { background: #dc2626; border-color: #fca5a5; }
+}
+
+.butch-btn-quiet { opacity: 0.8; }
+
+.butch-btn-match.active {
+  background: #b45309;
+  border-color: #fbbf24;
+  color: white;
+}
+
+.butch-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 560px;
+  font-size: 0.8rem;
+
+  li {
+    padding: 2px 0;
+    opacity: 0.45;
+    text-align: center;
+  }
+
+  li:first-child { opacity: 0.9; }
+}
+
+// ── Butch: results ───────────────────────────────────────────────────────────
+
+.butch-results {
+  gap: 16px;
+
+  h2 { margin-bottom: 0; }
+}
+
+.butch-results-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.butch-results-table,
+.butch-history-table {
+  border-collapse: collapse;
+  font-size: 0.9rem;
+
+  th {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    opacity: 0.6;
+    text-align: left;
+  }
+
+  td {
+    padding: 6px 12px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    text-align: left;
+  }
+}
+
+.butch-results-name { white-space: nowrap; font-weight: 600; }
+.butch-results-total { font-weight: 800; font-size: 1.05rem; }
+.butch-row-me td { background: rgba(255,255,255,0.06); }
+.butch-row-low td:first-child { color: #fbbf24; }
+.butch-slots-results { justify-content: flex-start; gap: 4px; }
+
+.butch-history-table td { text-align: center; }
+
+@media (max-width: 640px) {
+  .butch-table {
+    --bc-opp-w: 34px;
+    --bc-mine-w: 58px;
+    --bc-pile-w: 60px;
+
+    gap: 12px;
+    padding: 10px 8px 20px;
+  }
+
+  .butch-center { gap: 16px; }
+  .butch-slots { gap: 4px; }
+}

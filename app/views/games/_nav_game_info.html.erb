@@ -33,7 +33,8 @@
       <div class="player-chip <%= 'active-turn' if is_active %> <%= 'my-player' if player.id == current_player&.id %> <%= 'player-finished' if p_finished %> <%= 'player-passed' if p_passed %>" data-team="<%= player.team.to_i + 1 %>">
         <span class="player-name"><%= player.user.name %></span>
         <% if game_started %>
-          <span class="card-count">· <%= (player.hand || []).length %></span>
+          <%# compact: a Butch hand keeps nil gaps where matched cards left. %>
+          <span class="card-count">· <%= (player.hand || []).compact.length %></span>
         <% end %>
         <% if p_passed && !p_finished %>
           <span class="player-passed-badge">· <%= passed_label %></span>

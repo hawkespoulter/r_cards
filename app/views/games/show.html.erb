@@ -2,6 +2,8 @@
   <%= render partial: 'canasta_game' %>
 <% elsif @game.lucky_seven? %>
   <%= render partial: 'lucky_seven_game' %>
+<% elsif @game.butch? %>
+  <%= render partial: 'butch_game' %>
 <% else %>
   <%= render partial: 'scum_game' %>
 <% end %>

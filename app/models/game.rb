@@ -4,9 +4,10 @@ class Game < ApplicationRecord
   has_one :scum, dependent: :destroy
   has_one :canasta, dependent: :destroy
   has_one :lucky_seven, dependent: :destroy
+  has_one :butch, dependent: :destroy
   has_many :users, through: :players
 
-  enum game_type: { scum: 0, canasta: 1, lucky_seven: 2 }
+  enum game_type: { scum: 0, canasta: 1, lucky_seven: 2, butch: 3 }
 
   store_accessor :settings, :pass_locks_out, :leader_can_continue, :florida_rules, :team1_name, :team2_name
 
@@ -48,6 +49,8 @@ class Game < ApplicationRecord
       players.each { |p| p.user.bump_canasta_stat!("games_played") }
     elsif lucky_seven?
       initialize_lucky_seven_game_state
+    elsif butch?
+      initialize_butch_game_state
     end
   end
 
@@ -79,6 +82,14 @@ class Game < ApplicationRecord
     return if lucky_seven.present?
     update(turn_order: players.pluck(:id).shuffle)
     LuckySeven.create(game: self).begin_play!
+  end
+
+  # Same ordering constraint as Lucky Seven: creating the Butch deals the
+  # first hand and seats its lead from turn_order.
+  def initialize_butch_game_state
+    return if butch.present?
+    update(turn_order: players.pluck(:id).shuffle)
+    Butch.create(game: self)
   end
 
   def update_current_turn(player_id)

@@ -154,6 +154,14 @@ document.addEventListener("turbo:load", function () {
             confetti: true
           });
           syncBoard(gameId);
+        } else if (data.butch_called_by) {
+          showCardModal({
+            title: `📣 ${data.butch_called_by} called Butch!`,
+            subtitle: "Everyone else gets one more turn",
+            duration: 2600,
+            autoDismiss: true
+          });
+          syncBoard(gameId);
         } else if (data.game_started) {
           playGameStart();
           syncBoard(gameId);

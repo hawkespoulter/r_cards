@@ -1,0 +1,16 @@
+<%# locals: owner (player id), slot (index), card (code or nil), back (card-back src)
+    optional: face (true to render face up — only the results screen does),
+    mine (true for the viewer's own row, which can be dragged to the discard).
+    A face-down card never carries its code into the page; butch_cards.js
+    flips one up only from the reveal list the server hands this viewer. %>
+<% face = local_assigns.fetch(:face, false) %>
+<% mine = local_assigns.fetch(:mine, false) %>
+<div class="butch-slot <%= card ? 'butch-slot-full' : 'butch-slot-empty' %>"
+     data-owner="<%= owner %>" data-slot="<%= slot %>"
+     <% if mine && card %>draggable="true"<% end %>>
+  <% if card %>
+    <img class="butch-card-img" draggable="false" alt=""
+         src="<%= face ? asset_path("cards/#{card_asset(card)}.svg") : back %>"
+         data-back="<%= back %>">
+  <% end %>
+</div>

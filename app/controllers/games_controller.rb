@@ -46,7 +46,13 @@ class GamesController < ApplicationController
     is_host = @game.players.order(:created_at).first&.user_id == current_user.id
     return redirect_to @game, alert: "Only the host can start a new round." unless is_host
 
-    result = @game.lucky_seven? ? @game.lucky_seven.start_new_game : @scum.start_new_round
+    result = if @game.lucky_seven?
+      @game.lucky_seven.start_new_game
+    elsif @game.butch?
+      @game.butch.start_next_hand
+    else
+      @scum.start_new_round
+    end
     if result[:error]
       respond_with_game_error(result[:error])
     else
@@ -93,6 +99,9 @@ class GamesController < ApplicationController
 
     if @game.canasta? && @game.players.count != 4
       return redirect_to @game, alert: "Canasta needs exactly 4 players to start."
+    end
+    if @game.butch? && !@game.players.count.between?(Butch::MIN_PLAYERS, Butch::MAX_PLAYERS)
+      return redirect_to @game, alert: "Butch needs #{Butch::MIN_PLAYERS}–#{Butch::MAX_PLAYERS} players to start."
     end
 
     @game.start_game
@@ -345,7 +354,65 @@ class GamesController < ApplicationController
     head :ok
   end
 
+  # --- Butch ---
+
+  def butch_peek
+    butch_action { |butch, player| butch.peek(player, params[:slot]) }
+  end
+
+  def butch_draw
+    butch_action { |butch, player| butch.draw(player, params[:source]) }
+  end
+
+  def butch_swap
+    butch_action { |butch, player| butch.swap(player, params[:slot]) }
+  end
+
+  def butch_discard
+    butch_action { |butch, player| butch.discard_drawn(player) }
+  end
+
+  def butch_power
+    butch_action do |butch, player|
+      butch.use_power(player, slot: params[:slot], target_player: params[:target_player],
+                              target_slot: params[:target_slot])
+    end
+  end
+
+  def butch_skip
+    butch_action { |butch, player| butch.skip_power(player) }
+  end
+
+  def butch_call
+    butch_action { |butch, player| butch.call_butch(player) }
+  end
+
+  def butch_match
+    butch_action { |butch, player| butch.match(player, params[:slot]) }
+  end
+
   private
+
+  # Shared shape for every Butch action: run it, then either pop the error
+  # or tell the table and re-render the actor's board.
+  def butch_action
+    @game           = Game.find(params[:id])
+    @current_player = @game.players.find_by(user_id: current_user.id)
+    return respond_with_game_error("You're not in this game") unless @game.butch? && @game.butch && @current_player
+
+    result = yield(@game.butch, @current_player)
+    return respond_with_game_error(result[:error]) if result[:error]
+
+    ActionCable.server.broadcast "game_#{@game.id}", {
+      message:         'update',
+      action:          ('play_card' if result[:sound]),
+      silent:          result[:silent],
+      round_ended:     result[:hand_over],
+      game_started:    result[:play_started],
+      butch_called_by: result[:butch_called_by]
+    }
+    respond_with_game_update
+  end
 
   # Populates everything `show.html.erb`/`show.turbo_stream.erb` need to
   # render the current player's view of @game. Assumes @game is already set.
@@ -356,6 +423,7 @@ class GamesController < ApplicationController
     @scum           = @game.scum if @game.scum?
     @canasta        = @game.canasta if @game.canasta?
     @lucky_seven    = @game.lucky_seven if @game.lucky_seven?
+    @butch          = @game.butch if @game.butch?
 
     if @game_started
       @current_turn_name = @game.players.find(@game.current_turn).user.name

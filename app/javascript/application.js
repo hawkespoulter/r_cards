@@ -5,6 +5,7 @@ import "channels"
 import "click_cards"
 import "canasta_cards"
 import "lucky_seven_cards"
+import "butch_cards"
 
 // Navbar turn reminder (admin only — the button is only rendered for them).
 // This knocks on the *current player's* browser, not the clicker's, so it posts

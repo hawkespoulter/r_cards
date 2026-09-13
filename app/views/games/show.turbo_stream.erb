@@ -3,6 +3,8 @@
     <%= render "canasta_game" %>
   <% elsif @game.lucky_seven? %>
     <%= render "lucky_seven_game" %>
+  <% elsif @game.butch? %>
+    <%= render "butch_game" %>
   <% else %>
     <%= render "scum_game" %>
   <% end %>
@@ -22,5 +24,11 @@
     <%= render "nav_game_info", game: @game, canasta: nil, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
           show_settings_trigger: false, finished_ids: (@lucky_seven&.finished_player_ids || []),
           passed_ids: (@lucky_seven&.knocked_ids || []), rankings: (@lucky_seven&.rankings || []) %>
+  <% end %>
+<% elsif @game.butch? %>
+  <% my_turn = @game_started && @butch&.playing? && @game.current_turn == @current_player&.id %>
+  <%= turbo_stream.replace "nav-game-info" do %>
+    <%= render "nav_game_info", game: @game, canasta: nil, current_player: @current_player, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
+          show_settings_trigger: false, passed_ids: [@butch&.caller_player_id].compact, passed_label: "Butch!" %>
   <% end %>
 <% end %>

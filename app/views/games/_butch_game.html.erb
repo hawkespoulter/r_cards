@@ -1,0 +1,282 @@
+<% butch         = @butch %>
+<% me            = @current_player %>
+<% players_by_id = @game.players.includes(:user).index_by(&:id) %>
+<% caller_id     = butch&.caller_player_id %>
+<% my_turn       = @game_started && butch&.playing? && @game.current_turn == me&.id %>
+<% mode          = butch ? butch.mode_for(me) : "none" %>
+<% card_back     = asset_path("cards/backs/#{current_user.card_back_key(@game)}.jpg") %>
+<% name_for      = ->(pid) { players_by_id[pid.to_i]&.user&.name } %>
+
+<% content_for :nav_center do %>
+  <%= render "nav_game_info", game: @game, canasta: nil, current_player: me, game_started: @game_started, is_host: @is_host, my_turn: my_turn,
+        show_settings_trigger: false, passed_ids: [caller_id].compact, passed_label: "Butch!" %>
+<% end %>
+
+<div class="game-container butch-container <%= 'my-turn' if my_turn %>" id="game-container"
+     data-game-id="<%= @game.id %>" data-my-turn="<%= my_turn %>"
+     data-player-id="<%= me&.id %>" data-butch-mode="<%= mode %>">
+
+  <% if !@game_started || butch.nil? %>
+
+    <% seated = @game.players.order(:created_at).to_a %>
+    <div class="pregame">
+      <p>Waiting for players to join…</p>
+      <p class="waiting-hint">
+        <%= seated.length %> in — Butch takes <%= Butch::MIN_PLAYERS %> to <%= Butch::MAX_PLAYERS %> players.
+      </p>
+      <% if @is_host %>
+        <%= button_to 'Start Game', start_game_path(@game), method: :post, class: 'btn-start',
+              disabled: !seated.length.between?(Butch::MIN_PLAYERS, Butch::MAX_PLAYERS) %>
+      <% else %>
+        <p style="opacity:0.5;font-size:0.9rem;">Waiting for the host to start the game…</p>
+      <% end %>
+    </div>
+
+  <% elsif butch.between_hands? %>
+
+    <% last       = butch.last_hand || {} %>
+    <% low_ids    = butch.hand_winner_ids %>
+    <% low_points = (last["points"] || {}).values.min %>
+    <div class="game-over butch-results">
+      <% if butch.game_over? %>
+        <% winners = butch.winner_ids.map { |pid| name_for.(pid) } %>
+        <h2>🏆 <%= winners.to_sentence %> win<%= 's' if winners.length == 1 %>!</h2>
+        <p class="waiting-hint">Someone reached <%= Butch::TARGET_SCORE %> — lowest total takes the game.</p>
+      <% else %>
+        <h2>Hand <%= last["hand"] %> — <%= low_ids.map { |pid| name_for.(pid) }.to_sentence %> low with <%= low_points %></h2>
+        <p class="waiting-hint">First to <%= Butch::TARGET_SCORE %> ends the game; lowest total wins.</p>
+      <% end %>
+      <% if butch.hand_end_reason.present? %>
+        <p class="waiting-hint"><%= butch.hand_end_reason %>.</p>
+      <% end %>
+
+      <div class="butch-results-wrap">
+        <table class="butch-results-table">
+          <thead>
+            <tr><th>Player</th><th>Hand</th><th>Pts</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            <% butch.standings.each do |pid| %>
+              <% player = players_by_id[pid] %>
+              <tr class="<%= 'butch-row-me' if pid == me&.id %> <%= 'butch-row-low' if low_ids.include?(pid) %>">
+                <td class="butch-results-name">
+                  <%= player.user.name %>
+                  <% if last["caller_id"].to_i == pid %><span class="butch-badge">called</span><% end %>
+                </td>
+                <td>
+                  <div class="butch-slots butch-slots-results">
+                    <% (player.hand || []).each_with_index do |card, i| %>
+                      <%= render "butch_slot", owner: pid, slot: i, card: card, back: card_back, face: true %>
+                    <% end %>
+                  </div>
+                </td>
+                <td><%= (last["points"] || {})[pid.to_s] %></td>
+                <td class="butch-results-total"><%= butch.score_for(pid) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (butch.history || []).length > 1 %>
+        <div class="butch-results-wrap">
+          <table class="butch-history-table">
+            <thead>
+              <tr>
+                <th></th>
+                <% butch.history.each do |h| %><th>H<%= h["hand"] %></th><% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% butch.standings.each do |pid| %>
+                <tr>
+                  <td><%= name_for.(pid) %></td>
+                  <% butch.history.each do |h| %><td><%= (h["points"] || {})[pid.to_s] %></td><% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+
+      <div class="game-over-actions">
+        <% if @is_host %>
+          <%= button_to (butch.game_over? ? 'Play Again' : 'Next Hand'), start_round_game_path(@game), method: :post, class: 'btn-start' %>
+        <% else %>
+          <p class="waiting-hint">Waiting for the host to deal <%= butch.game_over? ? 'a new game' : 'the next hand' %>…</p>
+        <% end %>
+        <%= link_to 'Back to Lobby', games_path, class: 'btn-quit', style: 'display:inline-block;padding:10px 24px;border-radius:6px;text-decoration:none;' %>
+      </div>
+    </div>
+
+  <% else %>
+
+    <% top          = butch.discards.last %>
+    <% step         = butch.step %>
+    <% drawn        = butch.drawn_card %>
+    <% turn_name    = name_for.(@game.current_turn) %>
+    <% can_match    = me && butch.can_match?(me) %>
+    <% locked_out   = me && butch.playing? && butch.locked_out?(me) %>
+    <% can_draw     = my_turn && step == "draw" %>
+    <% can_take     = can_draw && top && (me.hand || []).compact.any? %>
+    <% hand_of_turn = players_by_id[@game.current_turn] %>
+
+    <%# Only this viewer's looks (and a missed match everyone saw) — see Butch#reveal_payload. %>
+    <div id="butch-reveals" hidden data-reveals="<%= butch.reveal_payload(me&.id).to_json %>"></div>
+
+    <div class="butch-table">
+
+      <div class="butch-opponents">
+        <% butch.seating_after(me&.id).each do |pid| %>
+          <% opp = players_by_id[pid] %>
+          <% next unless opp %>
+          <div class="butch-seat <%= 'active-turn' if butch.playing? && @game.current_turn == pid %> <%= 'butch-seat-caller' if caller_id == pid %> <%= 'butch-seat-target' if butch.targetable?(pid, from: me&.id) %>"
+               data-player="<%= pid %>">
+            <div class="butch-seat-head">
+              <span class="butch-seat-name"><%= opp.user.name %></span>
+              <span class="butch-seat-score" title="Running total"><%= butch.score_for(pid) %></span>
+              <% if caller_id == pid %>
+                <span class="butch-badge">BUTCH!</span>
+              <% elsif butch.peek_phase? && butch.peeks_left(pid).positive? %>
+                <span class="butch-seat-status">looking…</span>
+              <% end %>
+            </div>
+            <div class="butch-slots butch-slots-opp">
+              <% (opp.hand || []).each_with_index do |card, i| %>
+                <%= render "butch_slot", owner: pid, slot: i, card: card, back: card_back %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="butch-center">
+        <div class="butch-pile-block">
+          <%# An empty deck is still clickable on your draw — the server reshuffles
+              the discard pile into a new one (or ends the hand if it can't). %>
+          <% if can_draw %>
+            <%= button_to butch_draw_game_path(@game, source: "deck"), method: :post, class: "butch-pile-btn", title: "Draw from the deck" do %>
+              <img class="butch-pile-card" src="<%= card_back %>" alt="Deck">
+            <% end %>
+          <% elsif butch.draw_count.positive? %>
+            <img class="butch-pile-card" src="<%= card_back %>" alt="Deck">
+          <% else %>
+            <div class="butch-pile-card butch-pile-empty">∅</div>
+          <% end %>
+          <span class="butch-pile-label">Deck · <%= butch.draw_count %></span>
+        </div>
+
+        <div class="butch-pile-block butch-discard <%= 'butch-discard-live' if can_match %>" id="butch-discard">
+          <% if can_take %>
+            <%= button_to butch_draw_game_path(@game, source: "discard"), method: :post, class: "butch-pile-btn", title: "Take the #{butch.label(top)}" do %>
+              <%= image_tag "cards/#{card_asset(top)}.svg", class: "butch-pile-card", draggable: "false" %>
+            <% end %>
+          <% elsif top %>
+            <%= image_tag "cards/#{card_asset(top)}.svg", class: "butch-pile-card", draggable: "false" %>
+          <% else %>
+            <div class="butch-pile-card butch-pile-empty">∅</div>
+          <% end %>
+          <span class="butch-pile-label">Discard</span>
+        </div>
+
+        <% if drawn %>
+          <div class="butch-pile-block butch-drawn">
+            <% if my_turn || butch.drawn_from_discard? %>
+              <%= image_tag "cards/#{card_asset(drawn)}.svg", class: "butch-pile-card butch-drawn-card", draggable: "false" %>
+            <% else %>
+              <img class="butch-pile-card butch-drawn-card" src="<%= card_back %>" alt="">
+            <% end %>
+            <span class="butch-pile-label"><%= my_turn ? "You drew" : "#{turn_name} holds" %></span>
+          </div>
+        <% end %>
+      </div>
+
+      <p class="butch-prompt">
+        <% if butch.peek_phase? %>
+          <% if me && butch.peeks_left(me.id).positive? %>
+            Tap <%= butch.peeks_left(me.id) %> of your cards to look at <%= butch.peeks_left(me.id) == 1 ? 'it' : 'them' %> — remember what you see!
+          <% else %>
+            Waiting for <%= butch.waiting_to_peek.map { |pid| name_for.(pid) }.to_sentence %> to look…
+          <% end %>
+        <% elsif my_turn %>
+          <% case mode %>
+          <% when "swap" %>
+            <% if butch.drawn_from_discard? %>
+              Tap the card to swap the <%= butch.label(drawn) %> in for.
+            <% else %>
+              Tap one of your cards to swap the <%= butch.label(drawn) %> in, or discard it.
+            <% end %>
+          <% when "jack" %>
+            Jack — tap one of your cards to look at it.
+          <% when "ten_look" %>
+            10 — tap someone else's card to look at it.
+          <% when "ten_swap" %>
+            Trade for it? Tap one of your cards to swap, or keep yours.
+          <% when "queen" %>
+            Queen — pick one of your cards and one of someone else's to blind-trade.
+          <% else %>
+            Your turn — draw from the deck, take the <%= top ? butch.label(top) : 'discard' %>, or call Butch.
+          <% end %>
+        <% else %>
+          <%= turn_name %>'s turn<% if hand_of_turn && step == "power" %> — using a <%= { "ten" => "10", "jack" => "jack", "queen" => "queen" }[butch.power_type] %><% end %>.
+        <% end %>
+        <% if caller_id %>
+          <span class="butch-prompt-caller"><%= caller_id == me&.id ? "You" : name_for.(caller_id) %> called Butch — last turns!</span>
+        <% end %>
+      </p>
+
+      <div class="butch-mine">
+        <div class="butch-slots butch-slots-mine <%= 'butch-slots-frozen' if caller_id == me&.id %>">
+          <% (me&.hand || []).each_with_index do |card, i| %>
+            <%= render "butch_slot", owner: me.id, slot: i, card: card, back: card_back, mine: true %>
+          <% end %>
+        </div>
+
+        <div class="butch-actions">
+          <% if can_draw && caller_id.nil? %>
+            <%= button_to 'Butch!', butch_call_game_path(@game), method: :post, class: 'butch-btn butch-btn-call',
+                  form: { data: { turbo_confirm: 'Call Butch? Your cards are frozen and everyone else gets one more turn.' } } %>
+          <% end %>
+          <% if mode == "swap" && !butch.drawn_from_discard? %>
+            <%= button_to "Discard the #{butch.label(drawn)}", butch_discard_game_path(@game), method: :post, class: 'butch-btn' %>
+          <% end %>
+          <% if %w[jack ten_look ten_swap queen].include?(mode) %>
+            <%= button_to (mode == "ten_swap" ? 'Keep my cards' : 'Skip'), butch_skip_game_path(@game), method: :post, class: 'butch-btn butch-btn-quiet' %>
+          <% end %>
+          <% if butch.playing? %>
+            <button type="button" class="butch-btn butch-btn-match" id="butch-match-toggle" <%= 'disabled' unless can_match %>
+                    title="Then tap one of your cards — or drag it onto the discard">
+              <%= locked_out ? 'Locked out' : 'Match' %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <% if butch.log_lines.any? %>
+        <ul class="butch-log">
+          <% butch.log_lines.each do |line| %>
+            <li><%= line %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+
+    <%# Submitted by butch_cards.js. %>
+    <%= form_with url: butch_peek_game_path(@game), method: :post, html: { id: "butch-peek-form", style: "display:none;" } do |f| %>
+      <%= f.hidden_field :slot, value: "", id: nil %>
+    <% end %>
+    <%= form_with url: butch_swap_game_path(@game), method: :post, html: { id: "butch-swap-form", style: "display:none;" } do |f| %>
+      <%= f.hidden_field :slot, value: "", id: nil %>
+    <% end %>
+    <%= form_with url: butch_power_game_path(@game), method: :post, html: { id: "butch-power-form", style: "display:none;" } do |f| %>
+      <%= f.hidden_field :slot, value: "", id: nil %>
+      <%= f.hidden_field :target_player, value: "", id: nil %>
+      <%= f.hidden_field :target_slot, value: "", id: nil %>
+    <% end %>
+    <%= form_with url: butch_match_game_path(@game), method: :post, html: { id: "butch-match-form", style: "display:none;" } do |f| %>
+      <%= f.hidden_field :slot, value: "", id: nil %>
+    <% end %>
+
+  <% end %>
+
+</div>
